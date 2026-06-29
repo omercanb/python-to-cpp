@@ -47,4 +47,21 @@ def main():
 
     print(a if b else c)
 
-    loop(20)
+    loop(5)
+
+    i = 10
+    while i > 5:
+        print(i)
+        i -= 1
+
+    j:int = 0
+    while j < 20:
+        j += 1
+        if j % 2 == 0:
+            continue
+        print(j)
+        if j % 11 == 0:
+            break
+
+
+

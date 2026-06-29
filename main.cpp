@@ -55,7 +55,27 @@ std::cout << "\n";
 }
 
 std::cout << (b ? a : c) << "\n";
-loop(20);
+loop(5);
+i = 10;
+while (i > 5) {
+std::cout << i << "\n";
+i -= 1;
+}
+
+int j = 0;
+while (j < 20) {
+j += 1;
+if ((j % 2) == 0) {
+continue;
+}
+
+std::cout << j << "\n";
+if ((j % 11) == 0) {
+break;
+}
+
+}
+
 }
 
  

@@ -163,6 +163,19 @@ class CppTranslator(ast.NodeVisitor):
         else:
             return f'return;'
 
+    def visit_While(self, node: ast.While):
+        s = f'while ({self.visit(node.test)}) {{\n' 
+        for stmt in node.body:
+            s += f'{self.visit(stmt)}\n'
+        s += '}\n'
+        return s
+
+    def visit_Break(self, node: ast.Break):
+        return 'break;'
+        
+    def visit_Continue(self, node: ast.Continue):
+        return 'continue;'
+
 # Python type  ->  C++ type
 CPP_TYPES = {
     int:   "int",
