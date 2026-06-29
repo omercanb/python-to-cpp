@@ -48,5 +48,18 @@ class ScopeResolver(ast.NodeVisitor):
                 self.scope.define(node.target.id)
         self.generic_visit(node)
 
+    def visit_Assign(self, node: ast.Assign):
+        assert len(node.targets) == 1
+        target = node.targets[0]
+        if isinstance(target, ast.Name):
+            if self.scope.resolve(target.id):
+                target.is_declaration = False
+            else:
+                target.is_declaration = True
+                self.scope.define(target.id)
+        self.generic_visit(node)
+
+
+
 
 

@@ -23,14 +23,11 @@ int y = 20;
 int z = (x + y);
 std::cout << z << "\n";
 double a = 0.4;
-double b = ((2 * a) + 5);
+double b = ((2 * a) + x);
 std::cout << b << "\n";
 double c = (a / b);
-std::cout << c << "\n";
-double d = (x / y);
-std::cout << d << "\n";
-int f;
-std::cout << a << " " << b << " " << c << " " << d << "\n";
+double d = 1.0;
+std::cout << a << " " << b << " " << c << "\n";
 int i;
 i = 20;
 i += 2;
@@ -42,7 +39,7 @@ std::cout << i << "\n";
 std::cout << d << "\n";
 }
 
-if (a || b || (c && d)) {
+if (a || (b && c)) {
 std::cout << a << "\n";
 }
 
@@ -55,7 +52,6 @@ std::cout << "\n";
 }
 
 std::cout << (b ? a : c) << "\n";
-loop(5);
 i = 10;
 while (i > 5) {
 std::cout << i << "\n";
@@ -76,6 +72,8 @@ break;
 
 }
 
+int h = 3;
+j;
 }
 
  

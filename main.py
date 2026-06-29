@@ -1,6 +1,9 @@
 import ast
+from dataclasses import dataclass
 import scope
 from utils import dump, build_and_run
+
+import type_inference
 
 ANNOTATION_TYPES = {
     "int":   int,
@@ -13,23 +16,25 @@ def main():
     file = "input.py"
     tree = ast.parse(open(file).read())
 
-    infer_types(tree)
     print(dump(tree, indent=4))
 
     scope.ScopeResolver().visit(tree)
 
-    translated = CppTranslator().visit(tree)
+    print('inferring')
+    inferrer = type_inference.TypeInferrer()
+    inferrer.visit(tree)
+    types = inferrer.types
+    for k, v in types.items():
+        print(dump(k), v)
+
+    
+    translated = CppTranslator(types).visit(tree)
     build_and_run(translated)
 
 
-def infer_types(tree: ast.AST):
-    for node in ast.walk(tree):
-        match node:
-            case ast.AnnAssign(target=ast.Name(), annotation=ast.Name()):
-                node.target.inferred_type = ANNOTATION_TYPES.get(node.annotation.id)
-
-
+@dataclass
 class CppTranslator(ast.NodeVisitor):
+    types: dict[ast.AST, type]
     def visit_Module(self, node: ast.Module):
         s = '#include <iostream>'
         s += '\n\n'
@@ -56,13 +61,12 @@ class CppTranslator(ast.NodeVisitor):
     def visit_AnnAssign(self, node: ast.AnnAssign):
         # What happens if nested assigns happen
         assert(isinstance(node.target, ast.Name))
-        assert(hasattr(node.target, 'inferred_type'))
         assert(hasattr(node.target, 'is_declaration'))
         if node.target.is_declaration:
             if node.value:
-                return f"{cpp_type(node.target.inferred_type)} {node.target.id} = {self.visit(node.value)};"
+                return f"{cpp_type(self.types[node.target])} {node.target.id} = {self.visit(node.value)};"
             else:
-                return f"{cpp_type(node.target.inferred_type)} {node.target.id};"
+                return f"{cpp_type(self.types[node.target])} {node.target.id};"
         else:
             if node.value:
                 return f"{node.target.id} = {self.visit(node.value)};"
@@ -70,15 +74,21 @@ class CppTranslator(ast.NodeVisitor):
                 return f"{node.target.id};"
 
     def visit_Assign(self, node: ast.Assign):
-        s = ''
-        for target in node.targets:
-            assert(isinstance(target, ast.Name))
-        s += ' = '.join(target.id for target in node.targets)
-        if node.value:
-            s += f' = {self.visit(node.value)};'
+        assert len(node.targets) == 1
+        target = node.targets[0]
+        if target.is_declaration:
+            return f'{cpp_type(self.types[target])} {target.id} = {self.visit(node.value)};'
         else:
-            s += ';'
-        return s
+            return f'{target.id} = {self.visit(node.value)};'
+        # s = ''
+        # for target in node.targets:
+        #     assert(isinstance(target, ast.Name))
+        # s += ' = '.join(target.id for target in node.targets)
+        # if node.value:
+        #     s += f' = {self.visit(node.value)};'
+        # else:
+        #     s += ';'
+        # return s
 
     def visit_AugAssign(self, node: ast.AugAssign):
         return f'{self.visit(node.target)} {cpp_op(node.op)}= {self.visit(node.value)};'
@@ -176,6 +186,15 @@ class CppTranslator(ast.NodeVisitor):
     def visit_Continue(self, node: ast.Continue):
         return 'continue;'
 
+    def visit_For(self, node: ast.For):
+        pass
+
+
+
+def output_for_conditions(node:ast.For):
+    # Output the c++ for loop construct inside the parentheses for some common patterns
+     
+    pass
 # Python type  ->  C++ type
 CPP_TYPES = {
     int:   "int",

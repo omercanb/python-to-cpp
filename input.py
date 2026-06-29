@@ -12,19 +12,20 @@ def loop(x: int) -> None:
         loop(x-1)
 
 def main():
-    x: int = 10
-    y: int = 20
-    z: int = x + y
+    # l: list[int]
+    # n: tuple[int, list[str]]
+    # m: tuple[int, float, str, bool]
+    x = 10
+    y = 20
+    z = x + y
     print(z)
-    a: float = 0.4
-    b: float = 2 * a + 5
+    a = 0.4
+    b  = 2*a + (x)
     print(b)
-    c: float = a / b
-    print(c)
-    d: float = x / y;
-    print(d)
-    f: int
-    print(a, b, c, d);
+    c = a / b
+    d: float = 1.0
+    print(a, b, c)
+
 
     i: int
     i = 20
@@ -38,7 +39,7 @@ def main():
     else:
         print(d)
 
-    if a or b or c and d:
+    if a or b and c:
         print(a)
     if ((a or b) or c) and d:
         print()
@@ -47,14 +48,14 @@ def main():
 
     print(a if b else c)
 
-    loop(5)
+    # loop(5)
 
     i = 10
     while i > 5:
         print(i)
         i -= 1
 
-    j:int = 0
+    j = 0
     while j < 20:
         j += 1
         if j % 2 == 0:
@@ -63,5 +64,11 @@ def main():
         if j % 11 == 0:
             break
 
+    # for k in range(10):
+    #     print(k)
 
-
+    h = 3
+    j: int
+    # l: list[int]
+    # n: tuple[int, list[str]]
+    # m: tuple[int, float, str, bool]
