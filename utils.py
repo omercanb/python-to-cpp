@@ -11,7 +11,7 @@ def build_and_run(translated: str,
 
     # 2. compile:  g++ main.cpp -o main
     compile_proc = subprocess.run(
-        ["g++", f"-std={std}", src, "-o", exe],
+        ["g++", "-ggdb", f"-std={std}", src, "-o", exe],
         capture_output=True, text=True,
     )
     if compile_proc.returncode != 0:
@@ -24,7 +24,7 @@ def build_and_run(translated: str,
 
     # 3. run ./main and print its output
     run_proc = subprocess.run(
-        [f"./{exe}"],
+        ["stdbuf", "-oL", f"./{exe}"],
         capture_output=True, text=True,
     )
     print("--- program output ---")

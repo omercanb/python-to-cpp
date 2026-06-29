@@ -40,10 +40,18 @@ class CppTranslator(ast.NodeVisitor):
         return f'{self.visit(node.value)};'
 
     def visit_Call(self, node: ast.Call):
-        if not node.args:
-            return f'std::cout << "\\n"'
-        args = ' << " " << '.join(self.visit(arg) or "" for arg in node.args)
-        return f'std::cout << {args} << "\\n"'
+        # TODO change this to add an explicit print function and use it
+        if isinstance(node.func, ast.Name) and node.func.id == 'print':
+            if not node.args:
+                return f'std::cout << "\\n"'
+            args = ' << " " << '.join(self.visit(arg) or "" for arg in node.args)
+            return f'std::cout << {args} << "\\n"'
+        else:
+            s = f'{self.visit(node.func)}('
+            s += ', '.join(self.visit(arg) for arg in node.args)
+            s += ')'
+            return s
+        
 
     def visit_AnnAssign(self, node: ast.AnnAssign):
         # What happens if nested assigns happen
@@ -134,9 +142,14 @@ class CppTranslator(ast.NodeVisitor):
             s += f'int main('
         else:
             assert node.returns
-            assert isinstance(node.returns, ast.Name)
-            assert node.returns.id in ANNOTATION_TYPES 
-            s += f'{cpp_type(ANNOTATION_TYPES[node.returns.id])} {node.name}('
+            if isinstance(node.returns, ast.Constant):
+                assert node.returns.value == None
+                return_type = 'void'
+            else:
+                assert isinstance(node.returns, ast.Name)
+                assert node.returns.id in ANNOTATION_TYPES 
+                return_type = cpp_type(ANNOTATION_TYPES[node.returns.id])
+            s += f'{return_type} {node.name}('
         s += ', '.join(f'{cpp_type(ANNOTATION_TYPES[arg.annotation.id])} {arg.arg}' for arg in node.args.args)
         s += ') {\n'
         for stmt in node.body:

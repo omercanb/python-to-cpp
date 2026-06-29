@@ -7,6 +7,16 @@ return (x + y);
 
  
 
+void loop(int x) {
+if (x > 0) {
+std::cout << x << "\n";
+loop((x - 1));
+}
+
+}
+
+ 
+
 int main() {
 int x = 10;
 int y = 20;
@@ -45,6 +55,7 @@ std::cout << "\n";
 }
 
 std::cout << (b ? a : c) << "\n";
+loop(20);
 }
 
  

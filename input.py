@@ -6,6 +6,10 @@ def add(x: int, y: int) -> int:
     print(x, y)
     return x + y
 
+def loop(x: int) -> None:
+    if x > 0:
+        print(x);
+        loop(x-1)
 
 def main():
     x: int = 10
@@ -42,3 +46,5 @@ def main():
         print()
 
     print(a if b else c)
+
+    loop(20)
