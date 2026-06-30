@@ -39,7 +39,6 @@ class TypeInferrer():
     def visit(self, node):
         method = 'visit_' + node.__class__.__name__
         visitor = getattr(self, method, None)
-        print(node.__class__.__name__)
         if visitor is None:
             raise ValueError(f"No support for {node}")
         return visitor(node)

@@ -87,9 +87,12 @@ def main():
     h = 3
     j: int
 
-    combinator()
+    # combinator()
+    #
+    # range(10, 20)
 
-    range(10, 20)
+    l = [[3, 4], [4, 4]]
+    
     # l: list[int]
     # n: tuple[int, list[str]]
     # m: tuple[int, float, str, bool]

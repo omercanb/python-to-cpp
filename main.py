@@ -1,5 +1,7 @@
 import ast
 from dataclasses import dataclass
+import typing
+import types
 import scope
 from utils import dump, build_and_run
 
@@ -33,8 +35,16 @@ def main():
 
 
 @dataclass
-class CppTranslator(ast.NodeVisitor):
+class CppTranslator():
     types: dict[ast.AST, type]
+
+    def visit(self, node):
+        method = 'visit_' + node.__class__.__name__
+        visitor = getattr(self, method, None)
+        if visitor is None:
+            raise ValueError(f"No support for {node}")
+        return visitor(node)
+
     def visit_Module(self, node: ast.Module):
         s = '#include <iostream>'
         s += '\n\n'
@@ -184,21 +194,41 @@ class CppTranslator(ast.NodeVisitor):
     def visit_For(self, node: ast.For):
         pass
 
+    def visit_List(self, node: ast.List):
+        s = '{'
+        s += ', '.join(self.visit(element) for element in node.elts)
+        s += '}'
+        return s
+
     pass
 # Python type  ->  C++ type
-CPP_TYPES = {
+cpp_types = {
     int:   "int",
     float: "double",
     bool:  "bool",
     str:   "std::string",
     type(None): "void",
+    list: "std::vector"
 }
 
-def cpp_type(t):
-    try:
-        return CPP_TYPES[t]
-    except KeyError:
-        raise NotImplementedError(f"no C++ mapping for {t.__name__}")
+
+def cpp_type(typ: type) -> str:
+    s = ''
+    # The type is a subscripted type like list[int] 
+    if isinstance(typ, types.GenericAlias):
+        args = typing.get_args(typ)
+        origin = typing.get_origin(typ)
+        # Building the C++ type template
+        s = f'{cpp_types[origin]}<'
+        s += ', '.join(cpp_type(arg) for arg in args)
+        s += '>'
+        return s
+    else: 
+        try:
+            return cpp_types[typ]
+        except KeyError:
+            raise NotImplementedError(f"no C++ mapping for {typ.__name__}")
+
 
 # AST operator class  ->  C++ symbol
 CPP_OPS = {
