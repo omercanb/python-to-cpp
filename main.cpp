@@ -17,6 +17,33 @@ loop((x - 1));
 
  
 
+int global_x = 10;
+
+void combinator() {
+std::cout << global_x << "\n";
+global_x -= 1;
+if (global_x > 0) {
+combinator();
+combinator();
+combinator();
+combinator();
+}
+
+}
+
+ 
+
+void range(int start, int end) {
+if (start >= end) {
+return;
+}
+
+std::cout << start << "\n";
+range((start + 1), end);
+}
+
+ 
+
 int main() {
 int x = 10;
 int y = 20;
@@ -31,7 +58,6 @@ std::cout << a << " " << b << " " << c << "\n";
 int i;
 i = 20;
 i += 2;
-i /= 5;
 i %= 10;
 if (i > 10) {
 std::cout << i << "\n";
@@ -74,6 +100,8 @@ break;
 
 int h = 3;
 j;
+combinator();
+range(10, 20);
 }
 
  

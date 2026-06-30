@@ -149,19 +149,14 @@ class CppTranslator(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef):
         s = ''
         if node.name == 'main':
-            s += f'int main('
+            s += 'int main() {\n'
         else:
-            assert node.returns
-            if isinstance(node.returns, ast.Constant):
-                assert node.returns.value == None
-                return_type = 'void'
-            else:
-                assert isinstance(node.returns, ast.Name)
-                assert node.returns.id in ANNOTATION_TYPES 
-                return_type = cpp_type(ANNOTATION_TYPES[node.returns.id])
-            s += f'{return_type} {node.name}('
-        s += ', '.join(f'{cpp_type(ANNOTATION_TYPES[arg.annotation.id])} {arg.arg}' for arg in node.args.args)
-        s += ') {\n'
+            function_type = self.types[node]
+            return_type = function_type.__args__[-1]
+            argument_types = function_type.__args__[:-1]
+            s += f'{cpp_type(return_type)} {node.name}('
+            s += ', '.join(f'{cpp_type(arg_type)} {arg.arg}' for arg_type, arg in zip(argument_types, node.args.args))
+            s += ') {\n'
         for stmt in node.body:
             s += f'{self.visit(stmt)}\n'
         s += '}\n\n '
@@ -189,11 +184,6 @@ class CppTranslator(ast.NodeVisitor):
     def visit_For(self, node: ast.For):
         pass
 
-
-
-def output_for_conditions(node:ast.For):
-    # Output the c++ for loop construct inside the parentheses for some common patterns
-     
     pass
 # Python type  ->  C++ type
 CPP_TYPES = {

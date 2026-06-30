@@ -8,8 +8,26 @@ def add(x: int, y: int) -> int:
 
 def loop(x: int) -> None:
     if x > 0:
-        print(x);
+        print(x)
         loop(x-1)
+
+global_x = 10
+def combinator() -> None:
+    print(global_x)
+    global_x -= 1
+    if global_x > 0:
+        combinator()
+        combinator()
+        combinator()
+        combinator()
+
+def range(start: int, end: int) -> None:
+    if start >= end:
+        return 
+    print(start)
+    range(start + 1, end)
+
+
 
 def main():
     # l: list[int]
@@ -30,7 +48,6 @@ def main():
     i: int
     i = 20
     i += 2
-    i /= 5
     i %= 10
     #print("i: ", i)
 
@@ -69,6 +86,10 @@ def main():
 
     h = 3
     j: int
+
+    combinator()
+
+    range(10, 20)
     # l: list[int]
     # n: tuple[int, list[str]]
     # m: tuple[int, float, str, bool]
