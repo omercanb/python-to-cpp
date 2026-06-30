@@ -11,6 +11,12 @@ def loop(x: int) -> None:
         print(x)
         loop(x-1)
 
+def show(x: list[int]) -> None:
+    i = 10
+    while i > 10:
+        print(x)
+        i -= 1
+
 global_x = 10
 def combinator() -> None:
     print(global_x)
@@ -91,8 +97,12 @@ def main():
     #
     # range(10, 20)
 
+    q = [1, 2, 3]
+    
     l = [[3, 4], [4, 4]]
     
+    print(q)
+    print(l)
     # l: list[int]
     # n: tuple[int, list[str]]
     # m: tuple[int, float, str, bool]

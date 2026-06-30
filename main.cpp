@@ -1,7 +1,10 @@
 #include <iostream>
-
+#include "print.h"
+#include "list.h"
+#include "ptr.h"
+using namespace py;
 int add(int x, int y) {
-std::cout << x << " " << y << "\n";
+print(x, y);
 return (x + y);
 }
 
@@ -9,7 +12,7 @@ return (x + y);
 
 void loop(int x) {
 if (x > 0) {
-std::cout << x << "\n";
+print(x);
 loop((x - 1));
 }
 
@@ -17,10 +20,21 @@ loop((x - 1));
 
  
 
-int global_x = 10;
+void show(ptr<list<int>> x) {
+int i= 10;
+while (i > 10) {
+print(x);
+i -= 1;
+}
+
+}
+
+ 
+
+int global_x= 10;
 
 void combinator() {
-std::cout << global_x << "\n";
+print(global_x);
 global_x -= 1;
 if (global_x > 0) {
 combinator();
@@ -38,69 +52,72 @@ if (start >= end) {
 return;
 }
 
-std::cout << start << "\n";
+print(start);
 range((start + 1), end);
 }
 
  
 
 int main() {
-int x = 10;
-int y = 20;
-int z = (x + y);
-std::cout << z << "\n";
-double a = 0.4;
-double b = ((2 * a) + x);
-std::cout << b << "\n";
-double c = (a / b);
-double d = 1.0;
-std::cout << a << " " << b << " " << c << "\n";
+int x= 10;
+int y= 20;
+int z= (x + y);
+print(z);
+double a= 0.4;
+double b= ((2 * a) + x);
+print(b);
+double c= (a / b);
+double d= 1.0;
+print(a, b, c);
 int i;
-i = 20;
+i= 20;
 i += 2;
 i %= 10;
 if (i > 10) {
-std::cout << i << "\n";
+print(i);
 } else {
-std::cout << d << "\n";
+print(d);
 }
 
 if (a || (b && c)) {
-std::cout << a << "\n";
+print(a);
 }
 
 if (((a || b) || c) && d) {
-std::cout << "\n";
+print();
 }
 
 if ((a <= b) && (b < c) && (c <= d)) {
-std::cout << "\n";
+print();
 }
 
-std::cout << (b ? a : c) << "\n";
-i = 10;
+print((b ? a : c));
+i= 10;
 while (i > 5) {
-std::cout << i << "\n";
+print(i);
 i -= 1;
 }
 
-int j = 0;
+int j= 0;
 while (j < 20) {
 j += 1;
 if ((j % 2) == 0) {
 continue;
 }
 
-std::cout << j << "\n";
+print(j);
 if ((j % 11) == 0) {
 break;
 }
 
 }
 
-int h = 3;
+int h= 3;
 j;
-std::vector<std::vector<int>> l = {{3, 4}, {4, 4}};
+ptr<list<int>> q= ptr(new list({1, 2, 3}));
+ptr<list<ptr<list<int>>>> l= ptr(new list({ptr(new list({3, 4})), ptr(new list({4, 4}))}));
+print(q);
+print(l);
 }
 
  

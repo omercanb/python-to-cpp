@@ -15,10 +15,10 @@ template <typename T> class ptr {
     value_type *object;
 
     ptr(value_type *obj) {
-        std::cout << "pointer constructor\n";
         object = obj;
         refcount = new int;
         *refcount = 1;
+        std::cout << "pointer constructor: " << *refcount << "\n";
     }
 
     ptr(const ptr &o) {
@@ -31,11 +31,11 @@ template <typename T> class ptr {
     // Refence and dereference must happen in this order to survive self assign:
     // a = a
     ptr &operator=(const ptr &o) {
-        std::cout << "copy assign\n";
         o.reference();
         dereference();
         object = o.object;
         refcount = o.refcount;
+        std::cout << "copy assign" << *refcount << "\n";
         return *this;
     }
 

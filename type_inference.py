@@ -125,6 +125,7 @@ class TypeInferrer():
         # define the function on the outer scope
 
         # Collect the function parameters in the function scope
+        this_scope = self.scope
         function_scope = Scope(self.scope)
         args = node.args.args
         argument_types: list[type] = [] # Will be used later for the type of the function itself
@@ -148,6 +149,8 @@ class TypeInferrer():
         # if node.name != 'main': return
         for stmt in node.body:
             self.visit(stmt)
+
+        self.scope = this_scope
 
     def visit_Return(self, node: ast.Return):
         if node.value:

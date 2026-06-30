@@ -2,6 +2,7 @@ import ast
 from dataclasses import dataclass
 import typing
 import types
+from collections import defaultdict
 import scope
 from utils import dump, build_and_run
 
@@ -13,6 +14,8 @@ ANNOTATION_TYPES = {
     "bool":  bool,
     "str":   str,
 }
+
+includes = ['print.h', 'list.h', 'ptr.h']
 
 def main():
     file = "input.py"
@@ -46,8 +49,11 @@ class CppTranslator():
         return visitor(node)
 
     def visit_Module(self, node: ast.Module):
-        s = '#include <iostream>'
-        s += '\n\n'
+        s = '#include <iostream>\n'
+        for include in includes:
+            s += f'#include "{include}"\n'
+        s += f'using namespace py;'
+        s += '\n'
         s += '\n\n'.join(self.visit(child) or '' for child in node.body)
         return s
 
@@ -55,50 +61,33 @@ class CppTranslator():
         return f'{self.visit(node.value)};'
 
     def visit_Call(self, node: ast.Call):
-        # TODO change this to add an explicit print function and use it
+        s = ''
         if isinstance(node.func, ast.Name) and node.func.id == 'print':
-            if not node.args:
-                return f'std::cout << "\\n"'
-            args = ' << " " << '.join(self.visit(arg) or "" for arg in node.args)
-            return f'std::cout << {args} << "\\n"'
+            s += 'print('
         else:
-            s = f'{self.visit(node.func)}('
-            s += ', '.join(self.visit(arg) for arg in node.args)
-            s += ')'
-            return s
-        
+            s += f'{self.visit(node.func)}('
+        s += ', '.join(self.visit(arg) for arg in node.args)
+        s += ')'
+        return s
 
     def visit_AnnAssign(self, node: ast.AnnAssign):
-        # What happens if nested assigns happen
-        assert(isinstance(node.target, ast.Name))
-        assert(hasattr(node.target, 'is_declaration'))
-        if node.target.is_declaration:
-            if node.value:
-                return f"{cpp_type(self.types[node.target])} {node.target.id} = {self.visit(node.value)};"
-            else:
-                return f"{cpp_type(self.types[node.target])} {node.target.id};"
-        else:
-            if node.value:
-                return f"{node.target.id} = {self.visit(node.value)};"
-            else:
-                return f"{node.target.id};"
+        return self.translate_assign([node.target], node.value)
 
     def visit_Assign(self, node: ast.Assign):
-        assert len(node.targets) == 1
-        target = node.targets[0]
+        return self.translate_assign(node.targets, node.value)
+
+    def translate_assign(self, targets: list[ast.expr], value: ast.expr | None):
+        assert len(targets) == 1
+        target = targets[0]
+        assert isinstance(target, ast.Name)
+        s = ''
         if target.is_declaration:
-            return f'{cpp_type(self.types[target])} {target.id} = {self.visit(node.value)};'
-        else:
-            return f'{target.id} = {self.visit(node.value)};'
-        # s = ''
-        # for target in node.targets:
-        #     assert(isinstance(target, ast.Name))
-        # s += ' = '.join(target.id for target in node.targets)
-        # if node.value:
-        #     s += f' = {self.visit(node.value)};'
-        # else:
-        #     s += ';'
-        # return s
+            s += f'{cpp_type(self.types[target])} '
+        s += f'{target.id}'
+        if value is not None:
+            s += f'= {self.visit(value)}'
+        s += ';'
+        return s
 
     def visit_AugAssign(self, node: ast.AugAssign):
         return f'{self.visit(node.target)} {cpp_op(node.op)}= {self.visit(node.value)};'
@@ -195,12 +184,16 @@ class CppTranslator():
         pass
 
     def visit_List(self, node: ast.List):
-        s = '{'
+        s = 'ptr(new list({'
         s += ', '.join(self.visit(element) for element in node.elts)
-        s += '}'
+        s += '}))'
         return s
 
     pass
+
+is_object = defaultdict(lambda:False)
+is_object[list] = True 
+
 # Python type  ->  C++ type
 cpp_types = {
     int:   "int",
@@ -208,7 +201,7 @@ cpp_types = {
     bool:  "bool",
     str:   "std::string",
     type(None): "void",
-    list: "std::vector"
+    list: "list"
 }
 
 
@@ -219,9 +212,15 @@ def cpp_type(typ: type) -> str:
         args = typing.get_args(typ)
         origin = typing.get_origin(typ)
         # Building the C++ type template
-        s = f'{cpp_types[origin]}<'
+        s = ''
+        if is_object[origin]: # Objects need to be refcounted
+            s += 'ptr<'
+        s += f'{cpp_types[origin]}<'
         s += ', '.join(cpp_type(arg) for arg in args)
         s += '>'
+        if is_object[origin]:
+            s += '>'
+
         return s
     else: 
         try:

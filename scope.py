@@ -1,12 +1,10 @@
 import ast
 
 class Scope:
-    name: str
-    enclosing: 'Scope'
-    declarations = set()
     def __init__(self, name: str, enclosing: 'Scope'):
         self.name = name
         self.enclosing = enclosing
+        self.declarations = set()
 
     def define(self, name):
         self.declarations.add(name)

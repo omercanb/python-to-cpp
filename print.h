@@ -13,6 +13,7 @@ void print(First &&first, Rest &&...rest) {
     }
     std::cout << "\n";
 }
+void print() { std::cout << "\n"; }
 
 template <typename T>
 std::ostream &operator<<(std::ostream &os, const ptr<T> &p) {

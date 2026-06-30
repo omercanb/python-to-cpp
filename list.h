@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "ptr.h"
 #include <algorithm>
 #include <cstddef>
 #include <functional>
@@ -38,9 +39,6 @@ template <typename T> class list {
     // ---- construction -------------------------------------------------------
     list() = default;
     list(std::initializer_list<T> init) : data_(init) {}
-    template <class It> list(It first, It last) : data_(first, last) {}
-    explicit list(const std::vector<T> &v) : data_(v) {}
-    explicit list(std::vector<T> &&v) : data_(std::move(v)) {}
 
     // ---- size / truthiness --------------------------------------------------
     size_type size() const noexcept {
