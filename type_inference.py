@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 import types
 import typing
 from utils import dump
+from scope import ScopeType
 
 @dataclass
 class Scope:
@@ -32,16 +33,25 @@ class Unkown: pass
 
 # A basic type inference walker that will be changed later
 # All the visit functions return python types
-class TypeInferrer():
+class TypeInferrer(ast.NodeVisitor):
     types: dict[ast.AST, type] = {}
     scope: Scope = Scope()
+    current_scope_type = ScopeType.MODULE
+    prev_scope_type = None
 
-    def visit(self, node):
-        method = 'visit_' + node.__class__.__name__
-        visitor = getattr(self, method, None)
-        if visitor is None:
-            raise ValueError(f"No support for {node}")
-        return visitor(node)
+    def new_scope_type(self, scope_type: ScopeType):
+        self.prev_scope_type = self.current_scope_type
+        self.current_scope_type = scope_type
+
+    def old_scope_type(self):
+        self.current_scope_type = self.prev_scope_type
+
+    # def visit(self, node):
+    #     method = 'visit_' + node.__class__.__name__
+    #     visitor = getattr(self, method, None)
+    #     if visitor is None:
+    #         raise ValueError(f"No support for {node}")
+    #     return visitor(node)
 
     def visit_Module(self, node: ast.Module):
         for stmt in node.body:
@@ -119,6 +129,7 @@ class TypeInferrer():
         return target_t
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
+        self.new_scope_type(ScopeType.FUNCTION)
         # Create a new scope
         # For each formal parameter
             # Get the type and define the name to the type
@@ -151,6 +162,8 @@ class TypeInferrer():
             self.visit(stmt)
 
         self.scope = this_scope
+        self.old_scope_type()
+
 
     def visit_Return(self, node: ast.Return):
         if node.value:
@@ -280,6 +293,15 @@ class TypeInferrer():
 
     def visit_Break(self, node: ast.Break):
         return type(None)
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        self.new_scope_type(ScopeType.CLASS)
+        this_scope = self.scope
+        # Get the type of the class member fields and functions
+        members = []
+        for stmt in node.body:
+            members.append(self.visit(stmt))
+        print(members)
 
 
 simple_annotation_type = {

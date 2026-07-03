@@ -1,26 +1,11 @@
 import ast
 
-class Scope:
-    def __init__(self, name: str, enclosing: 'Scope'):
-        self.name = name
-        self.enclosing = enclosing
-        self.declarations = set()
-
-    def define(self, name):
-        self.declarations.add(name)
-
-    def resolve(self, name):
-        if name in self.declarations:
-            return True
-        elif self.enclosing:
-            return self.enclosing.resolve(name)
-        else:
-            return False
+from symbols import Scope, ScopeType
 
 
 class ScopeResolver(ast.NodeVisitor):
     def __init__(self):
-        self.scope = Scope("global", None)
+        self.scope = Scope(ScopeType.MODULE)
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
         # Inside a function, create a new scope
@@ -56,8 +41,3 @@ class ScopeResolver(ast.NodeVisitor):
                 target.is_declaration = True
                 self.scope.define(target.id)
         self.generic_visit(node)
-
-
-
-
-
