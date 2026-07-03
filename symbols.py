@@ -1,6 +1,8 @@
 import ast
+import builtins
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from pprint import pprint
 
 from utils import dump
 
@@ -42,6 +44,14 @@ def print_dict(d, indent):
         print_indented(indent, f"{k}: {v}")
 
 
+@dataclass
+class Builtin:
+    name: str
+
+
+builtins_map = {builtin: Builtin(builtin) for builtin in dir(builtins)}
+
+
 # The scope / scope tree responsible for maintaining definitions and resolutions
 @dataclass
 class Scope:
@@ -49,7 +59,7 @@ class Scope:
     name: str | None = None
     enclosing: "Scope | None" = None
     # Definitions contains both the symbol type and ast.stmt becase the ast.stmt can be useful and we can't recover the symbol type from the stmt in case of functions vs methods
-    definitions: dict[str, tuple[SymbolType, ast.stmt]] = field(default_factory=dict)
+    definitions: dict[str, tuple[SymbolType, ast.AST]] = field(default_factory=dict)
     children: list["Scope"] = field(default_factory=list)
 
     global_vars: set[str] = field(default_factory=set)
@@ -58,6 +68,40 @@ class Scope:
     def define(self, name, symbol_type: SymbolType, stmt):
         assert name not in self.definitions
         self.definitions[name] = (symbol_type, stmt)
+
+    def resolve(self, name, skip_class=False) -> tuple[SymbolType, ast.AST] | Builtin:
+        """
+        Scope resolution rules for python
+        If a the current scope is not a class scope, the symbol can't be resolved in a parent 'Class' scope
+        The global qualifier affect resolution, but the nonlocal qualifier doesn't
+        This happens in the case where a name is defined globally and in an enclosing scope, then the name should resolve to the gloval
+        """
+        skip = False
+        if skip_class and self.typ == ScopeType.CLASS:
+            skip = True
+
+        if name in self.global_vars:
+            return self.resolve_global_name(name)
+        if name in self.definitions:
+            return self.definitions[name]
+
+        if not skip:
+            if self.enclosing:
+                return self.enclosing.resolve(name, skip_class=True)
+
+        if name in builtins_map:
+            return builtins_map[name]
+
+        raise ValueError(f"Name not found line", name)
+
+    def resolve_global_name(self, name) -> tuple[SymbolType, ast.AST]:
+        scope = self
+        while scope.enclosing is not None:
+            scope = scope.enclosing
+        if name in scope.definitions:
+            return scope.definitions[name]
+        else:
+            raise NameError("Global declared name not found in global namespace", name)
 
     def add_child(self, child_scope):
         self.children.append(child_scope)
@@ -81,6 +125,37 @@ class Scope:
         for child in self.children:
             child.print_tree(indent + 4)
         print_indented(indent, "}")
+
+    def print_self(self, indent=0):
+        print_indented(indent, self.typ, self.name)
+        print_indented(indent, "definitions {")
+        print_dict(self.definitions, indent)
+        if self.nonlocal_vars:
+            print_indented(indent, f"nonlocals: {self.nonlocal_vars}")
+        if self.global_vars:
+            print_indented(indent, f"globals: {self.global_vars}")
+        print_indented(indent, "}")
+
+
+class ScopeTracker:
+    def __init__(self, scope: Scope):
+        self.scope = scope
+        self.iter = iter(self)
+
+    def __iter__(self):
+        stack = [self.scope]
+        while stack:
+            cur = stack.pop()
+            yield cur
+            stack.extend(reversed(cur.children))
+
+    def update(self, node: ast.AST):
+        match node:
+            case ast.ListComp() | ast.SetComp() | ast.DictComp() | ast.GeneratorExp():
+                for _ in node.generators:
+                    self.scope = next(self.iter)
+            case ast.Module() | ast.FunctionDef() | ast.ClassDef():
+                self.scope = next(self.iter)
 
 
 # The first pass of scope resolution

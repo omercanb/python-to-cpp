@@ -17,8 +17,6 @@ def fun(arg):
 
     y = [row for i in range(10) for row in range(i, 10)]
     x = [b for b in range(10)]
-    print(b)
-    print(i)
     a = 10
 
     # matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
@@ -30,7 +28,7 @@ def fun(arg):
         a = 20
 
 
-fun(b)
+fun(10)
 
 # def add(x: int, y: int) -> int:
 #     print(x, y)

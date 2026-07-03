@@ -3,10 +3,12 @@ import types
 import typing
 from collections import defaultdict
 from dataclasses import dataclass
+from pprint import pp
 
 import scope
 import symbols
 import type_inference
+import validate
 from scope import ScopeType
 from utils import build_and_run, dump
 
@@ -25,11 +27,14 @@ def main():
     tree = ast.parse(open(file).read())
 
     print(dump(tree, indent=4))
+    # validate.Validator().visit(tree)
 
     # scope.ScopeResolver().visit(tree)
     definer = symbols.SymbolDefiner()
     definer.visit(tree)
     definer.scope.print_tree()
+    ScopeTester(definer.scope).visit(tree)
+    return
 
     print("inferring")
     inferrer = type_inference.TypeInferrer()
@@ -40,6 +45,33 @@ def main():
 
     translated = CppTranslator(types).visit(tree)
     build_and_run(translated)
+
+
+class ScopeTester(ast.NodeVisitor):
+    def __init__(self, scope):
+        self.scope_tracker = symbols.ScopeTracker(scope)
+
+    def visit(self, node: ast.AST):
+        cur_scope = self.scope_tracker.scope
+        self.scope_tracker.update(node)
+        new_scope = self.scope_tracker.scope
+        if cur_scope != new_scope:
+            if hasattr(node, "lineno"):
+                print(node.lineno)
+            self.scope_tracker.scope.print_self()
+        method = "visit_" + node.__class__.__name__
+        visitor = getattr(self, method, self.generic_visit)
+        return visitor(node)
+
+    def visit_Name(self, node: ast.Name):
+        if not isinstance(node.ctx, ast.Load):
+            return
+        res = self.scope_tracker.scope.resolve(node.id)
+        if not isinstance(res, symbols.Builtin):
+            symbol_type, definition_node = res
+            print(
+                f"Resolve {ast.unparse(node)} on line {node.lineno}, definition on {definition_node.lineno or 'unkown'}: {ast.unparse(definition_node)}"
+            )
 
 
 @dataclass

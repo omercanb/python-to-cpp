@@ -1,9 +1,11 @@
 import ast
-from dataclasses import dataclass, field
 import types
 import typing
-from utils import dump
+from dataclasses import dataclass, field
+
 from scope import ScopeType
+from utils import dump
+
 
 @dataclass
 class Scope:
@@ -23,13 +25,14 @@ class Scope:
         self.names[name] = t
 
 
-py_builtins = set(['print'])
-builtin_types = {
-        'print': typing.Callable[..., None]
-}
+py_builtins = set(["print"])
+builtin_types = {"print": typing.Callable[..., None]}
+
 
 # Used for empty containers like []
-class Unkown: pass
+class Unkown:
+    pass
+
 
 # A basic type inference walker that will be changed later
 # All the visit functions return python types
@@ -66,7 +69,9 @@ class TypeInferrer(ast.NodeVisitor):
         if len(node.elts) == 0:
             return Unkown
         # Check that all elements of a list are of the same type
-        assert all(self.visit(element) == self.visit(node.elts[0]) for element in node.elts)
+        assert all(
+            self.visit(element) == self.visit(node.elts[0]) for element in node.elts
+        )
         typ = list[self.visit(node.elts[0])]
         self.types[node] = typ
         return typ
@@ -80,7 +85,6 @@ class TypeInferrer(ast.NodeVisitor):
         self.types[node] = typ
         return typ
 
-
     def visit_Name(self, node: ast.Name):
         typ = self.scope.lookup(node.id)
         if typ != None:
@@ -93,10 +97,11 @@ class TypeInferrer(ast.NodeVisitor):
         # Name not in scope
         self.types[node] = Unkown
         # return Unkown
-        raise ValueError(f"Variable '{node.id}' on line {node.lineno} used without declaration")
+        raise ValueError(
+            f"Variable '{node.id}' on line {node.lineno} used without declaration"
+        )
 
     def visit_Assign(self, node: ast.Assign):
-        assert len(node.targets) == 1
         target = node.targets[0]
         # How to handle unpackign?
         assert isinstance(target, ast.Name)
@@ -125,29 +130,37 @@ class TypeInferrer(ast.NodeVisitor):
             return target_t
         value_t = self.visit(node.value)
         if value_t != target_t:
-            raise ValueError(f'Annotated assignment {dump(node.target)} type {target_t} is different from assigned type {value_t}')
+            raise ValueError(
+                f"Annotated assignment {dump(node.target)} type {target_t} is different from assigned type {value_t}"
+            )
         return target_t
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
         self.new_scope_type(ScopeType.FUNCTION)
         # Create a new scope
         # For each formal parameter
-            # Get the type and define the name to the type
+        # Get the type and define the name to the type
         # define the function on the outer scope
 
         # Collect the function parameters in the function scope
         this_scope = self.scope
         function_scope = Scope(self.scope)
         args = node.args.args
-        argument_types: list[type] = [] # Will be used later for the type of the function itself
+        argument_types: list[type] = (
+            []
+        )  # Will be used later for the type of the function itself
         for arg in args:
-            if not hasattr(arg, 'annotation'):
-                raise ValueError(f"Parameter '{arg.arg}' for function '{node.name}' on line {node.lineno} does not have a type annotation")
+            if not hasattr(arg, "annotation"):
+                raise ValueError(
+                    f"Parameter '{arg.arg}' for function '{node.name}' on line {node.lineno} does not have a type annotation"
+                )
             typ = type_of_annotation(arg.annotation)
             argument_types.append(typ)
             function_scope.define(arg.arg, typ)
-        if not hasattr(node, 'returns'):
-            raise ValueError(f"Function '{node.name}' on line {node.lineno} does not have a return type annotation")
+        if not hasattr(node, "returns"):
+            raise ValueError(
+                f"Function '{node.name}' on line {node.lineno} does not have a return type annotation"
+            )
         return_type = type_of_annotation(node.returns)
         function_type = typing.Callable[argument_types, return_type]
 
@@ -164,7 +177,6 @@ class TypeInferrer(ast.NodeVisitor):
         self.scope = this_scope
         self.old_scope_type()
 
-
     def visit_Return(self, node: ast.Return):
         if node.value:
             return self.visit(node.value)
@@ -177,11 +189,15 @@ class TypeInferrer(ast.NodeVisitor):
     def visit_Expr(self, node: ast.Expr):
         return self.visit(node.value)
 
-    # Claude generated 
+    # Claude generated
     def _binop_type(self, op: ast.operator, left_t: type, right_t: type) -> type:
         numeric_rank = {bool: 0, int: 1, float: 2, complex: 3}
 
-        if isinstance(op, ast.Div) and left_t in numeric_rank and right_t in numeric_rank:
+        if (
+            isinstance(op, ast.Div)
+            and left_t in numeric_rank
+            and right_t in numeric_rank
+        ):
             return complex if complex in (left_t, right_t) else float
         if left_t in numeric_rank and right_t in numeric_rank:
             wider = left_t if numeric_rank[left_t] >= numeric_rank[right_t] else right_t
@@ -189,11 +205,11 @@ class TypeInferrer(ast.NodeVisitor):
         if isinstance(op, ast.Add) and left_t == right_t:
             return left_t
         if isinstance(op, ast.Mult) and (
-            (left_t in (str, bytes) and right_t is int) or
-            (right_t in (str, bytes) and left_t is int)
+            (left_t in (str, bytes) and right_t is int)
+            or (right_t in (str, bytes) and left_t is int)
         ):
             return left_t if left_t in (str, bytes) else right_t
-        assert False, f'unsupported BinOp on {left_t} and {right_t}'
+        assert False, f"unsupported BinOp on {left_t} and {right_t}"
 
     def visit_BinOp(self, node: ast.BinOp):
         typ = self._binop_type(node.op, self.visit(node.left), self.visit(node.right))
@@ -210,14 +226,14 @@ class TypeInferrer(ast.NodeVisitor):
                 typ = bool
             # +x / -x  →  numeric; bool collapses to int (-True == -1)
             case ast.UAdd() | ast.USub():
-                assert operand_t in numeric, f'unary +/- on {operand_t}'
+                assert operand_t in numeric, f"unary +/- on {operand_t}"
                 typ = int if operand_t is bool else operand_t
             # ~x  →  integer bitwise invert; not valid on float/complex
             case ast.Invert():
-                assert operand_t in (bool, int), f'unary ~ on {operand_t}'
+                assert operand_t in (bool, int), f"unary ~ on {operand_t}"
                 typ = int
             case _:
-                assert False, f'unsupported UnaryOp {node.op}'
+                assert False, f"unsupported UnaryOp {node.op}"
 
         self.types[node] = typ
         return typ
@@ -227,16 +243,19 @@ class TypeInferrer(ast.NodeVisitor):
         assert isinstance(node.target, ast.Name)
         name = node.target.id
         target_t = self.scope.lookup(name)
-        assert target_t is not None, f'augmented assign to undeclared {name}'
+        assert target_t is not None, f"augmented assign to undeclared {name}"
 
         value_t = self.visit(node.value)
         result_t = self._binop_type(node.op, target_t, value_t)
 
         # static typing: the variable's type must not change
         if result_t != target_t:
-            raise ValueError(f"{name} on line {node.lineno} is {target_t} but {name} {type(node.op).__name__} {value_t} is {result_t}")
-        assert result_t == target_t, \
-            f'{name} is {target_t} but {name} {type(node.op).__name__} {value_t} is {result_t}'
+            raise ValueError(
+                f"{name} on line {node.lineno} is {target_t} but {name} {type(node.op).__name__} {value_t} is {result_t}"
+            )
+        assert (
+            result_t == target_t
+        ), f"{name} is {target_t} but {name} {type(node.op).__name__} {value_t} is {result_t}"
 
         self.types[node] = target_t
         return target_t
@@ -249,19 +268,18 @@ class TypeInferrer(ast.NodeVisitor):
             self.visit(stmt)
         return type(None)
 
-
     def visit_BoolOp(self, node: ast.BoolOp):
         # and / or return one of their operands, not necessarily bool:
         #   1 and 2  -> 2 (int);  "" or [] -> [] (list)
         # The result type is the union of the operand types. With no union
         # type yet, require them equal and return that type.
         operand_types = [self.visit(v) for v in node.values]
-        assert all(t == operand_types[0] for t in operand_types), \
-            f'mixed BoolOp operand types: {operand_types}'
+        assert all(
+            t == operand_types[0] for t in operand_types
+        ), f"mixed BoolOp operand types: {operand_types}"
         typ = operand_types[0]
         self.types[node] = typ
         return typ
-
 
     def visit_Compare(self, node: ast.Compare):
         # x < y, a == b == c, x in xs, x is None  →  always bool.
@@ -305,14 +323,15 @@ class TypeInferrer(ast.NodeVisitor):
 
 
 simple_annotation_type = {
-    'int':   int,
-    'float': float,
-    'bool':  bool,
-    'str':   str,
-    'list': list,
-    'tuple': tuple,
-    'set': set,
+    "int": int,
+    "float": float,
+    "bool": bool,
+    "str": str,
+    "list": list,
+    "tuple": tuple,
+    "set": set,
 }
+
 
 # Returns the python type that an annotation expresses
 def type_of_annotation(annotation: ast.AST) -> type:
@@ -327,11 +346,7 @@ def type_of_annotation(annotation: ast.AST) -> type:
                 return value_t[slice_t]
             else:
                 assert isinstance(slice, ast.Tuple)
-                slice_types = [type_of_annotation(element) for element in annotation.slice.elts]
+                slice_types = [
+                    type_of_annotation(element) for element in annotation.slice.elts
+                ]
                 return value_t[*slice_types]
-
-
-
-
-
-

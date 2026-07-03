@@ -21,12 +21,16 @@ class A:
 
 class X:
     a = 10
+    b = 10
 
     def __init__(self):
         self.a = 20
 
     def bull():
         print(X)
+
+    class Y:
+        print(b)
 
 
 one = X()
@@ -36,6 +40,11 @@ one.a = 50
 print("start")
 print(X.a, one.a)
 print(X.a, two.a)
+
+a = b = 3
+print(id(a), id(b))
+a = 2
+print(a, b)
 
 
 # a = A()
