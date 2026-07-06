@@ -5,10 +5,12 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pprint import pp
 
+import name_resolution
 import scope
 import symbols
 import type_inference
 import validate
+from name_resolution import NameResolver
 from scope import ScopeType
 from utils import build_and_run, dump
 
@@ -22,9 +24,24 @@ ANNOTATION_TYPES = {
 includes = ["print.h", "list.h", "ptr.h"]
 
 
+def pipeline(program: str):
+    tree = ast.parse(program)
+    print(dump(tree, indent=4))
+    # validate.Validator().visit(tree)
+
+    definer = symbols.SymbolDefiner()
+    definer.visit(tree)
+
+    name_resolver = NameResolver(definer.scope)
+    name_resolver.visit(tree)
+    name_resolver.print_resolutions()
+
+
 def main():
     file = "input.py"
-    tree = ast.parse(open(file).read())
+    program = open(file).read()
+    pipeline(program)
+    return
 
     print(dump(tree, indent=4))
     # validate.Validator().visit(tree)

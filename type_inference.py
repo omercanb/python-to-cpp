@@ -3,6 +3,7 @@ import types
 import typing
 from dataclasses import dataclass, field
 
+import symbols
 from scope import ScopeType
 from utils import dump
 
@@ -320,6 +321,41 @@ class TypeInferrer(ast.NodeVisitor):
         for stmt in node.body:
             members.append(self.visit(stmt))
         print(members)
+
+
+class FunctionTypeInferrer(symbols.ScopingNodeVisitor):
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        args = node.args.args
+        argument_types: list[type] = (
+            []
+        )  # Will be used later for the type of the function itself
+        for arg in args:
+            if not hasattr(arg, "annotation"):
+                raise ValueError(
+                    f"Parameter '{arg.arg}' for function '{node.name}' on line {node.lineno} does not have a type annotation"
+                )
+            typ = type_of_annotation(arg.annotation)
+            argument_types.append(typ)
+            function_scope.define(arg.arg, typ)
+        if not hasattr(node, "returns"):
+            raise ValueError(
+                f"Function '{node.name}' on line {node.lineno} does not have a return type annotation"
+            )
+        return_type = type_of_annotation(node.returns)
+        function_type = typing.Callable[argument_types, return_type]
+
+        # Define the function in the outer scope and move to the function scope
+        self.scope.define(node.name, function_type)
+        self.scope = function_scope
+
+        self.types[node] = function_type
+
+        # if node.name != 'main': return
+        for stmt in node.body:
+            self.visit(stmt)
+
+        self.scope = this_scope
+        self.old_scope_type()
 
 
 simple_annotation_type = {

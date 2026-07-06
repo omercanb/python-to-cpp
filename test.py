@@ -1,3 +1,6 @@
+int(3)
+
+
 def main():
     global x
     x = 20

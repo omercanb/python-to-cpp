@@ -1,49 +1,57 @@
-class A:
-    a = b = 10
-    c: int
-
-    def __init__(self):
-        self.y = self.x = 10
-        self.z: int
-        self.l: float = 10
-
-    def hi(self):
-        print("hi")
-
-
-def fun(arg):
-    for x in range(10):
-        print(x)
-
-    y = [row for i in range(10) for row in range(i, 10)]
-    x = [b for b in range(10)]
-    a = 10
-
-    # matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
-    # odds = [entry for row in matrix for entry in row]
-    # print(odds)
-
-    def inner():
-        a = 10
-        a = 20
-
-
-fun(10)
-
-# def add(x: int, y: int) -> int:
-#     print(x, y)
-#     return x + y
+# int(3)
 #
+#
+# class A:
+#     a = b = 10
+#     c: int
+#
+#     def __init__(self):
+#         self.y = self.x = 10
+#         self.z: int
+#         self.l: float = 10
+#
+#     def hi(self):
+#         print("hi")
+#
+#
+# def fun(arg):
+#     for x in range(10):
+#         print(x)
+#
+#     y = [row for i in range(10) for row in range(i, 10)]
+#     x = [b for b in range(10)]
+#     a = 10
+#
+#     # matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+#     # odds = [entry for row in matrix for entry in row]
+#     # print(odds)
+#
+#     def inner():
+#         a = 10
+#         a = 20
+#
+#
+# fun(10)
+
+
+def add(x: int, y: int) -> int:
+    print(x, y)
+    return x + y
+
+
 # def loop(x: int) -> None:
 #     if x > 0:
 #         print(x)
-#         loop(x-1)
+#         loop(x - 1)
+#
 #
 # def show(x: list[int]) -> None:
 #     i = 10
 #     while i > 10:
 #         print(x)
 #         i -= 1
+
+
 #
 # global_x = 10
 # def combinator() -> None:

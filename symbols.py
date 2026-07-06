@@ -44,14 +44,6 @@ def print_dict(d, indent):
         print_indented(indent, f"{k}: {v}")
 
 
-@dataclass
-class Builtin:
-    name: str
-
-
-builtins_map = {builtin: Builtin(builtin) for builtin in dir(builtins)}
-
-
 # The scope / scope tree responsible for maintaining definitions and resolutions
 @dataclass
 class Scope:
@@ -69,7 +61,7 @@ class Scope:
         assert name not in self.definitions
         self.definitions[name] = (symbol_type, stmt)
 
-    def resolve(self, name, skip_class=False) -> tuple[SymbolType, ast.AST] | Builtin:
+    def resolve(self, name, skip_class=False) -> tuple[SymbolType, ast.AST] | None:
         """
         Scope resolution rules for python
         If a the current scope is not a class scope, the symbol can't be resolved in a parent 'Class' scope
@@ -89,10 +81,7 @@ class Scope:
             if self.enclosing:
                 return self.enclosing.resolve(name, skip_class=True)
 
-        if name in builtins_map:
-            return builtins_map[name]
-
-        raise ValueError(f"Name not found line", name)
+        return None
 
     def resolve_global_name(self, name) -> tuple[SymbolType, ast.AST]:
         scope = self
@@ -156,6 +145,29 @@ class ScopeTracker:
                     self.scope = next(self.iter)
             case ast.Module() | ast.FunctionDef() | ast.ClassDef():
                 self.scope = next(self.iter)
+
+
+# Visitor for the AST that keep track of the current scope
+class ScopingNodeVisitor(ast.NodeVisitor):
+    def __init__(self, scope: Scope):
+        self.scope_tracker = ScopeTracker(scope)
+
+    def scope(self):
+        return self.scope_tracker.scope
+
+    def visit(self, node: ast.AST):
+        if node is None:
+            return
+        if isinstance(node, list):
+            for child in node:
+                self.visit(child)
+        else:
+            cur_scope = self.scope_tracker.scope
+            self.scope_tracker.update(node)
+            new_scope = self.scope_tracker.scope
+            method = "visit_" + node.__class__.__name__
+            visitor = getattr(self, method, self.generic_visit)
+            return visitor(node)
 
 
 # The first pass of scope resolution
