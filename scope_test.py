@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pprint import pp
 
 import scope
-import symbols
+import symbol_definition
 import type_inference
 import validate
 from scope import ScopeType
@@ -33,14 +33,14 @@ def main():
     definer = symbols.SymbolDefiner()
     definer.visit(tree)
     definer.scope.print_tree()
-    for scope in symbols.ScopeTracker(definer.scope):
+    for scope in scope.ScopeTracker(definer.scope):
         scope.print_self()
     TestWalker(definer.scope).visit(tree)
 
 
 class TestWalker(ast.NodeVisitor):
-    def __init__(self, scope: symbols.Scope):
-        self.scope_tracker = symbols.ScopeTracker(scope)
+    def __init__(self, scope: scope.Scope):
+        self.scope_tracker = scope.ScopeTracker(scope)
 
     def visit(self, node: ast.AST):
         cur_scope = self.scope_tracker.scope

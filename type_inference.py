@@ -1,9 +1,14 @@
+from __future__ import annotations
+
 import ast
-import types
 import typing
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-import symbols
+import scope
+import symbol_definition
+from name_resolution import BindingTable
+from py_types import ClassType, FunctionType
 from scope import ScopeType
 from utils import dump
 
@@ -33,6 +38,29 @@ builtin_types = {"print": typing.Callable[..., None]}
 # Used for empty containers like []
 class Unkown:
     pass
+
+
+class FunctionAndClassTypeAnnotator(scope.ScopingNodeVisitor):
+    def __init__(
+        self,
+        scope,
+        node_scopes,
+        bindings: BindingTable,
+        declared_types: dict[ast.AST, FunctionType | ClassType],
+    ):
+        super().__init__(scope, node_scopes)
+        self.bindings = bindings
+        self.declared_types = declared_types
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        function_type = self.declared_types[node]
+        assert isinstance(function_type, FunctionType)
+        function_type.add_type(self.bindings)
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        class_type = self.declared_types[node]
+        assert isinstance(class_type, ClassType)
+        class_type.add_type(self.bindings)
 
 
 # A basic type inference walker that will be changed later
@@ -323,7 +351,7 @@ class TypeInferrer(ast.NodeVisitor):
         print(members)
 
 
-class FunctionTypeInferrer(symbols.ScopingNodeVisitor):
+class FunctionTypeInferrer(scope.ScopingNodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef):
         args = node.args.args
         argument_types: list[type] = (

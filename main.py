@@ -7,11 +7,12 @@ from pprint import pp
 
 import name_resolution
 import scope
-import symbols
-import type_inference
+import symbol_definition
 import validate
 from name_resolution import NameResolver
-from scope import ScopeType
+from scope import ScopeTracker, ScopeTreeCreator, ScopeType
+from symbol_definition import SymbolDefiner
+from type_inference import FunctionAndClassTypeAnnotator
 from utils import build_and_run, dump
 
 ANNOTATION_TYPES = {
@@ -28,13 +29,29 @@ def pipeline(program: str):
     tree = ast.parse(program)
     print(dump(tree, indent=4))
     # validate.Validator().visit(tree)
+    scope_tree_creator = ScopeTreeCreator()
+    scope_tree_creator.visit(tree)
+    scope = scope_tree_creator.scope
+    node_scopes = scope_tree_creator.node_scopes
+    scope_tree_creator.print_node_scopes()
 
-    definer = symbols.SymbolDefiner()
-    definer.visit(tree)
+    symbol_definer = SymbolDefiner(scope, node_scopes)
+    symbol_definer.visit(tree)
+    declared_types = symbol_definer.declared_types
 
-    name_resolver = NameResolver(definer.scope)
+    name_resolver = NameResolver(scope, node_scopes, declared_types)
     name_resolver.visit(tree)
-    name_resolver.print_resolutions()
+    name_resolver.print_bindings()
+    bindings = name_resolver.bindings
+    return
+
+    annotator = FunctionAndClassTypeAnnotator(
+        scope, node_scopes, bindings, declared_types
+    )
+    annotator.visit(tree)
+    for node, type in declared_types.items():
+        print(node.lineno)
+        print(repr(type))
 
 
 def main():
@@ -42,31 +59,31 @@ def main():
     program = open(file).read()
     pipeline(program)
     return
-
-    print(dump(tree, indent=4))
-    # validate.Validator().visit(tree)
-
-    # scope.ScopeResolver().visit(tree)
-    definer = symbols.SymbolDefiner()
-    definer.visit(tree)
-    definer.scope.print_tree()
-    ScopeTester(definer.scope).visit(tree)
-    return
-
-    print("inferring")
-    inferrer = type_inference.TypeInferrer()
-    inferrer.visit(tree)
-    types = inferrer.types
-    for k, v in types.items():
-        print(dump(k), v)
-
-    translated = CppTranslator(types).visit(tree)
-    build_and_run(translated)
+    #
+    # print(dump(tree, indent=4))
+    # # validate.Validator().visit(tree)
+    #
+    # # scope.ScopeResolver().visit(tree)
+    # definer = symbols.SymbolDefiner()
+    # definer.visit(tree)
+    # definer.scope.print_tree()
+    # ScopeTester(definer.scope).visit(tree)
+    # return
+    #
+    # print("inferring")
+    # inferrer = type_inference.TypeInferrer()
+    # inferrer.visit(tree)
+    # types = inferrer.types
+    # for k, v in types.items():
+    #     print(dump(k), v)
+    #
+    # translated = CppTranslator(types).visit(tree)
+    # build_and_run(translated)
 
 
 class ScopeTester(ast.NodeVisitor):
     def __init__(self, scope):
-        self.scope_tracker = symbols.ScopeTracker(scope)
+        self.scope_tracker = scope.ScopeTracker(scope)
 
     def visit(self, node: ast.AST):
         cur_scope = self.scope_tracker.scope

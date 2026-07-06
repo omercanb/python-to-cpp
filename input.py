@@ -34,10 +34,50 @@
 # fun(10)
 
 
-def add(x: int, y: int) -> int:
-    print(x, y)
-    return x + y
+class A:
+    def __init__(self, x: int) -> None:
+        self.x = x
 
+    pass
+
+
+class B:
+    def __init__(self, a: A) -> None:
+        print(a)
+        self.a = a
+
+
+B
+
+
+class C:
+    def __init__(self, some_bullshii: str) -> None:
+        self.z = some_bullshii
+
+    def do_shit(self) -> None:
+        print(self)
+
+    def recurse(self, x: int) -> int:
+        if x > 10:
+            return x + self.recurse(x - 1)
+        return 0
+
+
+C
+
+
+def fun(x: int, y: A) -> None:
+    class B:
+        pass
+
+    a = B()
+    pass
+
+
+# def add(x: int, y: int) -> int:
+#     print(x, y)
+#     return x + y
+#
 
 # def loop(x: int) -> None:
 #     if x > 0:

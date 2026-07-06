@@ -3,10 +3,20 @@ Resolve names (including type annotations) to their declarations or Builtins
 """
 
 import ast
+from dataclasses import dataclass
+from pprint import pp
 
-import py_builtins
-import symbols
 from errors import PyToCppError
+from py_types import BuiltinType, ClassType, FunctionType, PyType, builtins_map
+from scope import Scope, ScopingNodeVisitor
+
+type BindingTable = dict[ast.Name, Binding]
+
+
+@dataclass
+class Binding:
+    node: ast.AST | None
+    type: PyType
 
 
 class ResolutionError(PyToCppError):
@@ -15,42 +25,62 @@ class ResolutionError(PyToCppError):
         super().__init__(node, message)
 
 
-class NameResolver(symbols.ScopingNodeVisitor):
-    def __init__(self, scope):
-        super().__init__(scope)
-        self.resolutions: dict[ast.Name, ast.AST | py_builtins.Builtin] = {}
+class NameResolver(ScopingNodeVisitor):
+    def __init__(
+        self,
+        scope: Scope,
+        node_scopes,
+        declared_types: dict[ast.AST, FunctionType | ClassType],
+    ):
+        super().__init__(scope, node_scopes)
+        self.bindings: BindingTable = {}
+        self.declared_types = declared_types
+        for k, v in declared_types.items():
+            print(f"{k.name}: {repr(v)}")
 
     def resolve_builtin(self, name: str):
-        return py_builtins.builtins_map.get(name, None)
+        return builtins_map.get(name, None)
 
-    def resolve_to(self, node: ast.Name, thing):
-        assert node not in self.resolutions
-        self.resolutions[node] = thing
+    def bind_node(self, node: ast.Name, thing: Binding):
+        assert node not in self.bindings
+        self.bindings[node] = thing
 
-    def print_resolutions(self):
-        for name, resolution in self.resolutions.items():
-            s = f"resolution: line {name.lineno} '{name.id}' resolves to "
-            if isinstance(resolution, ast.AST):
-                s += f"{resolution}"
-                if hasattr(resolution, "lineno"):
-                    s += f"on line {resolution.lineno}"
+    def print_bindings(self):
+        for name, binding in self.bindings.items():
+            s = f"binding: line {name.lineno} '{name.id}' resolves to "
+            if binding.node is not None:
+                s += f"{binding.node}"
+                if hasattr(binding.node, "lineno"):
+                    s += f" on line {binding.node.lineno}"
             else:
-                s += f"builtin {resolution}"
+                s += f"builtin {binding}"
             print(s)
 
+    def visit_arg(self, node: ast.arg):
+        if node.annotation is not None:
+            self.resolve_name(node.annotation, self.scope().enclosing)
+
     def visit_Name(self, node: ast.Name):
-        # Load contexts are assigns
+        self.resolve_name(node, self.scope())
+
+    def resolve_name(self, node: ast.Name, scope: Scope):
+        # Only load contexts need resolution
         if not isinstance(node.ctx, ast.Load):
             return
-        result = self.scope().resolve(node.id)
+        result = scope.resolve(node.id)
+        # The name is user declared
         if result is not None:
             symbol_type, declaration_node = result
-            self.resolve_to(node, declaration_node)
+            typ = self.declared_types.get(declaration_node)
+            binding = Binding(declaration_node, typ)
+            self.bind_node(node, binding)
             return
         # The name could be a builtin or be undefined
         builtin = self.resolve_builtin(node.id)
         if builtin is not None:
-            self.resolve_to(node, builtin)
+            binding = Binding(None, builtin)
+            self.bind_node(node, binding)
             return
-        else:
-            raise ResolutionError(node)
+        pp(node.id)
+        scope.print_self()
+        raise ResolutionError(node)
