@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import ast
 import builtins
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from errors import PyToCppError
@@ -38,6 +38,7 @@ builtin_int = builtins_map["int"]
 builtin_float = builtins_map["float"]
 builtin_bool = builtins_map["bool"]
 builtin_str = builtins_map["str"]
+builtin_none = builtins_map["None"]
 
 
 # A slice type like list[int] or dict[int, str]
@@ -47,51 +48,44 @@ class SliceType(PyType):
     slice: list[PyType]
 
 
+def parse_function(
+    node: ast.FunctionDef, bindings: BindingTable, types: FunctionAndClassTypeTable
+) -> FunctionType:
+
+    argument_types, return_type = get_function_type(
+        node, bindings, types, is_method=False
+    )
+    return FunctionType(node.name, argument_types, return_type, node)
+
+
 @dataclass
 class FunctionType(PyType):
     name: str
-    node: ast.FunctionDef
     argument_types: list[PyType]
     return_type: PyType
-
-    def __init__(
-        self,
-        node: ast.FunctionDef,
-        bindings: BindingTable,
-        types: FunctionAndClassTypeTable,
-    ):
-        """Creates the function with just the name and the types will be filled out later"""
-        self.name = node.name
-        self.node = node
-        self.argument_types, self.return_type = get_function_type(
-            self.node, bindings, types, is_method=False
-        )
+    node: ast.AST | None
 
 
+def parse_method(
+    class_type: ClassType,
+    node: ast.FunctionDef,
+    bindings: BindingTable,
+    types: FunctionAndClassTypeTable,
+) -> MethodType:
+
+    argument_types, return_type = get_function_type(
+        node, bindings, types, is_method=True
+    )
+    return MethodType(class_type, node.name, argument_types, return_type, node)
+
+
+@dataclass
 class MethodType(PyType):
     class_type: ClassType
     name: str
-    node: ast.FunctionDef
     argument_types: list[PyType]
     return_type: PyType
-
-    def __init__(
-        self,
-        class_type: ClassType,
-        node: ast.FunctionDef,
-        bindings: BindingTable,
-        types: FunctionAndClassTypeTable,
-    ):
-        """Creates the function with just the name and the types will be filled out later"""
-        self.class_type = class_type
-        self.name = node.name
-        self.node = node
-        self.add_type(bindings, types)
-
-    def add_type(self, bindings: BindingTable, types: FunctionAndClassTypeTable):
-        self.argument_types, self.return_type = get_function_type(
-            self.node, bindings, types, is_method=True
-        )
+    node: ast.AST | None
 
 
 def get_function_type(
@@ -118,78 +112,115 @@ def get_function_type(
     return argument_types, return_type
 
 
+def parse_class_stub(
+    node: ast.ClassDef, scope: Scope, node_scopes: dict[ast.AST, Scope]
+) -> ClassType:
+    return ClassType(node.name, None, [], {}, node, scope, node_scopes)
+
+
+def parse_class_type(
+    stub: ClassType, bindings: BindingTable, types: FunctionAndClassTypeTable
+):
+    for child in ast.walk(stub.node):
+        match child:
+            case ast.FunctionDef():
+                # Check that we are not in a nested scope
+                if stub.node_scopes[child] != stub.scope:
+                    continue
+                method = parse_method(stub, child, bindings, types)
+                if method.name == "__init__":
+                    assert stub.constructor == None
+                    stub.constructor = method
+                    _parse_class_fields_from_init(stub, child, method)
+                else:
+                    stub.methods.append(method)
+
+
+def _parse_class_fields_from_init(stub, node: ast.FunctionDef, init_method: MethodType):
+    # Create a map of argument name to it's type in the annotation
+    argument_type_map = {}
+    for argument, argument_type in zip(
+        # Skipping the first argument
+        node.args.args[1:],
+        init_method.argument_types,
+    ):
+        argument_type_map[argument.arg] = argument_type
+    # Gets the first argument of the init method
+    stub_argument_name = node.args.args[0].arg
+    for child in ast.walk(node):
+        match child:
+            # Matches stub.x = y
+            case ast.Assign(
+                targets=[
+                    ast.Attribute(
+                        value=ast.Name(id=id, ctx=ast.Load()),
+                        attr=field_name,
+                        ctx=ast.Store(),
+                    )
+                ],
+                value=ast.Name(id=argument_name, ctx=ast.Load()),
+            ):
+                if id == stub_argument_name:
+                    type = argument_type_map[argument_name]
+                    stub.fields[field_name] = type
+
+
 @dataclass
 class ClassType(PyType):
-
-    node: ast.ClassDef
     name: str
-    constructor: MethodType | None
-    methods: list[MethodType]
-    fields: dict[str, PyType]
+    constructor: MethodType | None = None
+    methods: list[MethodType] = field(default_factory=list)
+    fields: dict[str, PyType] = field(default_factory=dict)
+    node: ast.ClassDef | None = None
+    scope: Scope | None = None
+    node_scopes: dict[ast.AST, Scope] | None = None
 
-    def __init__(
-        self, node: ast.ClassDef, scope: Scope, node_scopes: dict[ast.AST, Scope]
-    ):
-        """Creates the function with just the name and the types will be filled out later"""
-        self.node = node
-        self.name = node.name
-        self.constructor = None
-        self.methods = []
-        self.fields = {}
-        self.node_scopes = node_scopes
-        self.scope = scope
 
-    def add_type(self, bindings: BindingTable, types: FunctionAndClassTypeTable):
-        for child in ast.walk(self.node):
-            match child:
-                case ast.FunctionDef():
-                    # Check that we are not in a nested scope
-                    if self.node_scopes[child] != self.scope:
-                        continue
-                    method = MethodType(self, child, bindings, types)
-                    if method.name == "__init__":
-                        assert self.constructor == None
-                        self.constructor = method
-                        self.set_fields_from_init(child, method)
-                    else:
-                        self.methods.append(method)
+def create_list_type(element_type) -> ListType:
+    list_type = ListType("list")
+    methods = list_methods(element_type, list_type)
+    list_type.methods = methods
+    return list_type
 
-    def set_fields_from_init(self, node: ast.FunctionDef, init_method: MethodType):
-        # Create a map of argument name to it's type in the annotation
-        argument_type_map = {}
-        for argument, argument_type in zip(
-            # Skipping the first argument
-            node.args.args[1:],
-            init_method.argument_types,
-        ):
-            argument_type_map[argument.arg] = argument_type
-        # Gets the first argument of the init method
-        self_argument_name = node.args.args[0].arg
-        for child in ast.walk(node):
-            match child:
-                # Matches self.x = y
-                case ast.Assign(
-                    targets=[
-                        ast.Attribute(
-                            value=ast.Name(id=id, ctx=ast.Load()),
-                            attr=field_name,
-                            ctx=ast.Store(),
-                        )
-                    ],
-                    value=ast.Name(id=argument_name, ctx=ast.Load()),
-                ):
-                    if id == self_argument_name:
-                        type = argument_type_map[argument_name]
-                        self.fields[field_name] = type
+
+@dataclass
+class ListType(ClassType):
+    element_type: PyType = builtin_int
+
+
+def list_methods(element_type, list_type_instance) -> list[MethodType]:
+    T = element_type
+    none = builtins_map["None"]
+
+    def method(name, argument_types, return_type):
+        return MethodType(list_type_instance, name, argument_types, return_type, None)
+
+    return [
+        method("append", [T], none),
+        method("extend", [list_type_instance], none),
+        method("insert", [builtin_int, T], none),
+        method("remove", [T], none),
+        method("pop", [], T),
+        method("index", [T], builtin_int),
+        method("count", [T], builtin_int),
+        method("clear", [], none),
+        method("copy", [], list_type_instance),
+        method("reverse", [], none),
+        method("sort", [], none),
+    ]
 
 
 def type_of_annotation(
     annotation: ast.AST, bindings: BindingTable, types: FunctionAndClassTypeTable
 ) -> PyType:
     match annotation:
+        case ast.Subscript(value=ast.Name(id), slice=slice):
+            slice_type = type_of_annotation(slice, bindings, types)
+            if id == "list":
+                return create_list_type(slice_type)
         case ast.Constant():
             assert annotation.value == None
-            return builtins_map["None"]
+            return builtin_none
         case ast.Name():
             if annotation in bindings:
                 node = bindings[annotation].node

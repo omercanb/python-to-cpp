@@ -25,7 +25,8 @@ includes = ["print.h", "list.h", "ptr.h"]
 
 def pipeline(program: str):
     tree = ast.parse(program)
-    # print(dump(tree, indent=4))
+    print(dump(tree, indent=4))
+    # return
     # validate.Validator().visit(tree)
 
     scope_tree_creator = ScopeTreeCreator()

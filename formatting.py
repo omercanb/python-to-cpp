@@ -139,6 +139,11 @@ def _(typ: FunctionType):
 
 
 @get_type_name.register
+def _(typ: MethodType):
+    return typ.name
+
+
+@get_type_name.register
 def _(typ: ClassType):
     return typ.name
 

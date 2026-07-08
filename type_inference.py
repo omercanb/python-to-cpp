@@ -4,12 +4,13 @@ import ast
 from functools import singledispatchmethod
 
 from errors import PyToCppError
-from formatting import get_type_name
+from formatting import format_type, get_type_name
 from name_resolution import BindingTable
 from py_types import (
     ClassType,
     FunctionAndClassTypeTable,
     FunctionType,
+    MethodType,
     PyType,
     UnkownType,
     builtin_bool,
@@ -17,6 +18,9 @@ from py_types import (
     builtin_int,
     builtin_str,
     builtins_map,
+    parse_class_stub,
+    parse_class_type,
+    parse_function,
     type_of_annotation,
 )
 from scope import ScopeType, ScopingNodeVisitor
@@ -36,13 +40,13 @@ class FunctionAndClassTypeAnnotator(ScopingNodeVisitor):
         scope = self.scope_tracker.node_scopes[node]
         if scope.typ == ScopeType.CLASS:
             return
-        self.types[node] = FunctionType(node, self.bindings, self.types)
+        self.types[node] = parse_function(node, self.bindings, self.types)
         self.visit(node.body)
 
     def visit_ClassDef(self, node: ast.ClassDef):
         class_type = self.types[node]
         assert isinstance(class_type, ClassType)
-        class_type.add_type(self.bindings, self.types)
+        parse_class_type(class_type, self.bindings, self.types)
         self.visit(node.body)
 
 
@@ -59,7 +63,7 @@ class ClassTypeDeclarer(ScopingNodeVisitor):
             if scope is not None:
                 break
         assert scope is not None
-        self.types[node] = ClassType(node, scope, self.node_scopes())
+        self.types[node] = parse_class_stub(node, scope, self.node_scopes())
         self.visit(node.body)
 
 
@@ -102,7 +106,6 @@ class TypeInferrer2(ScopingNodeVisitor):
         return isinstance(typ, ClassType)
 
     def visit_Name(self, node: ast.Name):
-        print(node.id)
         if node not in self.bindings:
             typ = UnkownType()
         else:
@@ -147,8 +150,12 @@ class TypeInferrer2(ScopingNodeVisitor):
         self.visit(node.args)
         # The function or class type
         base_type = self.types[node.func]
-        assert isinstance(base_type, FunctionType) or isinstance(base_type, ClassType)
-        if isinstance(base_type, FunctionType):
+        assert (
+            isinstance(base_type, FunctionType)
+            or isinstance(base_type, ClassType)
+            or isinstance(base_type, MethodType)
+        )
+        if isinstance(base_type, FunctionType) or isinstance(base_type, MethodType):
             typ = base_type.return_type
         else:
             typ = base_type
@@ -178,8 +185,8 @@ class TypeInferrer2(ScopingNodeVisitor):
 
         typ = None
         for method in cls.methods:
-            if method.name == method:
-                typ = method.return_type
+            if method.name == attribute:
+                typ = method
                 break
         if typ is None:
             typ = cls.fields[attribute]

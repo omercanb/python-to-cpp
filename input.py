@@ -16,12 +16,28 @@ def add(a: int, b: int) -> int:
     return a + b
 
 
+def mul(a: int) -> int:
+    return 2 * a
+
+
 def main() -> None:
     a = 3 + 4 * 5
     b = " " * a
     c = a / 2
     d: float = a
     e = add(a, d)
+    l: list[int]
+    mul(3)
+    z = mul
+    z(a)
+
+    l.append(2)
+    g = l.pop()
+    l2 = l.copy()
+    l2.append(1)
+    l2.extend(l)
+    l2.pop()
+    l2.pop()
 
 
 # int(3)
