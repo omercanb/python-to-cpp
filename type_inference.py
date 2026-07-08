@@ -47,12 +47,17 @@ class FunctionAndClassTypeAnnotator(ScopingNodeVisitor):
         self.types = types
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
+        scope = self.scope_tracker.node_scopes[node]
+        if scope.typ == ScopeType.CLASS:
+            return
         self.types[node] = FunctionType(node, self.bindings, self.types)
+        self.visit(node.body)
 
     def visit_ClassDef(self, node: ast.ClassDef):
         class_type = self.types[node]
         assert isinstance(class_type, ClassType)
         class_type.add_type(self.bindings, self.types)
+        self.visit(node.body)
 
 
 class ClassTypeDeclarer(ScopingNodeVisitor):
@@ -62,7 +67,14 @@ class ClassTypeDeclarer(ScopingNodeVisitor):
         self.types: TypeTable = {}
 
     def visit_ClassDef(self, node: ast.ClassDef):
-        self.types[node] = ClassType(node)
+        scope = None
+        for stmt in node.body:
+            scope = self.scope_tracker.node_scopes.get(stmt)
+            if scope is not None:
+                break
+        assert scope is not None
+        self.types[node] = ClassType(node, scope, self.scope_tracker.node_scopes)
+        self.visit(node.body)
 
 
 # A basic type inference walker that will be changed later

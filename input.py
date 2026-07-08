@@ -1,3 +1,19 @@
+class A:
+    def __init__(self, num: int) -> None:
+        self.num = num
+
+    class B:
+        def __init__(self, field: str) -> None:
+            self.field = field
+
+        def b(self) -> None:
+            print(self)
+
+
+class C:
+    pass
+
+
 # int(3)
 #
 #
@@ -34,51 +50,55 @@
 # fun(10)
 
 
-class A:
-    def __init__(self, x: int) -> None:
-        self.x = x
-
-    pass
-
-
-class B:
-    def __init__(self, a: A) -> None:
-        print(a)
-        self.a = a
-
-
-B
-
-
-class C:
-    def __init__(self, some_bullshii: str) -> None:
-        self.z = some_bullshii
-
-    def do_shit(self) -> None:
-        print(self)
-
-    def recurse(self, x: int) -> int:
-        if x > 10:
-            return x + self.recurse(x - 1)
-        return 0
-
-
-C
-
-
-def fun(x: int, y: A) -> None:
-    class B:
-        pass
-
-    a = B()
-    pass
-
-
-# fmt: off
-l = [a for 
-     a in range(10)
-     for b in 
-     range(a, 10)]
+# class A:
+#     def __init__(self, x: int) -> None:
+#         self.x = x
+#
+#     pass
+#
+#
+# class B:
+#     def __init__(self, a: A) -> None:
+#         print(a)
+#         self.a = a
+#
+#
+# B
+#
+#
+# class C:
+#     def __init__(self, some_bullshii: str) -> None:
+#         self.z = some_bullshii
+#
+#     def do_shit(self) -> None:
+#         print(self)
+#
+#     def recurse(self, x: int) -> int:
+#         if x > 10:
+#             return x + self.recurse(x - 1)
+#         return 0
+#
+#     class Hello:
+#         def ohmygor(self) -> int:
+#             return 2
+#
+#
+# C
+#
+#
+# def fun(x: int, y: A) -> None:
+#     class B:
+#         pass
+#
+#     a = B()
+#     pass
+#
+#
+# # fmt: off
+# l = [a for 
+#      a in range(10)
+#      for b in 
+#      range(a, 10)]
 # fmt: on
 
 # def add(x: int, y: int) -> int:

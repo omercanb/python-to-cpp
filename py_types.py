@@ -9,6 +9,7 @@ from errors import PyToCppError
 
 if TYPE_CHECKING:
     from name_resolution import BindingTable
+    from scope import Scope
 
 type TypeTable = dict[ast.AST, FunctionType | ClassType]
 
@@ -17,17 +18,9 @@ class PyType:
     pass
 
 
-printing_recursive = False
-
-
 @dataclass
 class BuiltinType(PyType):
     builtin: type
-
-    def __repr__(self):
-        if self.builtin is None:
-            return f"None"
-        return f"{self.builtin.__name__}"
 
 
 builtins_map = {
@@ -36,33 +29,11 @@ builtins_map = {
 }
 
 
-def str_many(l: list):
-    s = ""
-    for item in l:
-        s += f"{str(item)}, "
-    if s:
-        s = s[:-2]
-    return s
-
-
-def str_fields(fields: dict):
-    s = "{"
-    for k, v in fields.items():
-        s += f"{str(k)}: {str(v)}, "
-    if s != "{":
-        s = s[:-2]
-    s += "}"
-    return s
-
-
 # A slice type like list[int] or dict[int, str]
 @dataclass
 class SliceType(PyType):
     base: PyType
     slice: list[PyType]
-
-    def __repr__(self):
-        return f"{self.base}[{self.slice}]"
 
 
 @dataclass
@@ -79,9 +50,6 @@ class FunctionType(PyType):
         self.argument_types, self.return_type = get_function_type(
             self.node, bindings, types, is_method=False
         )
-
-    def __repr__(self):
-        return f"function {self.name} ({str_many(self.argument_types)}) -> {str(self.return_type)}"
 
 
 class MethodType(PyType):
@@ -109,14 +77,11 @@ class MethodType(PyType):
             self.node, bindings, types, is_method=True
         )
 
-    def __repr__(self):
-        return f"method on {self.class_type.name} {self.name} ({str_many(self.argument_types)}) -> {str(self.return_type)}"
-
 
 def get_function_type(
     node: ast.FunctionDef,
     bindings: BindingTable,
-    types: dict[ast.AST, PyType],
+    types: TypeTable,
     is_method=False,
 ) -> tuple[list[PyType], PyType]:
     args = node.args.args
@@ -146,20 +111,25 @@ class ClassType(PyType):
     methods: list[MethodType]
     fields: dict[str, PyType]
 
-    def __init__(self, node: ast.ClassDef):
+    def __init__(
+        self, node: ast.ClassDef, scope: Scope, node_scopes: dict[ast.AST, Scope]
+    ):
         """Creates the function with just the name and the types will be filled out later"""
         self.node = node
         self.name = node.name
         self.constructor = None
         self.methods = []
         self.fields = {}
+        self.node_scopes = node_scopes
+        self.scope = scope
 
     def add_type(self, bindings: BindingTable, types: TypeTable):
         for child in ast.walk(self.node):
             match child:
-                case ast.ClassDef():  # Don't visit nested classes
-                    continue
                 case ast.FunctionDef():
+                    # Check that we are not in a nested scope
+                    if self.node_scopes[child] != self.scope:
+                        continue
                     method = MethodType(self, child, bindings, types)
                     if method.name == "__init__":
                         assert self.constructor == None
@@ -196,18 +166,9 @@ class ClassType(PyType):
                         type = argument_type_map[argument_name]
                         self.fields[field_name] = type
 
-    def __repr__(self):
-        s = f"class {self.name} fields {str_fields(self.fields)}\n"
-        s += f"constructor: {self.constructor}\n"
-        s += "\n".join(repr(method) for method in self.methods)
-        return s
-
-    def __str__(self):
-        return self.name
-
 
 def type_of_annotation(
-    annotation: ast.AST, bindings: BindingTable, types: dict[ast.AST, PyType]
+    annotation: ast.AST, bindings: BindingTable, types: TypeTable
 ) -> PyType:
     match annotation:
         case ast.Constant():

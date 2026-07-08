@@ -1,6 +1,12 @@
+import ast
 from collections import defaultdict
+from functools import singledispatch
+from types import MethodType
+from typing import TYPE_CHECKING
 
 from tabulate import tabulate
+
+from py_types import BuiltinType, ClassType, FunctionType, MethodType, TypeTable
 
 # Utility Functions
 
@@ -13,6 +19,16 @@ def print_indented(indent, *args, **kwargs):
 def print_dict(d, indent):
     for k, v in d.items():
         print_indented(indent, f"{k}: {v}")
+
+
+def get_node_name(node: ast.AST) -> str | None:
+    name_fields = ["name", "id", "arg"]
+    name = None
+    for field in name_fields:
+        name = getattr(node, field, None)
+        if name is not None:
+            break
+    return name
 
 
 # Scopes
@@ -57,13 +73,7 @@ def print_scopes_of_all_symbols(node_scopes):
         line = getattr(node, "lineno", None)
         data["line"].append(line)
 
-        name_fields = ["name", "id", "arg"]
-        name = None
-        for field in name_fields:
-            name = getattr(node, field, None)
-            if name is not None:
-                break
-
+        name = get_node_name(node)
         data["node"].append(f'{type(node).__name__} {name or ""}')
 
         data["scope"].append(f'{scope.typ.name.title()} {scope.name or ""}')
@@ -97,3 +107,69 @@ def print_scope(scope, indent=0):
     if scope.global_vars:
         print_indented(indent, f"globals: {scope.global_vars}")
     print_indented(indent, "}")
+
+
+# Class and Function Declarations
+
+
+def print_type_table(types: TypeTable):
+    s = "Classes and Functions\n\n"
+    for node, typ in types.items():
+        s += format_type(typ)
+        s += "\n"
+    print(s)
+
+
+@singledispatch
+def get_type_name(_) -> str:
+    return ""
+
+
+@get_type_name.register
+def _(typ: FunctionType):
+    return typ.name
+
+
+@get_type_name.register
+def _(typ: ClassType):
+    return typ.name
+
+
+@get_type_name.register
+def _(typ: BuiltinType):
+    if typ.builtin is None:
+        return "None"
+    return typ.builtin.__name__
+
+
+@singledispatch
+def format_type(_) -> str:
+    return ""
+
+
+@format_type.register
+def _(fun: FunctionType):
+    s = f"Function {fun.name}("
+
+    s += ", ".join((get_type_name(typ) for typ in fun.argument_types))
+    s += f") -> {get_type_name(fun.return_type)}"
+    return s
+
+
+@format_type.register
+def _(fun: MethodType):
+    s = f"{fun.name}("
+
+    s += ", ".join((get_type_name(typ) for typ in fun.argument_types))
+    s += f") -> {get_type_name(fun.return_type)}"
+    return s
+
+
+@format_type.register
+def _(cls: ClassType):
+    s = f"Class {cls.name}\n"
+    for field, typ in cls.fields.items():
+        s += f"    {field}: {get_type_name(typ)}\n"
+    for method in cls.methods:
+        s += f"    {format_type(method)}\n"
+    return s

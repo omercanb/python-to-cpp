@@ -49,6 +49,7 @@ def pipeline(program: str):
 
     type_annotator = FunctionAndClassTypeAnnotator(node_scopes, bindings, types)
     type_annotator.visit(tree)
+    print_type_table(type_annotator.types)
 
 
 def main():
