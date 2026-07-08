@@ -37,28 +37,21 @@ def pipeline(program: str):
 
     scope_tree_creator.print_scopes_by_line()
     print()
-
     scope.print_scope_structure()
     print()
-
     scope_tree_creator.print_scopes_of_all_symbols()
     print()
 
-    return
-
-    symbol_definer = SymbolDefiner(scope, node_scopes)
+    symbol_definer = SymbolDefiner(node_scopes)
     symbol_definer.visit(tree)
     declared_types = symbol_definer.declared_types
 
-    name_resolver = NameResolver(scope, node_scopes, declared_types)
+    name_resolver = NameResolver(node_scopes, declared_types)
     name_resolver.visit(tree)
     name_resolver.print_bindings()
     bindings = name_resolver.bindings
-    return
 
-    annotator = FunctionAndClassTypeAnnotator(
-        scope, node_scopes, bindings, declared_types
-    )
+    annotator = FunctionAndClassTypeAnnotator(node_scopes, bindings, declared_types)
     annotator.visit(tree)
     for node, type in declared_types.items():
         print(node.lineno)
@@ -94,7 +87,7 @@ def main():
 
 class ScopeTester(ast.NodeVisitor):
     def __init__(self, scope):
-        self.scope_tracker = scope.ScopeTracker(scope)
+        self.scope_tracker = scope.ScopeTracker()
 
     def visit(self, node: ast.AST):
         cur_scope = self.scope_tracker.scope

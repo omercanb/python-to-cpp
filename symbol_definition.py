@@ -39,8 +39,8 @@ class SymbolDefiner(ScopingNodeVisitor):
     Create stub types for functions and classes
     """
 
-    def __init__(self, scope, node_scopes):
-        super().__init__(scope, node_scopes)
+    def __init__(self, node_scopes):
+        super().__init__(node_scopes)
         self.declared_types: dict[ast.AST, FunctionType | ClassType] = {}
 
     def visit_FunctionDef(self, node: ast.FunctionDef):

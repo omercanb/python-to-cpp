@@ -287,9 +287,9 @@ class ScopeTreeCreator(ast.NodeVisitor):
 
 
 class ScopeTracker:
-    def __init__(self, scope, node_scopes):
+    def __init__(self, node_scopes: dict[ast.AST, Scope]):
         self.node_scopes = node_scopes
-        self.scope = scope
+        self.scope = next(iter(node_scopes.values()))
 
     def __iter__(self):
         stack = [self.scope]
@@ -308,8 +308,8 @@ class ScopingNodeVisitor(ast.NodeVisitor):
     Visitor for the AST that keep track of the current scope
     """
 
-    def __init__(self, scope: Scope, node_scopes):
-        self.scope_tracker = ScopeTracker(scope, node_scopes)
+    def __init__(self, node_scopes):
+        self.scope_tracker = ScopeTracker(node_scopes)
 
     def scope(self):
         return self.scope_tracker.scope

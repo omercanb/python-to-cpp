@@ -33,7 +33,7 @@ def main():
     definer = symbols.SymbolDefiner()
     definer.visit(tree)
     definer.scope.print_tree()
-    for scope in scope.ScopeTracker(definer.scope):
+    for scope in scope.ScopeTracker():
         scope.print_self()
     TestWalker(definer.scope).visit(tree)
 

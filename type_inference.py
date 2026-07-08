@@ -41,14 +41,8 @@ class Unkown:
 
 
 class FunctionAndClassTypeAnnotator(scope.ScopingNodeVisitor):
-    def __init__(
-        self,
-        scope,
-        node_scopes,
-        bindings: BindingTable,
-        declared_types: dict[ast.AST, FunctionType | ClassType],
-    ):
-        super().__init__(scope, node_scopes)
+    def __init__(self, node_scopes, bindings: BindingTable, declared_types: dict[ast.AST, FunctionType | ClassType]):
+        super().__init__(node_scopes)
         self.bindings = bindings
         self.declared_types = declared_types
 
