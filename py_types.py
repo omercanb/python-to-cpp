@@ -11,14 +11,21 @@ if TYPE_CHECKING:
     from name_resolution import BindingTable
     from scope import Scope
 
-type TypeTable = dict[ast.AST, FunctionType | ClassType]
+type FunctionAndClassTypeTable = dict[ast.AST, FunctionType | ClassType]
+
+type TypeTable = dict[ast.AST, PyType]
 
 
 class PyType:
     pass
 
 
-@dataclass
+# Used for empty containers like []
+class UnkownType(PyType):
+    pass
+
+
+@dataclass(frozen=True)
 class BuiltinType(PyType):
     builtin: type
 
@@ -27,6 +34,10 @@ builtins_map = {
     builtin_name: BuiltinType(getattr(builtins, builtin_name))
     for builtin_name in dir(builtins)
 }
+builtin_int = builtins_map["int"]
+builtin_float = builtins_map["float"]
+builtin_bool = builtins_map["bool"]
+builtin_str = builtins_map["str"]
 
 
 # A slice type like list[int] or dict[int, str]
@@ -43,7 +54,12 @@ class FunctionType(PyType):
     argument_types: list[PyType]
     return_type: PyType
 
-    def __init__(self, node: ast.FunctionDef, bindings: BindingTable, types: TypeTable):
+    def __init__(
+        self,
+        node: ast.FunctionDef,
+        bindings: BindingTable,
+        types: FunctionAndClassTypeTable,
+    ):
         """Creates the function with just the name and the types will be filled out later"""
         self.name = node.name
         self.node = node
@@ -64,7 +80,7 @@ class MethodType(PyType):
         class_type: ClassType,
         node: ast.FunctionDef,
         bindings: BindingTable,
-        types: TypeTable,
+        types: FunctionAndClassTypeTable,
     ):
         """Creates the function with just the name and the types will be filled out later"""
         self.class_type = class_type
@@ -72,7 +88,7 @@ class MethodType(PyType):
         self.node = node
         self.add_type(bindings, types)
 
-    def add_type(self, bindings: BindingTable, types: TypeTable):
+    def add_type(self, bindings: BindingTable, types: FunctionAndClassTypeTable):
         self.argument_types, self.return_type = get_function_type(
             self.node, bindings, types, is_method=True
         )
@@ -81,7 +97,7 @@ class MethodType(PyType):
 def get_function_type(
     node: ast.FunctionDef,
     bindings: BindingTable,
-    types: TypeTable,
+    types: FunctionAndClassTypeTable,
     is_method=False,
 ) -> tuple[list[PyType], PyType]:
     args = node.args.args
@@ -123,7 +139,7 @@ class ClassType(PyType):
         self.node_scopes = node_scopes
         self.scope = scope
 
-    def add_type(self, bindings: BindingTable, types: TypeTable):
+    def add_type(self, bindings: BindingTable, types: FunctionAndClassTypeTable):
         for child in ast.walk(self.node):
             match child:
                 case ast.FunctionDef():
@@ -168,7 +184,7 @@ class ClassType(PyType):
 
 
 def type_of_annotation(
-    annotation: ast.AST, bindings: BindingTable, types: TypeTable
+    annotation: ast.AST, bindings: BindingTable, types: FunctionAndClassTypeTable
 ) -> PyType:
     match annotation:
         case ast.Constant():

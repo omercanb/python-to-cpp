@@ -13,15 +13,12 @@ from formatting import *
 from name_resolution import NameResolver
 from scope import ScopeTracker, ScopeTreeCreator, ScopeType
 from symbol_declaration import SymbolDefiner
-from type_inference import ClassTypeDeclarer, FunctionAndClassTypeAnnotator
+from type_inference import (
+    ClassTypeDeclarer,
+    FunctionAndClassTypeAnnotator,
+    TypeInferrer2,
+)
 from utils import build_and_run, dump
-
-ANNOTATION_TYPES = {
-    "int": int,
-    "float": float,
-    "bool": bool,
-    "str": str,
-}
 
 includes = ["print.h", "list.h", "ptr.h"]
 
@@ -34,7 +31,6 @@ def pipeline(program: str):
     scope_tree_creator = ScopeTreeCreator()
     scope_tree_creator.visit(tree)
     node_scopes = scope_tree_creator.node_scopes
-    print_scopes_of_all_symbols(node_scopes)
 
     symbol_definer = SymbolDefiner(node_scopes)
     symbol_definer.visit(tree)
@@ -49,7 +45,12 @@ def pipeline(program: str):
 
     type_annotator = FunctionAndClassTypeAnnotator(node_scopes, bindings, types)
     type_annotator.visit(tree)
-    print_type_table(type_annotator.types)
+
+    type_inference = TypeInferrer2(node_scopes, bindings, types)
+    type_inference.visit(tree)
+
+    print(typed_unparse(tree, types))
+    # print(dump(tree, types=types, indent=4))
 
 
 def main():

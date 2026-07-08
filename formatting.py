@@ -6,7 +6,14 @@ from typing import TYPE_CHECKING
 
 from tabulate import tabulate
 
-from py_types import BuiltinType, ClassType, FunctionType, MethodType, TypeTable
+from py_types import (
+    BuiltinType,
+    ClassType,
+    FunctionAndClassTypeTable,
+    FunctionType,
+    MethodType,
+    UnkownType,
+)
 
 # Utility Functions
 
@@ -112,7 +119,7 @@ def print_scope(scope, indent=0):
 # Class and Function Declarations
 
 
-def print_type_table(types: TypeTable):
+def print_type_table(types: FunctionAndClassTypeTable):
     s = "Classes and Functions\n\n"
     for node, typ in types.items():
         s += format_type(typ)
@@ -121,7 +128,8 @@ def print_type_table(types: TypeTable):
 
 
 @singledispatch
-def get_type_name(_) -> str:
+def get_type_name(typ) -> str:
+    raise ValueError(f"get type name not implemented for type {typ}")
     return ""
 
 
@@ -140,6 +148,11 @@ def _(typ: BuiltinType):
     if typ.builtin is None:
         return "None"
     return typ.builtin.__name__
+
+
+@get_type_name.register
+def _(typ: UnkownType):
+    return "Unkown"
 
 
 @singledispatch
@@ -173,3 +186,35 @@ def _(cls: ClassType):
     for method in cls.methods:
         s += f"    {format_type(method)}\n"
     return s
+
+
+class TypedUnparser(ast._Unparser):
+    def __init__(self, types):
+        super().__init__()
+        self.types = types
+
+    def _fmt(self, typ) -> str:
+        return get_type_name(typ)
+
+    def _should(self, node) -> bool:
+        if not (isinstance(node, ast.expr) and node in self.types):
+            return False
+        return True
+
+    def traverse(self, node):
+        # lists + non-annotated nodes fall straight through to the real logic
+        if self._should(node):
+            with self.delimit("(", f" : {self._fmt(self.types[node])})"):
+                super().traverse(node)
+        else:
+            super().traverse(node)
+
+    # parameters aren't ast.expr, so annotate them explicitly
+    def visit_arg(self, node: ast.arg):
+        super().visit_arg(node)
+        if node in self.types:
+            self.write(f" (:{self._fmt(self.types[node])})")
+
+
+def typed_unparse(tree, types) -> str:
+    return TypedUnparser(types).visit(tree)

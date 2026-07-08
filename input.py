@@ -1,17 +1,27 @@
 class A:
-    def __init__(self, num: int) -> None:
-        self.num = num
-
-    class B:
-        def __init__(self, field: str) -> None:
-            self.field = field
-
-        def b(self) -> None:
-            print(self)
+    def __init__(self, x: int) -> None:
+        self.x = x
 
 
-class C:
-    pass
+class B:
+    def __init__(self, a: A, y: str) -> None:
+        self.a = a
+        self.y = y
+
+
+b = B(A(10), "hi")
+
+
+def add(a: int, b: int) -> int:
+    return a + b
+
+
+def main() -> None:
+    a = 3 + 4 * 5
+    b = " " * a
+    c = a / 2
+    d: float = a
+    e = add(a, d)
 
 
 # int(3)

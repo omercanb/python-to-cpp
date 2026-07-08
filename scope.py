@@ -235,6 +235,9 @@ class ScopingNodeVisitor(ast.NodeVisitor):
     def scope(self):
         return self.scope_tracker.scope
 
+    def node_scopes(self):
+        return self.scope_tracker.node_scopes
+
     def visit(self, node: ast.AST | list):
         if node is None:
             return
