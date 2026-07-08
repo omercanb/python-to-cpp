@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import ast
 import builtins
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from errors import PyToCppError
-from utils import dump
 
 if TYPE_CHECKING:
     from name_resolution import BindingTable
+
+type TypeTable = dict[ast.AST, FunctionType | ClassType]
 
 
 class PyType:
@@ -71,16 +72,12 @@ class FunctionType(PyType):
     argument_types: list[PyType]
     return_type: PyType
 
-    def __init__(self, node: ast.FunctionDef):
+    def __init__(self, node: ast.FunctionDef, bindings: BindingTable, types: TypeTable):
         """Creates the function with just the name and the types will be filled out later"""
         self.name = node.name
         self.node = node
-        self.argument_types = []
-        self.return_type = None
-
-    def add_type(self, bindings: BindingTable):
         self.argument_types, self.return_type = get_function_type(
-            self.node, bindings, is_method=False
+            self.node, bindings, types, is_method=False
         )
 
     def __repr__(self):
@@ -95,17 +92,21 @@ class MethodType(PyType):
     return_type: PyType
 
     def __init__(
-        self, class_type: ClassType, node: ast.FunctionDef, bindings: BindingTable
+        self,
+        class_type: ClassType,
+        node: ast.FunctionDef,
+        bindings: BindingTable,
+        types: TypeTable,
     ):
         """Creates the function with just the name and the types will be filled out later"""
         self.class_type = class_type
         self.name = node.name
         self.node = node
-        self.add_type(bindings)
+        self.add_type(bindings, types)
 
-    def add_type(self, bindings: BindingTable):
+    def add_type(self, bindings: BindingTable, types: TypeTable):
         self.argument_types, self.return_type = get_function_type(
-            self.node, bindings, is_method=True
+            self.node, bindings, types, is_method=True
         )
 
     def __repr__(self):
@@ -113,7 +114,10 @@ class MethodType(PyType):
 
 
 def get_function_type(
-    node: ast.FunctionDef, bindings: BindingTable, is_method=False
+    node: ast.FunctionDef,
+    bindings: BindingTable,
+    types: dict[ast.AST, PyType],
+    is_method=False,
 ) -> tuple[list[PyType], PyType]:
     args = node.args.args
     argument_types = []
@@ -122,14 +126,14 @@ def get_function_type(
             continue
         if arg.annotation is None:
             raise AnnotationError(arg, "Argument needs type annotation")
-        argument_types.append(type_of_annotation(arg.annotation, bindings))
+        argument_types.append(type_of_annotation(arg.annotation, bindings, types))
     if node.returns is None:
         if is_method:
             func_type = "Method"
         else:
             func_type = "Function"
         raise AnnotationError(node, f"{func_type} needs return type annotation")
-    return_type = type_of_annotation(node.returns, bindings)
+    return_type = type_of_annotation(node.returns, bindings, types)
     return argument_types, return_type
 
 
@@ -150,13 +154,13 @@ class ClassType(PyType):
         self.methods = []
         self.fields = {}
 
-    def add_type(self, bindings: BindingTable):
+    def add_type(self, bindings: BindingTable, types: TypeTable):
         for child in ast.walk(self.node):
             match child:
                 case ast.ClassDef():  # Don't visit nested classes
                     continue
                 case ast.FunctionDef():
-                    method = MethodType(self, child, bindings)
+                    method = MethodType(self, child, bindings, types)
                     if method.name == "__init__":
                         assert self.constructor == None
                         self.constructor = method
@@ -202,25 +206,30 @@ class ClassType(PyType):
         return self.name
 
 
-def type_of_annotation(annotation: ast.AST, bindings: BindingTable) -> PyType:
+def type_of_annotation(
+    annotation: ast.AST, bindings: BindingTable, types: dict[ast.AST, PyType]
+) -> PyType:
     match annotation:
         case ast.Constant():
             assert annotation.value == None
             return builtins_map["None"]
         case ast.Name():
             if annotation in bindings:
-                return bindings[annotation].type
+                node = bindings[annotation].node
+                if node is not None:
+                    return types[node]
             if annotation.id in builtins_map:
                 return builtins_map[annotation.id]
         case ast.Subscript():
-            base_type = type_of_annotation(annotation.value, bindings)
+            base_type = type_of_annotation(annotation.value, bindings, types)
             slice = annotation.slice
             if isinstance(slice, ast.Name):
-                slice_types = [type_of_annotation(slice, bindings)]
+                slice_types = [type_of_annotation(slice, bindings, types)]
             else:
                 assert isinstance(slice, ast.Tuple)
                 slice_types = [
-                    type_of_annotation(element, bindings) for element in slice.elts
+                    type_of_annotation(element, bindings, types)
+                    for element in slice.elts
                 ]
             return SliceType(base_type, slice_types)
     raise PyToCppError(annotation, "Unkown annotation type")

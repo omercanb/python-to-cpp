@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pprint import pp
 
 import scope
-import symbol_definition
+import symbol_declaration
 import type_inference
 import validate
 from scope import ScopeType

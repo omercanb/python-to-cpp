@@ -7,13 +7,13 @@ from pprint import pp
 
 import name_resolution
 import scope
-import symbol_definition
+import symbol_declaration
 import validate
 from formatting import *
 from name_resolution import NameResolver
 from scope import ScopeTracker, ScopeTreeCreator, ScopeType
-from symbol_definition import SymbolDefiner
-from type_inference import FunctionAndClassTypeAnnotator
+from symbol_declaration import SymbolDefiner
+from type_inference import ClassTypeDeclarer, FunctionAndClassTypeAnnotator
 from utils import build_and_run, dump
 
 ANNOTATION_TYPES = {
@@ -38,18 +38,17 @@ def pipeline(program: str):
 
     symbol_definer = SymbolDefiner(node_scopes)
     symbol_definer.visit(tree)
-    declared_types = symbol_definer.declared_types
 
-    name_resolver = NameResolver(node_scopes, declared_types)
+    name_resolver = NameResolver(node_scopes)
     name_resolver.visit(tree)
-    name_resolver.print_bindings()
     bindings = name_resolver.bindings
 
-    annotator = FunctionAndClassTypeAnnotator(node_scopes, bindings, declared_types)
-    annotator.visit(tree)
-    for node, type in declared_types.items():
-        print(node.lineno)
-        print(repr(type))
+    class_declarer = ClassTypeDeclarer(node_scopes, bindings)
+    class_declarer.visit(tree)
+    types = class_declarer.types
+
+    type_annotator = FunctionAndClassTypeAnnotator(node_scopes, bindings, types)
+    type_annotator.visit(tree)
 
 
 def main():

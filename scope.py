@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from tabulate import tabulate
 
 if TYPE_CHECKING:
-    from symbol_definition import SymbolType
+    from symbol_declaration import SymbolType
 
 #
 # class ScopeResolver(ast.NodeVisitor):

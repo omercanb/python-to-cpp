@@ -6,11 +6,10 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
-from pprint import pp
 from typing import TYPE_CHECKING
 
 from errors import PyToCppError
-from py_types import BuiltinType, ClassType, FunctionType, PyType, builtins_map
+from py_types import BuiltinType, builtins_map
 from scope import ScopingNodeVisitor
 
 if TYPE_CHECKING:
@@ -22,7 +21,6 @@ type BindingTable = dict[ast.Name, Binding]
 @dataclass
 class Binding:
     node: ast.AST | None
-    type: PyType
 
 
 class ResolutionError(PyToCppError):
@@ -32,12 +30,9 @@ class ResolutionError(PyToCppError):
 
 
 class NameResolver(ScopingNodeVisitor):
-    def __init__(
-        self, node_scopes, declared_types: dict[ast.AST, FunctionType | ClassType]
-    ):
+    def __init__(self, node_scopes):
         super().__init__(node_scopes)
         self.bindings: BindingTable = {}
-        self.declared_types = declared_types
 
     def resolve_builtin(self, name: str):
         return builtins_map.get(name, None)
@@ -59,7 +54,10 @@ class NameResolver(ScopingNodeVisitor):
 
     def visit_arg(self, node: ast.arg):
         if node.annotation is not None:
-            self.resolve_name(node.annotation, self.scope().enclosing)
+            assert isinstance(node.annotation, ast.Name)
+            enclosing_scope = self.scope().enclosing
+            assert enclosing_scope is not None
+            self.resolve_name(node.annotation, enclosing_scope)
 
     def visit_Name(self, node: ast.Name):
         self.resolve_name(node, self.scope())
@@ -71,15 +69,23 @@ class NameResolver(ScopingNodeVisitor):
         result = scope.resolve(node.id)
         # The name is user declared
         if result is not None:
-            symbol_type, declaration_node = result
-            typ = self.declared_types.get(declaration_node)
-            binding = Binding(declaration_node, typ)
+            _, declaration_node = result
+            binding = Binding(declaration_node)
             self.bind_node(node, binding)
             return
         # The name could be a builtin or be undefined
+        # TODO for now we have removed resolving to builtins here
+        # But if it can't resolve to a builtin we throw an error
+        # builtin = self.resolve_builtin(node.id)
+        # if builtin is not None:
+        #     binding = Binding(builtin)
+        #     self.bind_node(node, binding)
+        #     return
+        # raise ResolutionError(node)
+
         builtin = self.resolve_builtin(node.id)
-        if builtin is not None:
-            binding = Binding(None, builtin)
-            self.bind_node(node, binding)
-            return
-        raise ResolutionError(node)
+        if builtin is None:
+            raise ResolutionError(node)
+        else:
+            # Resolves but we don't bind it here
+            return None

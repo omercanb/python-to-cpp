@@ -1,16 +1,9 @@
 from __future__ import annotations
 
 import ast
-from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING
 
-from py_types import ClassType, FunctionType
 from scope import ScopeType, ScopingNodeVisitor
-
-if TYPE_CHECKING:
-    from py_types import PyType
-    from scope import Scope
 
 
 class SymbolType(Enum):
@@ -41,20 +34,17 @@ class SymbolDefiner(ScopingNodeVisitor):
 
     def __init__(self, node_scopes):
         super().__init__(node_scopes)
-        self.declared_types: dict[ast.AST, FunctionType | ClassType] = {}
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
         # If the node is a method, we don't wan't to define it as we'll do it when add a type to the class
         if self.scope().typ != ScopeType.CLASS:
             # Define function in current scope and define parameters in the function scope
             self.scope().declare(node.name, SymbolType.FUNCTION, node)
-            self.declared_types[node] = FunctionType(node)
         self.visit(node.args)
         self.visit(node.body)
 
     def visit_ClassDef(self, node: ast.ClassDef):
         self.scope().declare(node.name, SymbolType.CLASS, node)
-        self.declared_types[node] = ClassType(node)
         self.visit(node.body)
 
     def visit_arg(self, node: ast.arg):

@@ -5,11 +5,10 @@ import typing
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-import scope
-import symbol_definition
+import symbol_declaration
 from name_resolution import BindingTable
-from py_types import ClassType, FunctionType
-from scope import ScopeType
+from py_types import ClassType, FunctionType, TypeTable
+from scope import ScopeType, ScopingNodeVisitor
 from utils import dump
 
 
@@ -40,21 +39,30 @@ class Unkown:
     pass
 
 
-class FunctionAndClassTypeAnnotator(scope.ScopingNodeVisitor):
-    def __init__(self, node_scopes, bindings: BindingTable, declared_types: dict[ast.AST, FunctionType | ClassType]):
+# We have to take a two pass approach to first declare the names of the classes as types
+class FunctionAndClassTypeAnnotator(ScopingNodeVisitor):
+    def __init__(self, node_scopes, bindings: BindingTable, types: TypeTable):
         super().__init__(node_scopes)
         self.bindings = bindings
-        self.declared_types = declared_types
+        self.types = types
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
-        function_type = self.declared_types[node]
-        assert isinstance(function_type, FunctionType)
-        function_type.add_type(self.bindings)
+        self.types[node] = FunctionType(node, self.bindings, self.types)
 
     def visit_ClassDef(self, node: ast.ClassDef):
-        class_type = self.declared_types[node]
+        class_type = self.types[node]
         assert isinstance(class_type, ClassType)
-        class_type.add_type(self.bindings)
+        class_type.add_type(self.bindings, self.types)
+
+
+class ClassTypeDeclarer(ScopingNodeVisitor):
+    def __init__(self, node_scopes, bindings: BindingTable):
+        super().__init__(node_scopes)
+        self.bindings = bindings
+        self.types: TypeTable = {}
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        self.types[node] = ClassType(node)
 
 
 # A basic type inference walker that will be changed later
@@ -345,7 +353,7 @@ class TypeInferrer(ast.NodeVisitor):
         print(members)
 
 
-class FunctionTypeInferrer(scope.ScopingNodeVisitor):
+class FunctionTypeInferrer(ScopingNodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef):
         args = node.args.args
         argument_types: list[type] = (
