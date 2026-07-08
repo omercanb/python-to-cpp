@@ -9,6 +9,7 @@ import name_resolution
 import scope
 import symbol_definition
 import validate
+from formatting import *
 from name_resolution import NameResolver
 from scope import ScopeTracker, ScopeTreeCreator, ScopeType
 from symbol_definition import SymbolDefiner
@@ -32,15 +33,8 @@ def pipeline(program: str):
 
     scope_tree_creator = ScopeTreeCreator()
     scope_tree_creator.visit(tree)
-    scope = scope_tree_creator.scope
     node_scopes = scope_tree_creator.node_scopes
-
-    scope_tree_creator.print_scopes_by_line()
-    print()
-    scope.print_scope_structure()
-    print()
-    scope_tree_creator.print_scopes_of_all_symbols()
-    print()
+    print_scopes_of_all_symbols(node_scopes)
 
     symbol_definer = SymbolDefiner(node_scopes)
     symbol_definer.visit(tree)

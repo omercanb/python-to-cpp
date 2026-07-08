@@ -32,7 +32,9 @@ class ResolutionError(PyToCppError):
 
 
 class NameResolver(ScopingNodeVisitor):
-    def __init__(self, node_scopes, declared_types: dict[ast.AST, FunctionType | ClassType]):
+    def __init__(
+        self, node_scopes, declared_types: dict[ast.AST, FunctionType | ClassType]
+    ):
         super().__init__(node_scopes)
         self.bindings: BindingTable = {}
         self.declared_types = declared_types

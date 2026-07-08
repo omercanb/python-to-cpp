@@ -87,8 +87,7 @@ class Scope:
     global_vars: set[str] = field(default_factory=set)
     nonlocal_vars: set[str] = field(default_factory=set)
 
-    def define(self, name, symbol_type: SymbolType, stmt):
-        print(self.name, name, self.definitions)  # HERE
+    def declare(self, name, symbol_type: SymbolType, stmt):
         assert name not in self.definitions
         self.definitions[name] = (symbol_type, stmt)
 
@@ -131,40 +130,6 @@ class Scope:
 
     def add_nonlocal(self, name):
         self.nonlocal_vars.add(name)
-
-    def print_tree(self, indent=0):
-        print_indented(indent, self.typ, self.name)
-        print_indented(indent, "definitions {")
-        print_dict(self.definitions, indent)
-        print_indented(indent, "}")
-        if self.nonlocal_vars:
-            print_indented(indent, f"nonlocals: {self.nonlocal_vars}")
-        if self.global_vars:
-            print_indented(indent, f"globals: {self.global_vars}")
-        print_indented(indent, "child scopes {")
-        for child in self.children:
-            child.print_tree(indent + 4)
-        print_indented(indent, "}")
-
-    def print_self(self, indent=0):
-        print_indented(indent, self.typ, self.name)
-        print_indented(indent, "definitions {")
-        print_dict(self.definitions, indent)
-        if self.nonlocal_vars:
-            print_indented(indent, f"nonlocals: {self.nonlocal_vars}")
-        if self.global_vars:
-            print_indented(indent, f"globals: {self.global_vars}")
-        print_indented(indent, "}")
-
-    def print_scope_structure(self, indent=0):
-        if indent == 0:
-            print("Scope Structure")
-        print(f"{" "*indent} {self.typ.name.title()} {self.name or ""}")
-        for child in self.children:
-            child.print_scope_structure(indent + 4)
-
-    def get_identifier(self) -> str:
-        return f"{self.typ.name} {self.name or ''}"
 
 
 @dataclass
@@ -240,50 +205,6 @@ class ScopeTreeCreator(ast.NodeVisitor):
         self.visit(elements)
         self.visit(other_generators)
         self.pop_scope()
-
-    def print_node_scopes(self):
-        for node, scope in sorted(
-            self.node_scopes.items(), key=lambda kv: getattr(kv[0], "lineno", 0)
-        ):
-            line = getattr(node, "lineno", "?")
-            print(
-                f"line {line}: {scope.typ.name} {scope.name or ''} -> {node.__class__.__name__}"
-            )
-
-    def print_scopes_by_line(self):
-        print("Scopes By Line")
-        prev_line = None
-        for node, scope in self.node_scopes.items():
-            cur_line = getattr(node, "lineno", None)
-            if cur_line == None:
-                continue
-            if prev_line != cur_line:
-                print(f'line {cur_line}: {scope.typ.name.title()} {scope.name or ""}')
-            prev_line = cur_line
-
-    def print_scopes_of_all_symbols(self):
-        print("Scopes of All Symbols")
-        headers = [
-            "Line",
-            "Node",
-            "Scope",
-        ]
-        data = defaultdict(list)
-        for node, scope in self.node_scopes.items():
-            line = getattr(node, "lineno", None)
-            data["line"].append(line)
-
-            name_fields = ["name", "id", "arg"]
-            name = None
-            for field in name_fields:
-                name = getattr(node, field, None)
-                if name is not None:
-                    break
-
-            data["node"].append(f'{type(node).__name__} {name or ""}')
-
-            data["scope"].append(f'{scope.typ.name.title()} {scope.name or ""}')
-        print(tabulate(data, headers))
 
 
 class ScopeTracker:

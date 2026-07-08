@@ -47,18 +47,18 @@ class SymbolDefiner(ScopingNodeVisitor):
         # If the node is a method, we don't wan't to define it as we'll do it when add a type to the class
         if self.scope().typ != ScopeType.CLASS:
             # Define function in current scope and define parameters in the function scope
-            self.scope().define(node.name, SymbolType.FUNCTION, node)
+            self.scope().declare(node.name, SymbolType.FUNCTION, node)
             self.declared_types[node] = FunctionType(node)
         self.visit(node.args)
         self.visit(node.body)
 
     def visit_ClassDef(self, node: ast.ClassDef):
-        self.scope().define(node.name, SymbolType.CLASS, node)
+        self.scope().declare(node.name, SymbolType.CLASS, node)
         self.declared_types[node] = ClassType(node)
         self.visit(node.body)
 
     def visit_arg(self, node: ast.arg):
-        self.scope().define(node.arg, SymbolType.VARIABLE, node)
+        self.scope().declare(node.arg, SymbolType.VARIABLE, node)
 
     def visit_Global(self, node: ast.Global):
         for name in node.names:
@@ -78,4 +78,4 @@ class SymbolDefiner(ScopingNodeVisitor):
             return
         if name in self.scope().definitions:
             return
-        self.scope().define(name, SymbolType.VARIABLE, node)
+        self.scope().declare(name, SymbolType.VARIABLE, node)
