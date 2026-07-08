@@ -33,7 +33,7 @@ class X:
         print(X)
 
     class Y:
-        print(b)
+        pass
 
 
 one = X()
@@ -48,6 +48,9 @@ a = b = 3
 print(id(a), id(b))
 a = 2
 print(a, b)
+
+l = [a for a in range(10) for a in range(a, 10)]
+print(l)
 
 
 # a = A()

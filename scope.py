@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import ast
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from pprint import pp
 from typing import TYPE_CHECKING
+
+from tabulate import tabulate
 
 if TYPE_CHECKING:
     from symbol_definition import SymbolType
@@ -153,6 +156,16 @@ class Scope:
             print_indented(indent, f"globals: {self.global_vars}")
         print_indented(indent, "}")
 
+    def print_scope_structure(self, indent=0):
+        if indent == 0:
+            print("Scope Structure")
+        print(f"{" "*indent} {self.typ.name.title()} {self.name or ""}")
+        for child in self.children:
+            child.print_scope_structure(indent + 4)
+
+    def get_identifier(self) -> str:
+        return f"{self.typ.name} {self.name or ''}"
+
 
 @dataclass
 class ScopeTreeCreator(ast.NodeVisitor):
@@ -202,26 +215,31 @@ class ScopeTreeCreator(ast.NodeVisitor):
         self.pop_scope()
 
     def visit_ListComp(self, node: ast.ListComp):
-        self.handle_generators(node.generators)
+        self.handle_generators([node.elt], node.generators)
 
     def visit_SetComp(self, node: ast.SetComp):
-        self.handle_generators(node.generators)
+        self.handle_generators([node.elt], node.generators)
 
     def visit_DictComp(self, node: ast.DictComp):
-        self.handle_generators(node.generators)
+        self.handle_generators([node.key, node.value], node.generators)
 
     def visit_GeneratorExp(self, node: ast.GeneratorExp):
-        self.handle_generators(node.generators)
+        self.handle_generators([node.elt], node.generators)
 
     # Comprehensions create nested scopes but arent nested in the AST so we have to handle them manually
-    def handle_generators(self, generators: list[ast.comprehension]):
-        for generator in generators:
-            self.push_scope(ScopeType.COMPREHENSION)
-            match generator.target:
-                case ast.Name(id=var, ctx=ast.Store()):
-                    self.scope.define(var, SymbolType.VARIABLE, generator.target)
-        for _ in generators:
-            self.pop_scope()
+    def handle_generators(
+        self, elements: list[ast.AST], generators: list[ast.comprehension]
+    ):
+        first_generator, *other_generators = generators
+        # The first iterator needs to be evaluated in the enclosing scope
+        self.visit(first_generator.iter)
+        # Only one scope is created regardless of the number of generators
+        self.push_scope(ScopeType.COMPREHENSION)
+        self.visit(first_generator.target)
+        self.visit(first_generator.ifs)
+        self.visit(elements)
+        self.visit(other_generators)
+        self.pop_scope()
 
     def print_node_scopes(self):
         for node, scope in sorted(
@@ -231,6 +249,41 @@ class ScopeTreeCreator(ast.NodeVisitor):
             print(
                 f"line {line}: {scope.typ.name} {scope.name or ''} -> {node.__class__.__name__}"
             )
+
+    def print_scopes_by_line(self):
+        print("Scopes By Line")
+        prev_line = None
+        for node, scope in self.node_scopes.items():
+            cur_line = getattr(node, "lineno", None)
+            if cur_line == None:
+                continue
+            if prev_line != cur_line:
+                print(f'line {cur_line}: {scope.typ.name.title()} {scope.name or ""}')
+            prev_line = cur_line
+
+    def print_scopes_of_all_symbols(self):
+        print("Scopes of All Symbols")
+        headers = [
+            "Line",
+            "Node",
+            "Scope",
+        ]
+        data = defaultdict(list)
+        for node, scope in self.node_scopes.items():
+            line = getattr(node, "lineno", None)
+            data["line"].append(line)
+
+            name_fields = ["name", "id", "arg"]
+            name = None
+            for field in name_fields:
+                name = getattr(node, field, None)
+                if name is not None:
+                    break
+
+            data["node"].append(f'{type(node).__name__} {name or ""}')
+
+            data["scope"].append(f'{scope.typ.name.title()} {scope.name or ""}')
+        print(tabulate(data, headers))
 
 
 class ScopeTracker:

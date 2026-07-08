@@ -2,13 +2,19 @@
 Resolve names (including type annotations) to their declarations or Builtins
 """
 
+from __future__ import annotations
+
 import ast
 from dataclasses import dataclass
 from pprint import pp
+from typing import TYPE_CHECKING
 
 from errors import PyToCppError
 from py_types import BuiltinType, ClassType, FunctionType, PyType, builtins_map
-from scope import Scope, ScopingNodeVisitor
+from scope import ScopingNodeVisitor
+
+if TYPE_CHECKING:
+    from scope import Scope
 
 type BindingTable = dict[ast.Name, Binding]
 
@@ -35,8 +41,6 @@ class NameResolver(ScopingNodeVisitor):
         super().__init__(scope, node_scopes)
         self.bindings: BindingTable = {}
         self.declared_types = declared_types
-        for k, v in declared_types.items():
-            print(f"{k.name}: {repr(v)}")
 
     def resolve_builtin(self, name: str):
         return builtins_map.get(name, None)
@@ -81,6 +85,4 @@ class NameResolver(ScopingNodeVisitor):
             binding = Binding(None, builtin)
             self.bind_node(node, binding)
             return
-        pp(node.id)
-        scope.print_self()
         raise ResolutionError(node)

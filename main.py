@@ -27,13 +27,24 @@ includes = ["print.h", "list.h", "ptr.h"]
 
 def pipeline(program: str):
     tree = ast.parse(program)
-    print(dump(tree, indent=4))
+    # print(dump(tree, indent=4))
     # validate.Validator().visit(tree)
+
     scope_tree_creator = ScopeTreeCreator()
     scope_tree_creator.visit(tree)
     scope = scope_tree_creator.scope
     node_scopes = scope_tree_creator.node_scopes
-    scope_tree_creator.print_node_scopes()
+
+    scope_tree_creator.print_scopes_by_line()
+    print()
+
+    scope.print_scope_structure()
+    print()
+
+    scope_tree_creator.print_scopes_of_all_symbols()
+    print()
+
+    return
 
     symbol_definer = SymbolDefiner(scope, node_scopes)
     symbol_definer.visit(tree)

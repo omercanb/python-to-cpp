@@ -74,6 +74,13 @@ def fun(x: int, y: A) -> None:
     pass
 
 
+# fmt: off
+l = [a for 
+     a in range(10)
+     for b in 
+     range(a, 10)]
+# fmt: on
+
 # def add(x: int, y: int) -> int:
 #     print(x, y)
 #     return x + y
