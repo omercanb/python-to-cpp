@@ -11,8 +11,10 @@ from py_types import (
     ClassType,
     FunctionAndClassTypeTable,
     FunctionType,
+    IteratorType,
     ListType,
     MethodType,
+    RangeType,
     UnknownType,
 )
 from scope import Scope
@@ -183,6 +185,11 @@ def _(typ: BuiltinType):
     if typ.builtin is None:
         return "None"
     return typ.builtin.__name__
+
+
+@get_type_name.register
+def _(typ: IteratorType):
+    return f"iterator({get_type_name(typ.element_type)})"
 
 
 @get_type_name.register

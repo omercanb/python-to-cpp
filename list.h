@@ -34,7 +34,7 @@ struct TypeError : PyException {
 template <typename T> class list {
   public:
     using value_type = T;
-    using size_type = long long;
+    using size_type = size_t;
 
     // ---- construction -------------------------------------------------------
     list() = default;
@@ -234,7 +234,18 @@ template <typename T> class list {
             throw IndexError("list index out of range");
         return static_cast<std::size_t>(i);
     }
+    class list_iterator {
+      public:
+        ptr<list<T>> l;
+        size_t i;
+        list_iterator(ptr<list<T>> l) : l(l), i(0) {}
+        int next() { return l[i++]; }
+        bool done() { return i >= py::len(l); }
+    };
 };
+
+template <typename T> auto iter(list<T> l) { return l.iter(); }
+template <typename It> auto next(It it) { return it.next(); }
 
 // n * a  (mirror of a * n)
 template <typename T>
@@ -242,6 +253,6 @@ list<T> operator*(typename list<T>::size_type n, const list<T> &a) {
     return a * n;
 }
 
-template <typename T> size_t len(list<T> &l) { return l.size(); }
+template <typename T> inline size_t len(list<T> &l) { return l.size(); }
 
 } // namespace py

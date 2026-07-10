@@ -10,6 +10,7 @@ from py_types import (
     ClassType,
     FunctionAndClassTypeTable,
     FunctionType,
+    IteratorType,
     ListType,
     MethodType,
     PyType,
@@ -164,6 +165,16 @@ class TypeInferrer(ScopingNodeVisitor):
         self.current_class.append(typ)
         self.visit(node.body)
         self.current_class.pop()
+
+    def visit_For(self, node: ast.For):
+        self.visit(node.target)
+        self.visit(node.iter)
+        iter_type = self.types[node.iter]
+        if isinstance(iter_type, ListType):
+            self.types[node.target] = iter_type.element_type
+        elif isinstance(iter_type, IteratorType):
+            self.types[node.target] = iter_type.element_type
+        self.visit(node.body)
 
     def visit_Call(self, node: ast.Call):
         self.visit(node.func)

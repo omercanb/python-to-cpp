@@ -213,11 +213,22 @@ def list_methods(element_type, list_type_instance) -> list[MethodType]:
     ]
 
 
+class RangeType(PyType):
+    pass
+
+
+@dataclass
+class IteratorType(PyType):
+    element_type: PyType
+
+
 builtin_print = FunctionType("print", [], builtin_none, None)
 builtin_len = FunctionType("len", [], builtin_none, None)
+builtin_range = FunctionType("range", [], IteratorType(builtin_int), None)
 builtin_funcs = {
     "print": builtin_print,
     "len": builtin_len,
+    "range": builtin_range,
 }
 
 

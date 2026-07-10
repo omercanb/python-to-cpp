@@ -5,10 +5,18 @@ from dataclasses import dataclass, field
 
 from formatting import get_scope_identifier, get_type_name
 from name_resolution import BindingTable
-from py_types import ClassType, FunctionType, MethodType, PyType, TypeTable, is_object
+from py_types import (
+    ClassType,
+    FunctionType,
+    MethodType,
+    PyType,
+    RangeType,
+    TypeTable,
+    is_object,
+)
 from scope import Scope, ScopeType, ScopingNodeVisitor
 
-includes = ["print.h", "list.h", "ptr.h"]
+includes = ["print.h", "list.h", "ptr.h", "range.h"]
 
 
 @dataclass
@@ -68,12 +76,7 @@ class CppTranslator(ScopingNodeVisitor):
             self.marked_scopes.add(scope)
             # Because a function def is still in the module scope, we first enter the scope then put the declaration market
             # Because of this, out current position ends up being one after the starting line of the scope, so we mitigate this
-            if self.output:
-                last = self.output.pop()
-                self.output.append(DeclarationMarker(scope, self.indent_level))
-                self.output.append(last)
-            else:
-                self.output.append(DeclarationMarker(scope, self.indent_level))
+            self.output.append(DeclarationMarker(scope, self.indent_level))
 
     def add_declaration(self, node: ast.AST):
         match node:
@@ -122,10 +125,18 @@ class CppTranslator(ScopingNodeVisitor):
 
     def emit_body(self, node: ast.FunctionDef):
         self.indent()
+        # We have to do something pretty hacky here
+        # Since in a function declaration we don't know the function scope until we've stepped into the function, we need to first step into the funciton, then place the declaration marker
+        # But since the first statement could have filled out the output we need to move to where the first stmt finished
+        current_output = self.output
+        self.output = []
         for stmt in node.body:
             self.visit(stmt)
             if stmt == node.body[0]:
+                new_output = self.output
+                self.output = current_output
                 self.declaration_marker()
+                self.output.extend(new_output)
 
         self.unindent()
 
@@ -135,8 +146,6 @@ class CppTranslator(ScopingNodeVisitor):
         if self.scope().typ != ScopeType.CLASS:
             self.add_declaration(node)
         self.stmt(f"{get_function_signature(func)} {{")
-        if node.name == "main":
-            self.stmt("std::ios_base::sync_with_stdio(false);")
         self.emit_body(node)
         self.stmt("}\n")
 
@@ -189,7 +198,19 @@ class CppTranslator(ScopingNodeVisitor):
         self.stmt("continue;")
 
     def visit_For(self, node: ast.For):
-        pass
+        assert isinstance(node.target, ast.Name)
+        self.test_declare_name(node.target)
+        target = self.visit(node.target)
+        iterable = self.visit(node.iter)
+        var = f"{node.target.id}__iter"
+        for_line = f"for (auto {var} = iter({iterable}); !{var}.done();)"
+        self.stmt(f"{for_line} {{")
+        self.indent()
+        self.stmt(f"{target} = next({var});")
+        for child in node.body:
+            self.visit(child)
+        self.unindent()
+        self.stmt("}")
 
     def visit_If(self, node: ast.If):
         # Hack to make it so we don't parenthesize the bool op twice
@@ -199,13 +220,13 @@ class CppTranslator(ScopingNodeVisitor):
             self.stmt(f"if ({self.visit(node.test)}) {{")
         self.indent()
         for stmt in node.body:
-            self.stmt(f"{self.visit(stmt)}")
+            self.visit(stmt)
         self.unindent()
         if node.orelse:
             self.stmt("} else {")
             self.indent()
             for stmt in node.orelse:
-                self.stmt(f"{self.visit(stmt)}")
+                self.visit(stmt)
             self.unindent()
         self.stmt("}")
 
@@ -313,13 +334,18 @@ class CppTranslator(ScopingNodeVisitor):
         assert len(targets) == 1
         target = targets[0]
         # Check if it's a declaration
-        if isinstance(target, ast.Name) and self.bindings[target].node == target:
-            self.add_declaration(target)
+        if isinstance(target, ast.Name):
+            self.test_declare_name(target)
         s = f"{self.visit(target)}"
         if value is not None:
             s += f" = {self.visit(value)}"
         s += ";"
         return s
+
+    def test_declare_name(self, name: ast.Name):
+        print("HERE", name)
+        if self.bindings[name].node == name:
+            self.add_declaration(name)
 
 
 def commas(lst):
@@ -399,6 +425,11 @@ def _(typ: BuiltinType) -> str:
         return CPP_SCALAR_TYPES[typ.builtin]
     except (KeyError, TypeError):
         raise NotImplementedError(f"no C++ mapping for builtin {typ.builtin!r}")
+
+
+@cpp_type.register
+def _(typ: RangeType) -> str:
+    return f"range"
 
 
 @cpp_type.register

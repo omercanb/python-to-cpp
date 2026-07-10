@@ -68,4 +68,6 @@ template <typename T> class ptr {
 
 template <typename T> size_t len(ptr<T> &p) { return len(*(p.object)); }
 
+template <typename T> auto iter(ptr<T> p) { return p->iter(); }
+
 } // namespace py
