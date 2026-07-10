@@ -242,4 +242,6 @@ list<T> operator*(typename list<T>::size_type n, const list<T> &a) {
     return a * n;
 }
 
+template <typename T> size_t len(list<T> &l) { return l.size(); }
+
 } // namespace py

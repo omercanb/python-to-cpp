@@ -229,12 +229,14 @@ class CppTranslator(ScopingNodeVisitor):
             raise NotImplementedError("slice subscription (a[i:j]) not supported")
         value = self.visit(node.value)
         index = self.visit(node.slice)
-        return f"(*{value})[{index}]"  # deref the ptr, then operator[] on the list
+        return f"{value}[{index}]"
+        # return f"(*{value})[{index}]"  # deref the ptr, then operator[] on the list
 
     def visit_Call(self, node: ast.Call):
         s = ""
-        if isinstance(node.func, ast.Name) and node.func.id == "print":
-            s += "print("
+        builtin_funcs = ["print", "len"]
+        if isinstance(node.func, ast.Name) and node.func.id in builtin_funcs:
+            s += f"{node.func.id}("
         else:
             call = self.visit(node.func)
             s += f"{call}("

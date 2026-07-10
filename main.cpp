@@ -96,6 +96,12 @@ std::ios_base::sync_with_stdio(false);
     cls->printA();
     cls->a = ptr(new A(20));
     cls->printA();
+    print(cls->a->x);
+    print(len(l));
+    l->extend(l);
+    print(len(l));
+    print(l);
+    print(l[0], l[1]);
     return 0;
 }
 

@@ -54,9 +54,10 @@ def main() -> int:
     cls.printA()
     cls.a = A(20)
     cls.printA()
-    print(cls)
-    len(cls)
+    print(cls.a.x)
+    print(len(l))
+    l.extend(l)
+    print(len(l))
+    print(l)
+    print(l[0], l[1])
     return 0
-
-
-main()

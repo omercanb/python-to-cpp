@@ -213,12 +213,12 @@ def list_methods(element_type, list_type_instance) -> list[MethodType]:
     ]
 
 
-@dataclass
-class PrintType(FunctionType):
-    pass
-
-
-builtin_print = PrintType("print", [], builtin_none, None)
+builtin_print = FunctionType("print", [], builtin_none, None)
+builtin_len = FunctionType("len", [], builtin_none, None)
+builtin_funcs = {
+    "print": builtin_print,
+    "len": builtin_len,
+}
 
 
 def is_object(type: PyType):

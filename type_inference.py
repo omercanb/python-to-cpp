@@ -17,6 +17,7 @@ from py_types import (
     UnknownType,
     builtin_bool,
     builtin_float,
+    builtin_funcs,
     builtin_int,
     builtin_print,
     builtin_str,
@@ -117,9 +118,8 @@ class TypeInferrer(ScopingNodeVisitor):
     def visit_Name(self, node: ast.Name):
         if node not in self.bindings:
             # Check builtin types first
-            if node.id == "print":
-                # Will have to turn this to an actual resolution of types
-                typ = builtin_print
+            if node.id in builtin_funcs:
+                typ = builtin_funcs[node.id]
             else:
                 typ = UnknownType()
         else:

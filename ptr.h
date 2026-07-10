@@ -62,6 +62,10 @@ template <typename T> class ptr {
             delete refcount;
         }
     }
+    decltype(auto) operator[](size_t i) { return (*object)[i]; }
+    decltype(auto) operator[](size_t i) const { return (*object[i]); }
 };
+
+template <typename T> size_t len(ptr<T> &p) { return len(*(p.object)); }
 
 } // namespace py
