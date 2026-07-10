@@ -21,7 +21,7 @@ class PyType:
 
 
 # Used for empty containers like []
-class UnkownType(PyType):
+class UnknownType(PyType):
     pass
 
 
@@ -39,6 +39,8 @@ builtin_float = builtins_map["float"]
 builtin_bool = builtins_map["bool"]
 builtin_str = builtins_map["str"]
 builtin_none = builtins_map["None"]
+
+unkown_type = UnknownType()
 
 
 # A slice type like list[int] or dict[int, str]
@@ -174,18 +176,19 @@ class ClassType(PyType):
     node: ast.ClassDef | None = None
     scope: Scope | None = None
     node_scopes: dict[ast.AST, Scope] | None = None
-
-
-def create_list_type(element_type) -> ListType:
-    list_type = ListType("list")
-    methods = list_methods(element_type, list_type)
-    list_type.methods = methods
-    return list_type
+    get_item_type: PyType | None = None
 
 
 @dataclass
 class ListType(ClassType):
     element_type: PyType = builtin_int
+
+
+def create_list_type(element_type: PyType) -> ListType:
+    list_type = ListType("list", element_type=element_type, get_item_type=element_type)
+    methods = list_methods(element_type, list_type)
+    list_type.methods = methods
+    return list_type
 
 
 def list_methods(element_type, list_type_instance) -> list[MethodType]:
@@ -208,6 +211,18 @@ def list_methods(element_type, list_type_instance) -> list[MethodType]:
         method("reverse", [], none),
         method("sort", [], none),
     ]
+
+
+@dataclass
+class PrintType(FunctionType):
+    pass
+
+
+builtin_print = PrintType("print", [], builtin_none, None)
+
+
+def is_object(type: PyType):
+    return isinstance(type, ClassType)
 
 
 def type_of_annotation(

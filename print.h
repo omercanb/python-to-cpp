@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <ostream>
+
 namespace py {
 template <typename First, typename... Rest>
 void print(First &&first, Rest &&...rest) {

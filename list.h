@@ -100,6 +100,13 @@ template <typename T> class list {
         return value;
     }
 
+    void extend(ptr<list<T>> &other) {
+        auto len = other->size();
+        for (size_type i = 0; i < len; ++i) {
+            this->append((*other)[i]);
+        }
+    }
+
     void clear() noexcept { data_.clear(); }
 
     // index(value, start=0, stop=size): ValueError if not found.

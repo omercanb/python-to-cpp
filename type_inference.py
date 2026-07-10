@@ -10,14 +10,18 @@ from py_types import (
     ClassType,
     FunctionAndClassTypeTable,
     FunctionType,
+    ListType,
     MethodType,
     PyType,
-    UnkownType,
+    TypeTable,
+    UnknownType,
     builtin_bool,
     builtin_float,
     builtin_int,
+    builtin_print,
     builtin_str,
     builtins_map,
+    create_list_type,
     parse_class_stub,
     parse_class_type,
     parse_function,
@@ -67,8 +71,8 @@ class ClassTypeDeclarer(ScopingNodeVisitor):
         self.visit(node.body)
 
 
-class TypeInferrer2(ScopingNodeVisitor):
-    def __init__(self, node_scopes, bindings: BindingTable, types):
+class TypeInferrer(ScopingNodeVisitor):
+    def __init__(self, node_scopes, bindings: BindingTable, types: TypeTable):
         super().__init__(node_scopes)
         self.bindings = bindings
         self.types = types
@@ -91,7 +95,7 @@ class TypeInferrer2(ScopingNodeVisitor):
             )
 
     def compatible(self, source: PyType, target: PyType) -> bool:
-        if isinstance(source, UnkownType) or isinstance(target, UnkownType):
+        if isinstance(source, UnknownType) or isinstance(target, UnknownType):
             return True
         if source is target:
             return True
@@ -100,6 +104,11 @@ class TypeInferrer2(ScopingNodeVisitor):
                 return True
         if source == builtin_int and target == builtin_float:
             return True
+        if isinstance(source, ListType) and isinstance(target, ListType):
+            if isinstance(source.element_type, UnknownType) or isinstance(
+                source.element_type, UnknownType
+            ):
+                return True
         return False
 
     def is_attributable(self, typ: PyType):
@@ -107,10 +116,19 @@ class TypeInferrer2(ScopingNodeVisitor):
 
     def visit_Name(self, node: ast.Name):
         if node not in self.bindings:
-            typ = UnkownType()
+            # Check builtin types first
+            if node.id == "print":
+                # Will have to turn this to an actual resolution of types
+                typ = builtin_print
+            else:
+                typ = UnknownType()
         else:
             binding = self.bindings[node]
-            typ = self.types[binding.node]
+            # If the node has a binding but it points to itself thats a declaration and the type is still unkown
+            if binding.node == node:
+                typ = UnknownType()
+            else:
+                typ = self.types[binding.node]
         self.types[node] = typ
 
     def visit_Constant(self, node: ast.Constant):
@@ -125,7 +143,7 @@ class TypeInferrer2(ScopingNodeVisitor):
         self.visit(node.value)
         for target in node.targets:
             self.type_check(target, self.types[node.value])
-            if target not in self.types or isinstance(self.types[target], UnkownType):
+            if target not in self.types or isinstance(self.types[target], UnknownType):
                 # We take this oppurtinity to bind this variable to the inferred type
                 self.types[target] = self.types[node.value]
 
@@ -137,6 +155,8 @@ class TypeInferrer2(ScopingNodeVisitor):
             self.visit(node.value)
             self.type_check(node.value, annotation_type)
         self.types[node.target] = annotation_type
+        if node.value is not None:
+            self.types[node.value] = annotation_type
 
     def visit_ClassDef(self, node: ast.ClassDef):
         typ = self.types[node]
@@ -191,6 +211,31 @@ class TypeInferrer2(ScopingNodeVisitor):
         if typ is None:
             typ = cls.fields[attribute]
         self.types[node] = typ
+
+    def visit_List(self, node: ast.List):
+        for element in node.elts:
+            self.visit(element)
+        if len(node.elts) == 0:
+            self.types[node] = create_list_type(UnknownType())
+            return
+        element_type = self.types[node.elts[0]]
+        for element in node.elts:
+            self.type_check(element, element_type)
+        self.types[node] = create_list_type(element_type)
+
+    def visit_Subscript(self, node: ast.Subscript):
+        # Slices always return the container type
+        # Assuming that tuples aren't sliced
+        self.visit(node.value)
+        self.visit(node.slice)
+        base_type = self.types[node.value]
+        if isinstance(node.slice, ast.Slice):
+            self.types[node] = base_type
+            return
+        assert isinstance(base_type, ClassType)
+        assert base_type.get_item_type is not None
+        self.types[node] = base_type.get_item_type
+        return
 
     def visit_BinOp(self, node: ast.BinOp):
         self.visit(node.left)

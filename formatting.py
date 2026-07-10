@@ -11,9 +11,12 @@ from py_types import (
     ClassType,
     FunctionAndClassTypeTable,
     FunctionType,
+    ListType,
     MethodType,
-    UnkownType,
+    UnknownType,
 )
+from scope import Scope
+from symbol_declaration import SymbolType
 
 # Utility Functions
 
@@ -23,9 +26,9 @@ def print_indented(indent, *args, **kwargs):
     print(*args, **kwargs)
 
 
-def print_dict(d, indent):
-    for k, v in d.items():
-        print_indented(indent, f"{k}: {v}")
+def print_dict(d: dict[str, tuple[SymbolType, ast.AST]], indent):
+    for name, (symbol_type, node) in d.items():
+        print_indented(indent, f"{name}: {symbol_type} {node} {node.lineno}")
 
 
 def get_node_name(node: ast.AST) -> str | None:
@@ -90,7 +93,7 @@ def print_scopes_of_all_symbols(node_scopes):
 # Name Resolution
 
 
-def print_scope_rec(scope, indent=0):
+def print_scope_rec(scope: Scope, indent=0):
     print_indented(indent, scope.typ, scope.name)
     print_indented(indent, "definitions {")
     print_dict(scope.definitions, indent)
@@ -101,7 +104,7 @@ def print_scope_rec(scope, indent=0):
         print_indented(indent, f"globals: {scope.global_vars}")
     print_indented(indent, "child scopes {")
     for child in scope.children:
-        child.print_tree(indent + 4)
+        print_scope_rec(child, indent + 4)
     print_indented(indent, "}")
 
 
@@ -114,6 +117,28 @@ def print_scope(scope, indent=0):
     if scope.global_vars:
         print_indented(indent, f"globals: {scope.global_vars}")
     print_indented(indent, "}")
+
+
+# Bindings
+
+
+def print_bindings(bindings):
+    print("Name Bindings")
+    headers = ["Use Line", "Name", "Resolves To", "declaration Line"]
+    data = defaultdict(list)
+    for use, binding in bindings.items():
+        data["use line"].append(getattr(use, "lineno", None))
+        data["name"].append(use.id)
+
+        declaration = binding.node
+        if declaration is None:
+            data["resolves to"].append("<builtin>")
+            data["declaration line"].append("")
+        else:
+            name = get_node_name(declaration)
+            data["resolves to"].append(f'{type(declaration).__name__} {name or ""}')
+            data["declaration line"].append(getattr(declaration, "lineno", ""))
+    print(tabulate(data, headers))
 
 
 # Class and Function Declarations
@@ -149,6 +174,11 @@ def _(typ: ClassType):
 
 
 @get_type_name.register
+def _(typ: ListType):
+    return f"{typ.name}[{get_type_name(typ.element_type)}]"
+
+
+@get_type_name.register
 def _(typ: BuiltinType):
     if typ.builtin is None:
         return "None"
@@ -156,7 +186,7 @@ def _(typ: BuiltinType):
 
 
 @get_type_name.register
-def _(typ: UnkownType):
+def _(typ: UnknownType):
     return "Unkown"
 
 

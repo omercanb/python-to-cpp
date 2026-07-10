@@ -34,11 +34,9 @@ def build_and_run(translated: str, src="main.cpp", exe="main", std="c++17"):
     # 3. run ./main and print its output
     run_proc = subprocess.run(
         ["stdbuf", "-oL", f"./{exe}"],
-        capture_output=True,
-        text=True,
     )
-    print("--- program output ---")
-    print(run_proc.stdout, end="")
+    # print("--- program output ---")
+    # print(run_proc.stdout, end="")
     if run_proc.stderr:
         print("--- stderr ---")
         print(run_proc.stderr, end="")

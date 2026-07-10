@@ -5,6 +5,7 @@ Resolve names (including type annotations) to their declarations or Builtins
 from __future__ import annotations
 
 import ast
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -41,31 +42,28 @@ class NameResolver(ScopingNodeVisitor):
         assert node not in self.bindings
         self.bindings[node] = thing
 
-    def print_bindings(self):
-        for name, binding in self.bindings.items():
-            s = f"binding: line {name.lineno} '{name.id}' resolves to "
-            if binding.node is not None:
-                s += f"{binding.node}"
-                if hasattr(binding.node, "lineno"):
-                    s += f" on line {binding.node.lineno}"
-            else:
-                s += f"builtin {binding}"
-            print(s)
-
     def visit_arg(self, node: ast.arg):
         if node.annotation is not None:
             assert isinstance(node.annotation, ast.Name)
             enclosing_scope = self.scope().enclosing
             assert enclosing_scope is not None
-            self.resolve_name(node.annotation, enclosing_scope)
+            self.resolve_name_load(node.annotation, enclosing_scope)
 
     def visit_Name(self, node: ast.Name):
-        self.resolve_name(node, self.scope())
+        if isinstance(node.ctx, ast.Load):
+            self.resolve_name_load(node, self.scope())
+        elif isinstance(node.ctx, ast.Store):
+            self.resolve_name_store(node, self.scope())
+        # Del and other contexts: ignored for now
 
-    def resolve_name(self, node: ast.Name, scope: Scope):
-        # Only load contexts need resolution
-        if not isinstance(node.ctx, ast.Load):
-            return
+    def visit_AugAssign(self, node: ast.AugAssign):
+        self.visit(node.value)
+        if isinstance(node.target, ast.Name):
+            self.resolve_name_store(node.target, self.scope())
+        else:
+            self.visit(node.target)
+
+    def resolve_name_store(self, node: ast.Name, scope: Scope):
         result = scope.resolve(node.id)
         # The name is user declared
         if result is not None:
@@ -73,15 +71,15 @@ class NameResolver(ScopingNodeVisitor):
             binding = Binding(declaration_node)
             self.bind_node(node, binding)
             return
-        # The name could be a builtin or be undefined
-        # TODO for now we have removed resolving to builtins here
-        # But if it can't resolve to a builtin we throw an error
-        # builtin = self.resolve_builtin(node.id)
-        # if builtin is not None:
-        #     binding = Binding(builtin)
-        #     self.bind_node(node, binding)
-        #     return
-        # raise ResolutionError(node)
+
+    def resolve_name_load(self, node: ast.Name, scope: Scope):
+        result = scope.resolve(node.id)
+        # The name is user declared
+        if result is not None:
+            _, declaration_node = result
+            binding = Binding(declaration_node)
+            self.bind_node(node, binding)
+            return
 
         builtin = self.resolve_builtin(node.id)
         if builtin is None:

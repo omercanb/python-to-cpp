@@ -71,7 +71,7 @@ def print_dict(d, indent):
         print_indented(indent, f"{k}: {v}")
 
 
-@dataclass
+@dataclass(eq=False)
 class Scope:
     """
     The scope / scope tree responsible for maintaining definitions and resolutions

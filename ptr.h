@@ -14,6 +14,13 @@ template <typename T> class ptr {
     int *refcount;
     value_type *object;
 
+    ptr() {
+        object = nullptr;
+        refcount = new int;
+        *refcount = 1;
+        std::cout << "empty constructor\n";
+    }
+
     ptr(value_type *obj) {
         object = obj;
         refcount = new int;
@@ -49,7 +56,9 @@ template <typename T> class ptr {
         (*refcount)--;
         if ((*refcount) <= 0) {
             std::cout << "deletion\n";
-            delete object;
+            if (object != nullptr) {
+                delete object;
+            }
             delete refcount;
         }
     }
