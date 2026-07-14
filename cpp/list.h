@@ -222,6 +222,16 @@ template <typename T> class list {
 
     const std::vector<T> &raw() const noexcept { return data_; } // escape hatch
 
+    class list_iterator {
+      public:
+        list<T> &l;
+        size_t i;
+        list_iterator(list<T> &l) : l(l), i(0) {}
+        int next() { return l[i++]; }
+        bool done() { return i >= l.len(); }
+    };
+    list_iterator iter() { return list_iterator(*this); }
+
   private:
     std::vector<T> data_;
 
@@ -234,18 +244,10 @@ template <typename T> class list {
             throw IndexError("list index out of range");
         return static_cast<std::size_t>(i);
     }
-    class list_iterator {
-      public:
-        ptr<list<T>> l;
-        size_t i;
-        list_iterator(ptr<list<T>> l) : l(l), i(0) {}
-        int next() { return l[i++]; }
-        bool done() { return i >= py::len(l); }
-    };
 };
 
-template <typename T> auto iter(list<T> l) { return l.iter(); }
-template <typename It> auto next(It it) { return it.next(); }
+template <typename T> auto iter(list<T> &l) { return l.iter(); }
+template <typename It> auto next(It &it) { return it.next(); }
 
 // n * a  (mirror of a * n)
 template <typename T>

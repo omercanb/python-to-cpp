@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import ast
 
-from ..errors import PyToCppError
 from python.formatting import get_type_name
+
+from ..errors import PyToCppError
+from ..utils import dump
 from .name_resolution import BindingTable
 from .py_types import (
     ClassType,
@@ -28,7 +30,6 @@ from .py_types import (
     type_of_annotation,
 )
 from .scope import ScopeType, ScopingNodeVisitor
-from ..utils import dump
 
 
 # We have to take a two pass approach to first declare the names of the classes as types
@@ -115,19 +116,16 @@ class TypeInferrer(ScopingNodeVisitor):
         return isinstance(typ, ClassType)
 
     def visit_Name(self, node: ast.Name):
-        if node not in self.bindings:
-            # Check builtin types first
-            if node.id in builtin_funcs:
-                typ = builtin_funcs[node.id]
-            else:
-                typ = UnknownType()
+        binding = self.bindings[node]
+        if binding.builtin and node.id in builtin_funcs:
+            typ = builtin_funcs[node.id]
+        # If the node has a binding but it points to itself thats a declaration and the type is still unkown
+        elif binding.node == node:
+            typ = UnknownType()
+        elif binding.node:
+            typ = self.types[binding.node]
         else:
-            binding = self.bindings[node]
-            # If the node has a binding but it points to itself thats a declaration and the type is still unkown
-            if binding.node == node:
-                typ = UnknownType()
-            else:
-                typ = self.types[binding.node]
+            typ = UnknownType()
         self.types[node] = typ
 
     def visit_Constant(self, node: ast.Constant):

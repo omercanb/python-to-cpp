@@ -22,6 +22,7 @@ type BindingTable = dict[ast.Name, Binding]
 @dataclass
 class Binding:
     node: ast.AST | None
+    builtin: BuiltinType | None
 
 
 class ResolutionError(PyToCppError):
@@ -68,7 +69,7 @@ class NameResolver(ScopingNodeVisitor):
         # The name is user declared
         if result is not None:
             _, declaration_node = result
-            binding = Binding(declaration_node)
+            binding = Binding(declaration_node, None)
             self.bind_node(node, binding)
             return
 
@@ -77,7 +78,7 @@ class NameResolver(ScopingNodeVisitor):
         # The name is user declared
         if result is not None:
             _, declaration_node = result
-            binding = Binding(declaration_node)
+            binding = Binding(declaration_node, None)
             self.bind_node(node, binding)
             return
 
@@ -85,5 +86,6 @@ class NameResolver(ScopingNodeVisitor):
         if builtin is None:
             raise ResolutionError(node)
         else:
-            # Resolves but we don't bind it here
-            return None
+            binding = Binding(None, builtin)
+            self.bind_node(node, binding)
+            return

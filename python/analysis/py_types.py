@@ -27,12 +27,11 @@ class UnknownType(PyType):
 
 @dataclass(frozen=True)
 class BuiltinType(PyType):
-    builtin: type
+    name: str
 
 
 builtins_map = {
-    builtin_name: BuiltinType(getattr(builtins, builtin_name))
-    for builtin_name in dir(builtins)
+    builtin_name: BuiltinType(builtin_name) for builtin_name in dir(builtins)
 }
 builtin_int = builtins_map["int"]
 builtin_float = builtins_map["float"]
@@ -223,7 +222,7 @@ class IteratorType(PyType):
 
 
 builtin_print = FunctionType("print", [], builtin_none, None)
-builtin_len = FunctionType("len", [], builtin_none, None)
+builtin_len = FunctionType("len", [], builtin_int, None)
 builtin_range = FunctionType("range", [], IteratorType(builtin_int), None)
 builtin_funcs = {
     "print": builtin_print,

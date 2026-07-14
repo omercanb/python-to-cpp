@@ -129,17 +129,20 @@ def print_bindings(bindings):
     headers = ["Use Line", "Name", "Resolves To", "declaration Line"]
     data = defaultdict(list)
     for use, binding in bindings.items():
-        data["use line"].append(getattr(use, "lineno", None))
-        data["name"].append(use.id)
 
         declaration = binding.node
-        if declaration is None:
-            data["resolves to"].append("<builtin>")
-            data["declaration line"].append("")
-        else:
+        builtin = binding.builtin
+        if declaration is not None:
+            data["use line"].append(getattr(use, "lineno", None))
+            data["name"].append(use.id)
             name = get_node_name(declaration)
             data["resolves to"].append(f'{type(declaration).__name__} {name or ""}')
             data["declaration line"].append(getattr(declaration, "lineno", ""))
+        elif builtin is not None:
+            data["use line"].append(getattr(use, "lineno", None))
+            data["name"].append(use.id)
+            data["resolves to"].append(f"builtin {builtin.name}")
+            data["declaration line"].append("")
     print(tabulate(data, headers))
 
 
@@ -182,9 +185,9 @@ def _(typ: ListType):
 
 @get_type_name.register
 def _(typ: BuiltinType):
-    if typ.builtin is None:
+    if typ.name is None:
         return "None"
-    return typ.builtin.__name__
+    return f"<builtin {typ.name}>"
 
 
 @get_type_name.register

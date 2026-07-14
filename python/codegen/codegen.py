@@ -11,9 +11,12 @@ from ..analysis.py_types import (
     PyType,
     RangeType,
     TypeTable,
+    builtin_funcs,
+    builtin_range,
     is_object,
 )
 from ..analysis.scope import Scope, ScopeType, ScopingNodeVisitor
+from .for_loop import match_for
 
 includes = ["print.h", "list.h", "ptr.h", "range.h"]
 
@@ -198,9 +201,16 @@ class CppTranslator(ScopingNodeVisitor):
 
     def visit_For(self, node: ast.For):
         assert isinstance(node.target, ast.Name)
+        match_for(self, node)
+        return
         self.test_declare_name(node.target)
         target = self.visit(node.target)
         iterable = self.visit(node.iter)
+        print("ITERABLE", iterable, type(iterable))
+        print(self.types[node.iter])
+        match iterable:
+            case builtin_range:
+                print("YES")
         var = f"{node.target.id}__iter"
         for_line = f"for (auto {var} = iter({iterable}); !{var}.done();)"
         self.stmt(f"{for_line} {{")
@@ -254,7 +264,6 @@ class CppTranslator(ScopingNodeVisitor):
 
     def visit_Call(self, node: ast.Call):
         s = ""
-        builtin_funcs = ["print", "len"]
         if isinstance(node.func, ast.Name) and node.func.id in builtin_funcs:
             s += f"{node.func.id}("
         else:
@@ -292,6 +301,9 @@ class CppTranslator(ScopingNodeVisitor):
 
     def visit_BinOp(self, node: ast.BinOp):
         return f"({self.visit(node.left)} {cpp_op(node.op)} {self.visit(node.right)})"
+
+    def visit_UnaryOp(self, node: ast.UnaryOp):
+        return f"({cpp_op(node.op)}{self.visit(node.operand)})"
 
     # Currently this is not quite right because an if(x) in python will use a truthiness condition while in c++ it may be different
     # For when we have only number types though, this is fine
@@ -342,7 +354,6 @@ class CppTranslator(ScopingNodeVisitor):
         return s
 
     def test_declare_name(self, name: ast.Name):
-        print("HERE", name)
         if self.bindings[name].node == name:
             self.add_declaration(name)
 
@@ -391,12 +402,11 @@ from ..analysis.py_types import (
 )
 
 CPP_SCALAR_TYPES = {
-    int: "int",
-    float: "double",
-    bool: "bool",
-    str: "std::string",
-    None: "void",
-    type(None): "void",
+    "int": "int",
+    "float": "double",
+    "bool": "bool",
+    "str": "std::string",
+    "None": "void",
 }
 
 CPP_CONTAINER_TYPES = {
@@ -419,9 +429,9 @@ def cpp_type(typ: PyType) -> str:
 @cpp_type.register
 def _(typ: BuiltinType) -> str:
     try:
-        return CPP_SCALAR_TYPES[typ.builtin]
+        return CPP_SCALAR_TYPES[typ.name]
     except (KeyError, TypeError):
-        raise NotImplementedError(f"no C++ mapping for builtin {typ.builtin!r}")
+        raise NotImplementedError(f"no C++ mapping for builtin {typ.name!r}")
 
 
 @cpp_type.register
