@@ -1,7 +1,7 @@
 import ast
 import sys
 
-from utils import dump
+from ..utils import dump
 
 """
 Validate the constructs used in the program and give error messages

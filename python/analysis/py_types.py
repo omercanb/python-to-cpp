@@ -5,11 +5,11 @@ import builtins
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from errors import PyToCppError
+from ..errors import PyToCppError
 
 if TYPE_CHECKING:
-    from name_resolution import BindingTable
-    from scope import Scope
+    from .name_resolution import BindingTable
+    from .scope import Scope
 
 type FunctionAndClassTypeTable = dict[ast.AST, FunctionType | ClassType]
 

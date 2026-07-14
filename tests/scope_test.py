@@ -5,12 +5,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pprint import pp
 
-import scope
-import symbol_declaration
-import type_inference
-import validate
-from scope import ScopeType
-from utils import build_and_run, dump
+from python.analysis import scope, symbol_declaration, type_inference, validate
+from python.analysis.scope import ScopeType
+from python.utils import build_and_run, dump
 
 ANNOTATION_TYPES = {
     "int": int,

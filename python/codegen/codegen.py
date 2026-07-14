@@ -1,11 +1,10 @@
 import ast
 from collections import defaultdict
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from formatting import get_scope_identifier, get_type_name
-from name_resolution import BindingTable
-from py_types import (
+from ..analysis.name_resolution import BindingTable
+from ..analysis.py_types import (
     ClassType,
     FunctionType,
     MethodType,
@@ -14,7 +13,7 @@ from py_types import (
     TypeTable,
     is_object,
 )
-from scope import Scope, ScopeType, ScopingNodeVisitor
+from ..analysis.scope import Scope, ScopeType, ScopingNodeVisitor
 
 includes = ["print.h", "list.h", "ptr.h", "range.h"]
 
@@ -382,14 +381,12 @@ def get_class_signature(c: ClassType):
 
 from functools import singledispatch
 
-from py_types import (
+from ..analysis.py_types import (
     BuiltinType,
     ClassType,
     FunctionType,
     ListType,
-    MethodType,
     PyType,
-    SliceType,
     UnknownType,
 )
 

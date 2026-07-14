@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from tabulate import tabulate
 
-from py_types import (
+from python.analysis.py_types import (
     BuiltinType,
     ClassType,
     FunctionAndClassTypeTable,
@@ -17,8 +17,8 @@ from py_types import (
     RangeType,
     UnknownType,
 )
-from scope import Scope
-from symbol_declaration import SymbolType
+from python.analysis.scope import Scope
+from python.analysis.symbol_declaration import SymbolType
 
 # Utility Functions
 

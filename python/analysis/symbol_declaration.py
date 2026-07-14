@@ -3,7 +3,7 @@ from __future__ import annotations
 import ast
 from enum import Enum, auto
 
-from scope import ScopeType, ScopingNodeVisitor
+from .scope import ScopeType, ScopingNodeVisitor
 
 
 class SymbolType(Enum):

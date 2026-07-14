@@ -1,25 +1,14 @@
-import ast
-import types
-import typing
-from collections import defaultdict
-from dataclasses import dataclass
-from pprint import pp
-
-import name_resolution
-import scope
-import symbol_declaration
-import validate
-from codegen import CppTranslator
-from formatting import *
-from name_resolution import NameResolver
-from scope import ScopeTracker, ScopeTreeCreator, ScopeType
-from symbol_declaration import SymbolDefiner
-from type_inference import (
+from python.analysis.name_resolution import NameResolver
+from python.analysis.scope import ScopeTreeCreator
+from python.analysis.symbol_declaration import SymbolDefiner
+from python.analysis.type_inference import (
     ClassTypeDeclarer,
     FunctionAndClassTypeAnnotator,
     TypeInferrer,
 )
-from utils import build_and_run, dump
+from python.codegen.codegen import CppTranslator
+from python.formatting import *
+from python.utils import build_and_run, dump
 
 includes = ["print.h", "list.h", "ptr.h"]
 

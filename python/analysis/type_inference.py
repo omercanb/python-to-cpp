@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import ast
-from functools import singledispatchmethod
 
-from errors import PyToCppError
-from formatting import format_type, get_type_name
-from name_resolution import BindingTable
-from py_types import (
+from ..errors import PyToCppError
+from python.formatting import get_type_name
+from .name_resolution import BindingTable
+from .py_types import (
     ClassType,
     FunctionAndClassTypeTable,
     FunctionType,
@@ -20,7 +19,6 @@ from py_types import (
     builtin_float,
     builtin_funcs,
     builtin_int,
-    builtin_print,
     builtin_str,
     builtins_map,
     create_list_type,
@@ -29,8 +27,8 @@ from py_types import (
     parse_function,
     type_of_annotation,
 )
-from scope import ScopeType, ScopingNodeVisitor
-from utils import dump
+from .scope import ScopeType, ScopingNodeVisitor
+from ..utils import dump
 
 
 # We have to take a two pass approach to first declare the names of the classes as types

@@ -9,12 +9,12 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from errors import PyToCppError
-from py_types import BuiltinType, builtins_map
-from scope import ScopingNodeVisitor
+from ..errors import PyToCppError
+from .py_types import BuiltinType, builtins_map
+from .scope import ScopingNodeVisitor
 
 if TYPE_CHECKING:
-    from scope import Scope
+    from .scope import Scope
 
 type BindingTable = dict[ast.Name, Binding]
 

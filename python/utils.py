@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import ast
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING, Mapping
+from typing import Mapping
 
-from formatting import *
+from python.formatting import *
 
 if TYPE_CHECKING:
-    from py_types import PyType, TypeTable
+    from .analysis.py_types import PyType
 
 
 def build_and_run(translated: str, src="main.cpp", exe="main", std="c++17"):
@@ -19,7 +18,7 @@ def build_and_run(translated: str, src="main.cpp", exe="main", std="c++17"):
 
     # 2. compile:  g++ main.cpp -o main
     compile_proc = subprocess.run(
-        ["g++", "-ggdb", f"-std={std}", src, "-o", exe],
+        ["g++", "-ggdb", f"-std={std}", f"-Icpp", src, "-o", exe],
         capture_output=True,
         text=True,
     )
