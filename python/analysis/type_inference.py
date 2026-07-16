@@ -1,15 +1,23 @@
 from __future__ import annotations
 
 import ast
+from types import resolve_bases
 
 from python.formatting import get_type_name
-
-from ..errors import PyToCppError
-from ..utils import dump
-from .name_resolution import BindingTable
-from .py_types import (
+from python.errors import PyToCppError
+from python.utils import dump
+from python.analysis.name_resolution import BindingTable
+from python.analysis.parse_types import type_of_annotation
+from python.analysis.ptypes.py_builtins import (
+    UnknownType,
+    builtin_bool,
+    builtin_float,
+    builtin_int,
+    builtin_str,
+    builtins_map,
+)
+from python.analysis.py_types import (
     ClassType,
-    FunctionAndClassTypeTable,
     FunctionType,
     IteratorType,
     ListType,
@@ -17,60 +25,11 @@ from .py_types import (
     PyType,
     RangeType,
     TypeTable,
-    UnknownType,
-    builtin_bool,
-    builtin_float,
     builtin_funcs,
-    builtin_int,
-    builtin_str,
-    builtins_map,
     create_list_type,
-    parse_class_stub,
-    parse_class_type,
-    parse_function,
-    type_of_annotation,
+    resolve_builtin,
 )
-from .scope import ScopeType, ScopingNodeVisitor
-
-
-# We have to take a two pass approach to first declare the names of the classes as types
-class FunctionAndClassTypeAnnotator(ScopingNodeVisitor):
-    def __init__(
-        self, node_scopes, bindings: BindingTable, types: FunctionAndClassTypeTable
-    ):
-        super().__init__(node_scopes)
-        self.bindings = bindings
-        self.types = types
-
-    def visit_FunctionDef(self, node: ast.FunctionDef):
-        scope = self.scope_tracker.node_scopes[node]
-        if scope.typ == ScopeType.CLASS:
-            return
-        self.types[node] = parse_function(node, self.bindings, self.types)
-        self.visit(node.body)
-
-    def visit_ClassDef(self, node: ast.ClassDef):
-        class_type = self.types[node]
-        assert isinstance(class_type, ClassType)
-        parse_class_type(class_type, self.bindings, self.types)
-        self.visit(node.body)
-
-
-class ClassTypeDeclarer(ScopingNodeVisitor):
-    def __init__(self, node_scopes, bindings: BindingTable):
-        super().__init__(node_scopes)
-        self.bindings = bindings
-        self.types: FunctionAndClassTypeTable = {}
-
-    def visit_ClassDef(self, node: ast.ClassDef):
-        scope = None
-        for stmt in node.body:
-            scope = self.node_scopes().get(stmt)
-            if scope is not None:
-                break
-        assert scope is not None
-        self.types[node] = parse_class_stub(node, scope, self.node_scopes())
-        self.visit(node.body)
+from python.analysis.scope import ScopingNodeVisitor
 
 
 class TypeInferrer(ScopingNodeVisitor):
@@ -117,17 +76,22 @@ class TypeInferrer(ScopingNodeVisitor):
         return isinstance(typ, ClassType)
 
     def visit_Name(self, node: ast.Name):
-        binding = self.bindings[node]
-        if binding.builtin and node.id in builtin_funcs:
-            typ = builtin_funcs[node.id]
-        # If the node has a binding but it points to itself thats a declaration and the type is still unkown
-        elif binding.node == node:
-            typ = UnknownType()
-        elif binding.node:
-            typ = self.types[binding.node]
+        """This name can't be an annotation"""
+        binding = self.bindings.get(node)
+        if binding is not None:
+            if binding.node is None and node.id in builtin_funcs:
+                typ = builtin_funcs[node.id]
+            # If the node has a binding but it points to itself thats a declaration and the type is still unkown
+            elif binding.node == node:
+                typ = UnknownType()
+            elif binding.node:
+                typ = self.types[binding.node]
+            else:
+                typ = UnknownType()
+            self.types[node] = typ
         else:
-            typ = UnknownType()
-        self.types[node] = typ
+            type = resolve_builtin(node.id)
+            self.types[node] = type
 
     def visit_Constant(self, node: ast.Constant):
         if node.value is None:
@@ -162,6 +126,10 @@ class TypeInferrer(ScopingNodeVisitor):
         self.current_class.append(typ)
         self.visit(node.body)
         self.current_class.pop()
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        self.visit(node.args)
+        self.visit(node.body)
 
     def visit_For(self, node: ast.For):
         self.visit(node.target)
@@ -203,8 +171,8 @@ class TypeInferrer(ScopingNodeVisitor):
 
     def visit_arg(self, node: ast.arg):
         assert node.annotation is not None
-        annotaion_type = type_of_annotation(node.annotation, self.bindings, self.types)
-        self.types[node] = annotaion_type
+        annotation_type = type_of_annotation(node.annotation, self.bindings, self.types)
+        self.types[node] = annotation_type
 
     def visit_Attribute(self, node: ast.Attribute):
         self.visit(node.value)
@@ -245,7 +213,6 @@ class TypeInferrer(ScopingNodeVisitor):
         assert isinstance(base_type, ClassType)
         assert base_type.get_item_type is not None
         self.types[node] = base_type.get_item_type
-        return
 
     def visit_BinOp(self, node: ast.BinOp):
         self.visit(node.left)
@@ -314,7 +281,11 @@ class TypeInferrer(ScopingNodeVisitor):
         self.types[node] = builtin_bool
 
     def binop_type(self, op: ast.operator, left: PyType, right: PyType) -> PyType:
-        numeric_rank = {builtin_bool: 0, builtin_int: 1, builtin_float: 2}
+        numeric_rank: dict[PyType, int] = {
+            builtin_bool: 0,
+            builtin_int: 1,
+            builtin_float: 2,
+        }
         both_numeric = left in numeric_rank and right in numeric_rank
 
         def widen(l: PyType, r: PyType) -> PyType:

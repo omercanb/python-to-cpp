@@ -3,7 +3,9 @@ from __future__ import annotations
 import ast
 from enum import Enum, auto
 
-from .scope import ScopeType, ScopingNodeVisitor
+from python.errors import PyToCppError
+from python.analysis.ptypes.py_builtins import builtins_map
+from python.analysis.scope import ScopeType, ScopingNodeVisitor
 
 
 class SymbolType(Enum):
@@ -29,7 +31,7 @@ class SymbolType(Enum):
 class SymbolDefiner(ScopingNodeVisitor):
     """
     Define variables, functions, and classes
-    Create stub types for functions and classes
+    Create stub ptypes for functions and classes
     """
 
     def __init__(self, node_scopes):
@@ -63,6 +65,11 @@ class SymbolDefiner(ScopingNodeVisitor):
         if not isinstance(node.ctx, ast.Store):
             return
         name = node.id
+
+        # Check if trying to declare a builtin name
+        if name in builtins_map:
+            raise PyToCppError(node, f"cannot assign to builtin '{name}'")
+
         # Assignments to a nonlocal or global var are not definitions
         if name in self.scope().nonlocal_vars or name in self.scope().global_vars:
             return

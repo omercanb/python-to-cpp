@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from typing import Mapping
+from typing import TYPE_CHECKING, Mapping
 
 from python.formatting import *
 
@@ -75,7 +75,7 @@ def build_and_run_capture(
     return run_proc
 
 
-# The dump function from the ast library, modified to print types if available
+# The dump function from the ast library, modified to print ptypes if available
 def dump(
     node,
     annotate_fields=True,

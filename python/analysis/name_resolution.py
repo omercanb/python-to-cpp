@@ -1,17 +1,14 @@
-"""
-Resolve names (including type annotations) to their declarations or Builtins
-"""
+"""Resolve names (including type annotations) to their declarations or Builtins"""
 
 from __future__ import annotations
 
 import ast
-from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from ..errors import PyToCppError
-from .py_types import BuiltinType, builtins_map
-from .scope import ScopingNodeVisitor
+from python.errors import PyToCppError
+from python.analysis.ptypes.py_builtins import BuiltinType, builtins_map
+from python.analysis.scope import ScopingNodeVisitor
 
 if TYPE_CHECKING:
     from .scope import Scope
@@ -22,7 +19,6 @@ type BindingTable = dict[ast.Name, Binding]
 @dataclass
 class Binding:
     node: ast.AST | None
-    builtin: BuiltinType | None
 
 
 class ResolutionError(PyToCppError):
@@ -65,27 +61,31 @@ class NameResolver(ScopingNodeVisitor):
             self.visit(node.target)
 
     def resolve_name_store(self, node: ast.Name, scope: Scope):
+        # Check if trying to assign to a builtin
+        if node.id in builtins_map:
+            raise PyToCppError(node, f"cannot assign to builtin '{node.id}'")
+
         result = scope.resolve(node.id)
         # The name is user declared
         if result is not None:
             _, declaration_node = result
-            binding = Binding(declaration_node, None)
+            binding = Binding(declaration_node)
             self.bind_node(node, binding)
             return
+
+        # Name doesn't exist yet - it's a new declaration
+        binding = Binding(None)
+        self.bind_node(node, binding)
 
     def resolve_name_load(self, node: ast.Name, scope: Scope):
         result = scope.resolve(node.id)
         # The name is user declared
         if result is not None:
             _, declaration_node = result
-            binding = Binding(declaration_node, None)
+            binding = Binding(declaration_node)
             self.bind_node(node, binding)
             return
 
         builtin = self.resolve_builtin(node.id)
         if builtin is None:
             raise ResolutionError(node)
-        else:
-            binding = Binding(None, builtin)
-            self.bind_node(node, binding)
-            return

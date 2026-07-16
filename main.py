@@ -1,11 +1,11 @@
 from python.analysis.name_resolution import NameResolver
 from python.analysis.scope import ScopeTreeCreator
 from python.analysis.symbol_declaration import SymbolDefiner
-from python.analysis.type_inference import (
+from python.analysis.type_annotation import (
     ClassTypeDeclarer,
     FunctionAndClassTypeAnnotator,
-    TypeInferrer,
 )
+from python.analysis.type_inference import TypeInferrer
 from python.codegen.codegen import CppTranslator
 from python.formatting import *
 from python.utils import build_and_run, dump
@@ -52,11 +52,11 @@ def pipeline(program: str, debug=False):
     s = translator.flush()
     return s
 
-    # print(dump(tree, types=types, indent=4))
+    # print(dump(tree, ptypes=ptypes, indent=4))
 
 
 def main():
-    file = "input.py"
+    file = "tests/test_files/loops.py"
     program = open(file).read()
     s = pipeline(program, debug=True)
     build_and_run(s)
@@ -75,11 +75,11 @@ def main():
     # print("inferring")
     # inferrer = type_inference.TypeInferrer()
     # inferrer.visit(tree)
-    # types = inferrer.types
-    # for k, v in types.items():
+    # ptypes = inferrer.ptypes
+    # for k, v in ptypes.items():
     #     print(dump(k), v)
     #
-    # translated = CppTranslator(types).visit(tree)
+    # translated = CppTranslator(ptypes).visit(tree)
     # build_and_run(translated)
 
 

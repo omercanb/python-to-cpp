@@ -2,21 +2,23 @@ import ast
 from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import singledispatch
 
-from ..analysis.name_resolution import BindingTable
-from ..analysis.py_types import (
+from python.analysis.name_resolution import BindingTable
+from python.analysis.ptypes.py_builtins import BuiltinType, UnknownType
+from python.analysis.py_types import (
     ClassType,
     FunctionType,
+    ListType,
     MethodType,
     PyType,
     RangeType,
     TypeTable,
     builtin_funcs,
-    builtin_range,
     is_object,
 )
-from ..analysis.scope import Scope, ScopeType, ScopingNodeVisitor
-from .for_loop import match_for
+from python.analysis.scope import Scope, ScopeType, ScopingNodeVisitor
+from python.codegen.for_loop import match_for
 
 includes = ["print.h", "list.h", "ptr.h", "range.h"]
 
@@ -306,7 +308,7 @@ class CppTranslator(ScopingNodeVisitor):
         return f"({cpp_op(node.op)}{self.visit(node.operand)})"
 
     # Currently this is not quite right because an if(x) in python will use a truthiness condition while in c++ it may be different
-    # For when we have only number types though, this is fine
+    # For when we have only number ptypes though, this is fine
     def visit_BoolOp(self, node: ast.BoolOp):
         s = "("
         s += f" {cpp_op(node.op)} ".join(self.visit(expr) for expr in node.values)
@@ -390,17 +392,6 @@ def get_class_signature(c: ClassType):
     return s
 
 
-from functools import singledispatch
-
-from ..analysis.py_types import (
-    BuiltinType,
-    ClassType,
-    FunctionType,
-    ListType,
-    PyType,
-    UnknownType,
-)
-
 CPP_SCALAR_TYPES = {
     "int": "int",
     "float": "double",
@@ -474,17 +465,17 @@ CPP_OPS = {
     ast.BitOr: "|",
     ast.BitXor: "^",
     ast.BitAnd: "&",
-    # comparison (ast.Compare)
+    # comparison
     ast.Eq: "==",
     ast.NotEq: "!=",
     ast.Lt: "<",
     ast.LtE: "<=",
     ast.Gt: ">",
     ast.GtE: ">=",
-    # boolean (ast.BoolOp)
+    # boolean
     ast.And: "&&",
     ast.Or: "||",
-    # unary (ast.UnaryOp)
+    # unary
     ast.UAdd: "+",
     ast.USub: "-",
     ast.Not: "!",

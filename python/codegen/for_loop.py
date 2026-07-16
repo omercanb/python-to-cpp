@@ -3,10 +3,6 @@ from __future__ import annotations
 import ast
 from typing import TYPE_CHECKING
 
-from python.utils import dump
-
-from ..analysis.py_types import builtins_map
-
 if TYPE_CHECKING:
     from python.codegen.codegen import CppTranslator
 
@@ -15,17 +11,23 @@ def match_for(self: CppTranslator, node: ast.For):
     if isinstance(node.target, ast.Name):
         self.test_declare_name(node.target)
     match node.iter:
+        # for i in range(len(list))
         case ast.Call(
             func=ast.Name(), args=[ast.Call(func=ast.Name(), args=[inner_object])]
         ) as call if (
-            self.bindings[call.func].builtin == builtins_map["range"]
-            and self.bindings[call.args[0].func].builtin == builtins_map["len"]
+            isinstance(call.func, ast.Name)
+            and isinstance(call.args[0], ast.Call)
+            and isinstance(call.args[0].func, ast.Name)
+            and call.func.id == "range"
+            and call.args[0].func.id == "len"
         ):
             for_range_len(self, node, inner_object)
+        # for i in range(number)
         case ast.Call(func=ast.Name()) as call if (
-            self.bindings[call.func].builtin == builtins_map["range"]
+            isinstance(call.func, ast.Name) and call.func.id == "range"
         ):
             for_range(self, node)
+        # for i in list
         case _:
             for_generic(self, node)
 
@@ -121,6 +123,7 @@ def for_range_unkown_step(self: CppTranslator, node: ast.For):
 def for_generic(self: CppTranslator, node: ast.For):
     target = self.visit(node.target)
     iterable = self.visit(node.iter)
+    assert isinstance(node.target, ast.Name)
     var = f"{node.target.id}__iter"
     for_line = f"for (auto {var} = iter({iterable}); !{var}.done();)"
     self.stmt(f"{for_line} {{")

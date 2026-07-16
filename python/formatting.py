@@ -2,20 +2,18 @@ import ast
 from collections import defaultdict
 from functools import singledispatch
 from types import MethodType
-from typing import TYPE_CHECKING
 
 from tabulate import tabulate
 
+from python.analysis.ptypes.py_builtins import BuiltinType, UnknownType
 from python.analysis.py_types import (
-    BuiltinType,
     ClassType,
-    FunctionAndClassTypeTable,
     FunctionType,
     IteratorType,
     ListType,
     MethodType,
     RangeType,
-    UnknownType,
+    TypeTable,
 )
 from python.analysis.scope import Scope
 from python.analysis.symbol_declaration import SymbolType
@@ -131,27 +129,21 @@ def print_bindings(bindings):
     for use, binding in bindings.items():
 
         declaration = binding.node
-        builtin = binding.builtin
         if declaration is not None:
             data["use line"].append(getattr(use, "lineno", None))
             data["name"].append(use.id)
             name = get_node_name(declaration)
             data["resolves to"].append(f'{type(declaration).__name__} {name or ""}')
             data["declaration line"].append(getattr(declaration, "lineno", ""))
-        elif builtin is not None:
-            data["use line"].append(getattr(use, "lineno", None))
-            data["name"].append(use.id)
-            data["resolves to"].append(f"builtin {builtin.name}")
-            data["declaration line"].append("")
     print(tabulate(data, headers))
 
 
 # Class and Function Declarations
 
 
-def print_type_table(types: FunctionAndClassTypeTable):
+def print_type_table(types: TypeTable):
     s = "Classes and Functions\n\n"
-    for node, typ in types.items():
+    for _, typ in types.items():
         s += format_type(typ)
         s += "\n"
     print(s)
@@ -160,7 +152,6 @@ def print_type_table(types: FunctionAndClassTypeTable):
 @singledispatch
 def get_type_name(typ) -> str:
     raise ValueError(f"get type name not implemented for type {typ}")
-    return ""
 
 
 @get_type_name.register
@@ -187,7 +178,7 @@ def _(typ: ListType):
 def _(typ: BuiltinType):
     if typ.name is None:
         return "None"
-    return f"<builtin {typ.name}>"
+    return f"{typ.name}"
 
 
 @get_type_name.register
@@ -196,12 +187,12 @@ def _(typ: IteratorType):
 
 
 @get_type_name.register
-def _(typ: RangeType):
+def _(_: RangeType):
     return f"range"
 
 
 @get_type_name.register
-def _(typ: UnknownType):
+def _(_: UnknownType):
     return "Unkown"
 
 
