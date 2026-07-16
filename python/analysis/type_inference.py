@@ -15,6 +15,7 @@ from .py_types import (
     ListType,
     MethodType,
     PyType,
+    RangeType,
     TypeTable,
     UnknownType,
     builtin_bool,
@@ -170,6 +171,8 @@ class TypeInferrer(ScopingNodeVisitor):
             self.types[node.target] = iter_type.element_type
         elif isinstance(iter_type, IteratorType):
             self.types[node.target] = iter_type.element_type
+        elif isinstance(iter_type, RangeType):
+            self.types[node.target] = builtin_int
         self.visit(node.body)
 
     def visit_Call(self, node: ast.Call):

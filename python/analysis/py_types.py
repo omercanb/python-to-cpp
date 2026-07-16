@@ -223,7 +223,7 @@ class IteratorType(PyType):
 
 builtin_print = FunctionType("print", [], builtin_none, None)
 builtin_len = FunctionType("len", [], builtin_int, None)
-builtin_range = FunctionType("range", [], IteratorType(builtin_int), None)
+builtin_range = FunctionType("range", [], RangeType(), None)
 builtin_funcs = {
     "print": builtin_print,
     "len": builtin_len,

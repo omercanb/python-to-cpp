@@ -13,9 +13,10 @@ from python.utils import build_and_run, dump
 includes = ["print.h", "list.h", "ptr.h"]
 
 
-def pipeline(program: str):
+def pipeline(program: str, debug=False):
     tree = ast.parse(program)
-    print(dump(tree, indent=4))
+    if debug:
+        print(dump(tree, indent=4))
     # return
     # validate.Validator().visit(tree)
 
@@ -29,7 +30,8 @@ def pipeline(program: str):
     name_resolver = NameResolver(node_scopes)
     name_resolver.visit(tree)
     bindings = name_resolver.bindings
-    print_bindings(bindings)
+    if debug:
+        print_bindings(bindings)
 
     class_declarer = ClassTypeDeclarer(node_scopes, bindings)
     class_declarer.visit(tree)
@@ -42,12 +44,13 @@ def pipeline(program: str):
         type_inference = TypeInferrer(node_scopes, bindings, types)
         type_inference.visit(tree)
     finally:
-        print(typed_unparse(tree, types))
+        if debug:
+            print(typed_unparse(tree, types))
 
     translator = CppTranslator(node_scopes, bindings, types)
     translator.visit(tree)
     s = translator.flush()
-    build_and_run(s)
+    return s
 
     # print(dump(tree, types=types, indent=4))
 
@@ -55,7 +58,8 @@ def pipeline(program: str):
 def main():
     file = "input.py"
     program = open(file).read()
-    pipeline(program)
+    s = pipeline(program, debug=True)
+    build_and_run(s)
     return
     #
     # print(dump(tree, indent=4))

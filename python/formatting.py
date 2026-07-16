@@ -196,6 +196,11 @@ def _(typ: IteratorType):
 
 
 @get_type_name.register
+def _(typ: RangeType):
+    return f"range"
+
+
+@get_type_name.register
 def _(typ: UnknownType):
     return "Unkown"
 

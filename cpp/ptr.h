@@ -18,18 +18,18 @@ template <typename T> class ptr {
         object = nullptr;
         refcount = new int;
         *refcount = 1;
-        std::cout << "empty constructor\n";
+        std::cerr << "empty constructor\n";
     }
 
     ptr(value_type *obj) {
         object = obj;
         refcount = new int;
         *refcount = 1;
-        std::cout << "pointer constructor: " << *refcount << "\n";
+        std::cerr << "pointer constructor: " << *refcount << "\n";
     }
 
     ptr(const ptr &o) {
-        std::cout << "copy constructor\n";
+        std::cerr << "copy constructor\n";
         o.reference();
         object = o.object;
         refcount = o.refcount;
@@ -42,7 +42,7 @@ template <typename T> class ptr {
         dereference();
         object = o.object;
         refcount = o.refcount;
-        std::cout << "copy assign" << *refcount << "\n";
+        std::cerr << "copy assign" << *refcount << "\n";
         return *this;
     }
 
@@ -55,7 +55,7 @@ template <typename T> class ptr {
     void dereference() const {
         (*refcount)--;
         if ((*refcount) <= 0) {
-            std::cout << "deletion\n";
+            std::cerr << "deletion\n";
             if (object != nullptr) {
                 delete object;
             }
