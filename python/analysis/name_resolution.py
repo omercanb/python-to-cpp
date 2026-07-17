@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
+from enum import Enum, auto
 from typing import TYPE_CHECKING
 
-from python.errors import PyToCppError
 from python.analysis.ptypes.py_builtins import BuiltinType, builtins_map
 from python.analysis.scope import ScopingNodeVisitor
+from python.errors import PyToCppError
 
 if TYPE_CHECKING:
     from .scope import Scope
@@ -18,7 +19,41 @@ type BindingTable = dict[ast.Name, Binding]
 
 @dataclass
 class Binding:
-    node: ast.AST | None
+    node: ast.AST
+
+
+class NameType(Enum):
+    reference = auto()
+    declaration = auto()
+    builtin = auto()
+
+
+def get_declaration(node: ast.Name, bindings: BindingTable) -> ast.AST:
+    assert node in bindings
+    return bindings[node].node
+
+
+def get_name_type(node: ast.Name, bindings: BindingTable):
+    binding = bindings.get(node)
+    if binding is not None:
+        # If the node has a binding but it points to itself thats a declaration and the type is still unkown
+        if binding.node == node:
+            return NameType.declaration
+        else:
+            return NameType.reference
+    else:
+        return NameType.builtin
+
+
+def is_declaration(node: ast.Name, bindings: BindingTable):
+    # If the node has a binding but it points to itself thats a declaration and the type is still unkown
+    binding = bindings.get(node)
+    if binding is None:
+        return False
+    if binding.node == node:
+        return True
+    else:
+        return False
 
 
 class ResolutionError(PyToCppError):

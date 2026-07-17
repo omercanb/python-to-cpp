@@ -49,35 +49,3 @@ class ClassTypeDeclarer(ScopingNodeVisitor):
         assert scope is not None
         self.types[node] = parse_class_stub(node, scope, self.node_scopes())
         self.visit(node.body)
-
-
-# class TypeAnnotator(ScopingNodeVisitor):
-#     """Extract and store types from annotations (before inference)"""
-#
-#     def __init__(self, node_scopes, bindings: BindingTable, types: TypeTable):
-#         super().__init__(node_scopes)
-#         self.bindings = bindings
-#         self.types = types
-#
-#     def bind_type(self, node: ast.AST, annotation: ast.Name | ast.Subscript):
-#         self.types[node]
-#
-#
-#     def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
-#         """Handle annotated assignments: x: int = 5"""
-#         self.types[node.target] = type_of_annotation(
-#             node.annotation, self.bindings, self.types
-#         )
-#         pass
-#
-#     def visit_arg(self, node: ast.arg) -> None:
-#         """Handle function parameter annotations"""
-#         pass
-#
-#     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-#         """Handle function return type annotations"""
-#         pass
-#
-#     def visit_ClassDef(self, node: ast.ClassDef) -> None:
-#         """Handle class definitions with annotations"""
-#         pass

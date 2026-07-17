@@ -15,7 +15,7 @@ def match_for(self: CppTranslator, node: ast.For):
         case ast.Call(
             func=ast.Name(), args=[ast.Call(func=ast.Name(), args=[inner_object])]
         ) as call if (
-            isinstance(call.func, ast.Name)
+            isinstance(call.func, ast.Name)  # To silence pyright
             and isinstance(call.args[0], ast.Call)
             and isinstance(call.args[0].func, ast.Name)
             and call.func.id == "range"

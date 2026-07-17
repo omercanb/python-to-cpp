@@ -56,7 +56,7 @@ def pipeline(program: str, debug=False):
 
 
 def main():
-    file = "tests/test_files/loops.py"
+    file = "input.py"
     program = open(file).read()
     s = pipeline(program, debug=True)
     build_and_run(s)

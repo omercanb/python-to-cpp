@@ -1,13 +1,18 @@
 from dataclasses import dataclass
 
-from python.analysis.py_types import PyType
-from python.analysis.ptypes.py_builtins import builtin_int, builtin_none
+from python.analysis.ptypes.py_builtins import (
+    ContainerType,
+    PyType,
+    builtin_int,
+    builtin_none,
+)
 
 
 # Gives the return type of a method call
-@dataclass
-class PyList(PyType):
-    element_type: PyType
+class ListType(ContainerType):
+    def __init__(self, element_type):
+        self.name = "list"
+        self.element_type = element_type
 
     def append(self, element_type: PyType) -> PyType:
         return builtin_none

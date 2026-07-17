@@ -4,6 +4,8 @@ import ast
 
 from python.analysis.name_resolution import BindingTable
 from python.analysis.ptypes.py_builtins import builtin_none, builtins_map
+from python.analysis.ptypes.py_list import ListType
+from python.analysis.ptypes.py_tuple import TupleType
 from python.analysis.py_types import (
     AnnotationError,
     ClassType,
@@ -11,10 +13,10 @@ from python.analysis.py_types import (
     MethodType,
     PyType,
     TypeTable,
-    create_list_type,
 )
 from python.analysis.scope import Scope
 from python.errors import PyToCppError
+from python.utils import dump
 
 
 def parse_method(
@@ -119,10 +121,6 @@ def type_of_annotation(
     annotation: ast.AST, bindings: BindingTable, types: TypeTable
 ) -> PyType:
     match annotation:
-        case ast.Subscript(value=ast.Name(id), slice=slice):
-            slice_type = type_of_annotation(slice, bindings, types)
-            if id == "list":
-                return create_list_type(slice_type)
         case ast.Constant():
             assert annotation.value == None
             return builtin_none
@@ -134,15 +132,27 @@ def type_of_annotation(
             if annotation.id in builtins_map:
                 return builtins_map[annotation.id]
         case ast.Subscript():
-            base_type = type_of_annotation(annotation.value, bindings, types)
-            slice = annotation.slice
-            if isinstance(slice, ast.Name):
-                slice_types = [type_of_annotation(slice, bindings, types)]
-            else:
-                assert isinstance(slice, ast.Tuple)
-                slice_types = [
-                    type_of_annotation(element, bindings, types)
-                    for element in slice.elts
-                ]
-            return base_type(*slice_types)
+            return type_of_container_annotation(annotation, bindings, types)
     raise PyToCppError(annotation, "Unkown annotation type")
+
+
+def type_of_container_annotation(
+    annotation: ast.Subscript, bindings: BindingTable, types: TypeTable
+):
+    if not isinstance(annotation.value, ast.Name):
+        raise PyToCppError(annotation, "Can't convert annotation")
+    match annotation.slice:
+        case ast.Name() as name:
+            elements = [type_of_annotation(name, bindings, types)]
+        case ast.Tuple() as slice:
+            elements = [
+                type_of_annotation(element, bindings, types) for element in slice.elts
+            ]
+        case _:
+            raise PyToCppError(annotation, "Can't convert annotation")
+    match annotation.value.id:
+        case "list":
+            return ListType(elements[0])
+        case "tuple":
+            return TupleType(elements)
+    raise PyToCppError(annotation, "Can't convert annotation")

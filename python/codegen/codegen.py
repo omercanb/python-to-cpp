@@ -3,13 +3,15 @@ from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import singledispatch
+from typing import Sequence
 
 from python.analysis.name_resolution import BindingTable
 from python.analysis.ptypes.py_builtins import BuiltinType, UnknownType
+from python.analysis.ptypes.py_list import ListType
+from python.analysis.ptypes.py_tuple import TupleType
 from python.analysis.py_types import (
     ClassType,
     FunctionType,
-    ListType,
     MethodType,
     PyType,
     RangeType,
@@ -43,7 +45,7 @@ class CppTranslator(ScopingNodeVisitor):
         self.marked_scopes: set[Scope] = set()
         self.current_self_name: str | None = None
 
-    def commas(self, lst: list[ast.AST]):
+    def commas(self, lst: Sequence[ast.AST]):
         return ", ".join(self.visit(node) for node in lst)
 
     def indent(self):
@@ -332,9 +334,9 @@ class CppTranslator(ScopingNodeVisitor):
         return s
 
     def visit_List(self, node: ast.List):
-        typ = self.types.get(node)
-        if isinstance(typ, ListType):
-            elem = cpp_type(typ.element_type)
+        type = self.types.get(node)
+        if isinstance(type, ListType):
+            elem = cpp_type(type.element_type)
         else:
             # no inferred element type (e.g. bare literal not tied to a decl):
             # fall back to the first element's type, or error
@@ -342,6 +344,11 @@ class CppTranslator(ScopingNodeVisitor):
         elements = self.commas(node.elts)
         list = f"list<{elem}>({{{elements}}})"
         return pointer_to(list)
+
+    def visit_Tuple(self, node: ast.Tuple):
+        type = self.types.get(node)
+        if type is not None:
+            return f"std::make_tuple({self.commas(node.elts)})"
 
     def translate_assign(self, targets: list[ast.expr], value: ast.expr | None):
         assert len(targets) == 1
@@ -433,6 +440,13 @@ def _(typ: RangeType) -> str:
 @cpp_type.register
 def _(typ: ListType) -> str:
     return f"ptr<list<{cpp_type(typ.element_type)}>>"
+
+
+@cpp_type.register
+def _(typ: TupleType) -> str:
+    return (
+        f"std::tuple<{', '.join(cpp_type(element) for element in typ.element_types)}>"
+    )
 
 
 @cpp_type.register

@@ -5,7 +5,9 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from python.analysis.ptypes.py_builtins import (
+    ContainerType,
     PyType,
+    UnknownType,
     builtin_int,
     builtin_none,
     builtins_map,
@@ -37,7 +39,7 @@ class MethodType(PyType):
     name: str
     argument_types: list[PyType]
     return_type: PyType
-    node: ast.AST | None
+    node: ast.AST
 
 
 @dataclass
@@ -52,38 +54,17 @@ class ClassType(PyType):
     get_item_type: PyType | None = None
 
 
-@dataclass
-class ListType(ClassType):
-    element_type: PyType = builtin_int
+class BuiltinClassType(PyType):
+    name: str
+    methods: list[BuiltinMethodType]
+    fields: dict[str, PyType]
 
 
-def create_list_type(element_type: PyType) -> ListType:
-    list_type = ListType("list", element_type=element_type, get_item_type=element_type)
-    methods = list_methods(element_type, list_type)
-    list_type.methods = methods
-    return list_type
-
-
-def list_methods(element_type, list_type_instance) -> list[MethodType]:
-    T = element_type
-    none = builtins_map["None"]
-
-    def method(name, argument_types, return_type):
-        return MethodType(list_type_instance, name, argument_types, return_type, None)
-
-    return [
-        method("append", [T], none),
-        method("extend", [list_type_instance], none),
-        method("insert", [builtin_int, T], none),
-        method("remove", [T], none),
-        method("pop", [], T),
-        method("index", [T], builtin_int),
-        method("count", [T], builtin_int),
-        method("clear", [], none),
-        method("copy", [], list_type_instance),
-        method("reverse", [], none),
-        method("sort", [], none),
-    ]
+class BuiltinMethodType(PyType):
+    class_type: BuiltinClassType
+    name: str
+    argument_types: list[PyType]
+    return_type: PyType
 
 
 class RangeType(PyType):
@@ -116,3 +97,66 @@ class AnnotationError(PyToCppError):
 def resolve_builtin(name: str) -> FunctionType:
     assert name in builtin_funcs
     return builtin_funcs[name]
+
+
+def get_attribute_type(base_type: PyType, attribute: str) -> PyType:
+    match base_type:
+        case ClassType():
+            return get_class_attribute_type(base_type, attribute)
+        case ContainerType():
+            return get_container_attribute_type(base_type, attribute)
+        case _:
+            raise NotImplementedError(f"Can't convert {base_type}")
+
+
+def get_class_attribute_type(class_type: ClassType, attribute: str) -> PyType:
+    typ = None
+    for method in class_type.methods:
+        if method.name == attribute:
+            typ = method
+            break
+    if typ is None:
+        typ = class_type.fields.get(attribute)
+    if typ is None:
+        raise PyToCppError(
+            class_type.node, f"No field {attribute} on class {class_type.name}"
+        )
+    return typ
+
+
+def get_container_attribute_type(
+    continer_type: ContainerType, attribute: str
+) -> PyType:
+    """Returns a placeholder type since call return types for builtin containers are determined later"""
+    return UnknownType()
+
+
+def get_call_type(base_type):
+    match base_type:
+        case FunctionType():
+            return base_type.return_type
+        case MethodType():
+            return base_type.return_type
+        case ClassType():
+            return base_type
+        case _:
+            raise NotImplementedError()
+
+
+class ListType(BuiltinClassType):
+    def __init__(self, element_type: PyType):
+        self.name = "list"
+        self.element_type = element_type
+        methods = [
+            ("append", element_type, builtin_none),
+            ("pop", builtin_int, builtin_none),
+        ]
+
+    # def assign_methods(self, element_type: PyType):
+    #     methods = [
+    #         ("append", element_type, builtin_none),
+    #         ("pop", builtin_int, builtin_none),
+    #         ("extend", self, self),
+    #         ("remove", element_type, builtin_none),
+    #         ("pop", )
+    #     ]

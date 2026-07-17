@@ -3,10 +3,14 @@ from __future__ import annotations
 import ast
 from types import resolve_bases
 
-from python.formatting import get_type_name
-from python.errors import PyToCppError
-from python.utils import dump
-from python.analysis.name_resolution import BindingTable
+from python.analysis import name_resolution
+from python.analysis.name_resolution import (
+    BindingTable,
+    NameType,
+    get_declaration,
+    get_name_type,
+    is_declaration,
+)
 from python.analysis.parse_types import type_of_annotation
 from python.analysis.ptypes.py_builtins import (
     UnknownType,
@@ -16,20 +20,25 @@ from python.analysis.ptypes.py_builtins import (
     builtin_str,
     builtins_map,
 )
+from python.analysis.ptypes.py_list import ListType
+from python.analysis.ptypes.py_tuple import TupleType
 from python.analysis.py_types import (
     ClassType,
     FunctionType,
     IteratorType,
-    ListType,
     MethodType,
     PyType,
     RangeType,
     TypeTable,
     builtin_funcs,
-    create_list_type,
+    get_attribute_type,
+    get_call_type,
     resolve_builtin,
 )
 from python.analysis.scope import ScopingNodeVisitor
+from python.errors import PyToCppError
+from python.formatting import get_type_name
+from python.utils import dump
 
 
 class TypeInferrer(ScopingNodeVisitor):
@@ -76,22 +85,16 @@ class TypeInferrer(ScopingNodeVisitor):
         return isinstance(typ, ClassType)
 
     def visit_Name(self, node: ast.Name):
-        """This name can't be an annotation"""
-        binding = self.bindings.get(node)
-        if binding is not None:
-            if binding.node is None and node.id in builtin_funcs:
-                typ = builtin_funcs[node.id]
-            # If the node has a binding but it points to itself thats a declaration and the type is still unkown
-            elif binding.node == node:
-                typ = UnknownType()
-            elif binding.node:
-                typ = self.types[binding.node]
-            else:
-                typ = UnknownType()
-            self.types[node] = typ
-        else:
-            type = resolve_builtin(node.id)
-            self.types[node] = type
+        # This name can't be an annotation
+        name_type = get_name_type(node, self.bindings)
+        match name_type:
+            case NameType.reference:
+                type = self.types[get_declaration(node, self.bindings)]
+            case NameType.declaration:
+                type = UnknownType()
+            case NameType.builtin:
+                type = resolve_builtin(node.id)
+        self.types[node] = type
 
     def visit_Constant(self, node: ast.Constant):
         if node.value is None:
@@ -146,18 +149,8 @@ class TypeInferrer(ScopingNodeVisitor):
     def visit_Call(self, node: ast.Call):
         self.visit(node.func)
         self.visit(node.args)
-        # The function or class type
         base_type = self.types[node.func]
-        assert (
-            isinstance(base_type, FunctionType)
-            or isinstance(base_type, ClassType)
-            or isinstance(base_type, MethodType)
-        )
-        if isinstance(base_type, FunctionType) or isinstance(base_type, MethodType):
-            typ = base_type.return_type
-        else:
-            typ = base_type
-        self.types[node] = typ
+        self.types[node] = get_call_type(base_type)
 
     def visit_arguments(self, node: ast.arguments):
         starting_argument = 0
@@ -177,29 +170,24 @@ class TypeInferrer(ScopingNodeVisitor):
     def visit_Attribute(self, node: ast.Attribute):
         self.visit(node.value)
         base_type = self.types[node.value]
-        assert isinstance(base_type, ClassType)
-        attribute = node.attr
-        cls = base_type
-
-        typ = None
-        for method in cls.methods:
-            if method.name == attribute:
-                typ = method
-                break
-        if typ is None:
-            typ = cls.fields[attribute]
-        self.types[node] = typ
+        self.types[node] = get_attribute_type(base_type, node.attr)
 
     def visit_List(self, node: ast.List):
         for element in node.elts:
             self.visit(element)
         if len(node.elts) == 0:
-            self.types[node] = create_list_type(UnknownType())
+            self.types[node] = ListType(UnknownType())
             return
         element_type = self.types[node.elts[0]]
         for element in node.elts:
             self.type_check(element, element_type)
-        self.types[node] = create_list_type(element_type)
+        self.types[node] = ListType(element_type)
+
+    def visit_Tuple(self, node: ast.Tuple):
+        for element in node.elts:
+            self.visit(element)
+        types = [self.types[element] for element in node.elts]
+        self.types[node] = TupleType(types)
 
     def visit_Subscript(self, node: ast.Subscript):
         # Slices always return the container type
@@ -281,15 +269,25 @@ class TypeInferrer(ScopingNodeVisitor):
         self.types[node] = builtin_bool
 
     def binop_type(self, op: ast.operator, left: PyType, right: PyType) -> PyType:
-        numeric_rank: dict[PyType, int] = {
-            builtin_bool: 0,
-            builtin_int: 1,
-            builtin_float: 2,
-        }
-        both_numeric = left in numeric_rank and right in numeric_rank
+        def numeric_rank(type: PyType) -> int | None:
+            if type == builtin_bool:
+                return 0
+            if type == builtin_int:
+                return 1
+            if type == builtin_float:
+                return 2
+            return None
 
-        def widen(l: PyType, r: PyType) -> PyType:
-            wider = l if numeric_rank[l] >= numeric_rank[r] else r
+        both_numeric = (
+            numeric_rank(left) is not None and numeric_rank(right) is not None
+        )
+
+        def widen(left: PyType, right: PyType) -> PyType:
+            rank_left = numeric_rank(left)
+            rank_right = numeric_rank(right)
+            assert rank_left is not None
+            assert rank_right is not None
+            wider = left if rank_left >= rank_right else right
             # bool collapses to int under arithmetic (1 + True == 2)
             return builtin_int if wider is builtin_bool else wider
 

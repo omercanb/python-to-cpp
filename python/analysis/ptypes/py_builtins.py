@@ -8,12 +8,16 @@ class PyType:
     pass
 
 
+class ContainerType(PyType):
+    pass
+
+
 # Used for empty containers like []
 class UnknownType(PyType):
     pass
 
 
-@dataclass(frozen=True)
+@dataclass
 class BuiltinType(PyType):
     name: str
 
