@@ -4,6 +4,7 @@ from python.analysis.symbol_declaration import SymbolDefiner
 from python.analysis.type_annotation import (
     ClassTypeDeclarer,
     FunctionAndClassTypeAnnotator,
+    TypeAnnotator,
 )
 from python.analysis.type_inference import TypeInferrer
 from python.codegen.codegen import CppTranslator
@@ -39,6 +40,9 @@ def pipeline(program: str, debug=False):
 
     type_annotator = FunctionAndClassTypeAnnotator(node_scopes, bindings, types)
     type_annotator.visit(tree)
+
+    # type_annotator = TypeAnnotator(node_scopes, bindings, types)
+    # type_annotator.visit(tree)
 
     try:
         type_inference = TypeInferrer(node_scopes, bindings, types)

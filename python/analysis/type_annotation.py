@@ -26,6 +26,7 @@ class FunctionAndClassTypeAnnotator(ScopingNodeVisitor):
         if scope.typ == ScopeType.CLASS:
             return
         self.types[node] = parse_function(node, self.bindings, self.types)
+        print(self.types[node])
         self.visit(node.body)
 
     def visit_ClassDef(self, node: ast.ClassDef):
@@ -53,10 +54,10 @@ class ClassTypeDeclarer(ScopingNodeVisitor):
 
 
 class TypeAnnotator(ScopingNodeVisitor):
-    def __init__(self, node_scopes, bindings: BindingTable):
+    def __init__(self, node_scopes, bindings: BindingTable, types: TypeTable):
         super().__init__(node_scopes)
         self.bindings = bindings
-        self.types: TypeTable = {}
+        self.types: TypeTable = types
         self.current_class: ClassType | None = None
 
     def visit_AnnAssign(self, node: ast.AnnAssign):
@@ -65,12 +66,3 @@ class TypeAnnotator(ScopingNodeVisitor):
         self.types[node.target] = target_type
         if node.value is not None:
             self.visit(node.value)
-
-    def visit_FunctionDef(self, node: ast.FunctionDef):
-        if self.current_class is None:
-            node_type = parse_function(node, self.bindings, self.types)
-        else:
-            node_type = parse_method(
-                self.current_class, node, self.bindings, self.types
-            )
-        self.types[node] = node_type

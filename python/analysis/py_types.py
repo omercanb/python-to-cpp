@@ -114,7 +114,7 @@ class BuiltinMethodType(PyType):
 class BuiltinClassType(PyType):
     name: str
     methods: list[BuiltinMethodType]
-    fields: dict[str, PyType]
+    fields: dict[str, PyType] = field(default_factory=dict)
 
 
 class RangeType(PyType):
@@ -152,7 +152,7 @@ def resolve_builtin(name: str) -> BuiltinFunctionType:
 
 def get_attribute_type(base_type: PyType, attribute: str) -> PyType:
     match base_type:
-        case ClassType():
+        case ClassType() | BuiltinClassType():
             return get_class_attribute_type(base_type, attribute)
         case ContainerType():
             return get_container_attribute_type(base_type, attribute)
@@ -160,7 +160,9 @@ def get_attribute_type(base_type: PyType, attribute: str) -> PyType:
             raise NotImplementedError(f"Can't convert {base_type}")
 
 
-def get_class_attribute_type(class_type: ClassType, attribute: str) -> PyType:
+def get_class_attribute_type(
+    class_type: ClassType | BuiltinClassType, attribute: str
+) -> PyType:
     typ = None
     for method in class_type.methods:
         if method.name == attribute:
@@ -169,9 +171,10 @@ def get_class_attribute_type(class_type: ClassType, attribute: str) -> PyType:
     if typ is None:
         typ = class_type.fields.get(attribute)
     if typ is None:
-        raise PyToCppError(
-            class_type.node, f"No field {attribute} on class {class_type.name}"
-        )
+        if hasattr(class_type, "node"):
+            raise PyToCppError(
+                class_type.node, f"No field {attribute} on class {class_type.name}"
+            )
     return typ
 
 
@@ -190,18 +193,28 @@ def get_call_type(base_type):
             return base_type.signature.return_type
         case ClassType():
             return base_type
+        case BuiltinFunctionType():
+            return base_type.signature.return_type
+        case BuiltinMethodType():
+            return base_type.signature.return_type
+        case BuiltinClassType():
+            return base_type
         case _:
-            raise NotImplementedError()
+            raise NotImplementedError(base_type)
 
 
 class ListType(BuiltinClassType):
+    def method(self, name, return_type):
+        return BuiltinMethodType(name, self, BuiltinSignature(return_type))
+
     def __init__(self, element_type: PyType):
         self.name = "list"
         self.element_type = element_type
-        methods = [
-            ("append", element_type, builtin_none),
-            ("pop", builtin_int, builtin_none),
+        self.methods = [
+            self.method("append", builtin_none),
+            self.method("pop", element_type),
         ]
+        self.fields = {}
 
     # def assign_methods(self, element_type: PyType):
     #     methods = [

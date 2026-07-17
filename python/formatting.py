@@ -5,8 +5,6 @@ from functools import singledispatch
 from tabulate import tabulate
 
 from python.analysis.ptypes.py_builtins import BuiltinType, UnknownType
-from python.analysis.ptypes.py_list import ListType
-from python.analysis.ptypes.py_tuple import TupleType
 from python.analysis.py_types import (
     BuiltinClassType,
     BuiltinFunctionType,
@@ -163,13 +161,18 @@ def get_type_name(typ) -> str:
 
 
 @get_type_name.register
-def _(typ: ListType):
-    return f"{typ.name}[{get_type_name(typ.element_type)}]"
+def _(t: BuiltinClassType):
+    return f"<builtin {t.name}>"
 
 
 @get_type_name.register
-def _(typ: TupleType):
-    return f"{typ.name}[{','.join(get_type_name(element) for element in typ.element_types)}]"
+def _(t: BuiltinFunctionType):
+    return f"<builtin {t.name}>"
+
+
+@get_type_name.register
+def _(t: BuiltinMethodType):
+    return f"<builtin {t.class_type.name}.{t.name}>"
 
 
 @get_type_name.register

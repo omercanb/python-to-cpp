@@ -7,11 +7,10 @@ from typing import Sequence
 
 from python.analysis.name_resolution import BindingTable
 from python.analysis.ptypes.py_builtins import BuiltinType, UnknownType
-from python.analysis.ptypes.py_list import ListType
-from python.analysis.ptypes.py_tuple import TupleType
 from python.analysis.py_types import (
     ClassType,
     FunctionType,
+    ListType,
     MethodType,
     PyType,
     RangeType,
@@ -442,11 +441,11 @@ def _(typ: ListType) -> str:
     return f"ptr<list<{cpp_type(typ.element_type)}>>"
 
 
-@cpp_type.register
-def _(typ: TupleType) -> str:
-    return (
-        f"std::tuple<{', '.join(cpp_type(element) for element in typ.element_types)}>"
-    )
+# @cpp_type.register
+# def _(typ: TupleType) -> str:
+#     return (
+#         f"std::tuple<{', '.join(cpp_type(element) for element in typ.element_types)}>"
+#     )
 
 
 @cpp_type.register

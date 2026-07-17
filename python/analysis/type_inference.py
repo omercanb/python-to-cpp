@@ -20,12 +20,11 @@ from python.analysis.ptypes.py_builtins import (
     builtin_str,
     builtins_map,
 )
-from python.analysis.ptypes.py_list import ListType
-from python.analysis.ptypes.py_tuple import TupleType
 from python.analysis.py_types import (
     ClassType,
     FunctionType,
     IteratorType,
+    ListType,
     MethodType,
     PyType,
     RangeType,

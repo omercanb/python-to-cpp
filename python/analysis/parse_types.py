@@ -4,13 +4,12 @@ import ast
 
 from python.analysis.name_resolution import BindingTable
 from python.analysis.ptypes.py_builtins import UnknownType, builtin_none, builtins_map
-from python.analysis.ptypes.py_list import ListType
-from python.analysis.ptypes.py_tuple import TupleType
 from python.analysis.py_types import (
     AnnotationError,
     AnnotationType,
     ClassType,
     FunctionType,
+    ListType,
     MethodType,
     Parameter,
     ParamKind,
@@ -189,6 +188,4 @@ def type_of_container_annotation(
     match annotation.value.id:
         case "list":
             return ListType(elements[0])
-        case "tuple":
-            return TupleType(elements)
     raise PyToCppError(annotation, "Can't convert annotation")
