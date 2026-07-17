@@ -7,9 +7,10 @@ from python.analysis.parse_types import (
     parse_class_stub,
     parse_class_type,
     parse_function,
+    parse_method,
     type_of_annotation,
 )
-from python.analysis.py_types import ClassType, TypeTable
+from python.analysis.py_types import AnnotationType, ClassType, TypeTable
 from python.analysis.scope import ScopeType, ScopingNodeVisitor
 
 
@@ -49,3 +50,27 @@ class ClassTypeDeclarer(ScopingNodeVisitor):
         assert scope is not None
         self.types[node] = parse_class_stub(node, scope, self.node_scopes())
         self.visit(node.body)
+
+
+class TypeAnnotator(ScopingNodeVisitor):
+    def __init__(self, node_scopes, bindings: BindingTable):
+        super().__init__(node_scopes)
+        self.bindings = bindings
+        self.types: TypeTable = {}
+        self.current_class: ClassType | None = None
+
+    def visit_AnnAssign(self, node: ast.AnnAssign):
+        self.types[node.annotation] = AnnotationType(node.annotation)
+        target_type = type_of_annotation(node.annotation, self.bindings, self.types)
+        self.types[node.target] = target_type
+        if node.value is not None:
+            self.visit(node.value)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        if self.current_class is None:
+            node_type = parse_function(node, self.bindings, self.types)
+        else:
+            node_type = parse_method(
+                self.current_class, node, self.bindings, self.types
+            )
+        self.types[node] = node_type

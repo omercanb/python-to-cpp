@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
-from python.analysis.ptypes.py_builtins import BuiltinType, builtins_map
+from python.analysis.ptypes.py_builtins import builtins_map
 from python.analysis.scope import ScopingNodeVisitor
 from python.errors import PyToCppError
 
@@ -20,12 +20,14 @@ type BindingTable = dict[ast.Name, Binding]
 @dataclass
 class Binding:
     node: ast.AST
+    is_annotation: bool = False
 
 
 class NameType(Enum):
     reference = auto()
     declaration = auto()
     builtin = auto()
+    annotation = auto()
 
 
 def get_declaration(node: ast.Name, bindings: BindingTable) -> ast.AST:
@@ -37,6 +39,8 @@ def get_name_type(node: ast.Name, bindings: BindingTable):
     binding = bindings.get(node)
     if binding is not None:
         # If the node has a binding but it points to itself thats a declaration and the type is still unkown
+        if binding.is_annotation:
+            return NameType.annotation
         if binding.node == node:
             return NameType.declaration
         else:
@@ -63,23 +67,37 @@ class ResolutionError(PyToCppError):
 
 
 class NameResolver(ScopingNodeVisitor):
+
     def __init__(self, node_scopes):
         super().__init__(node_scopes)
         self.bindings: BindingTable = {}
+        self.annotations: set[ast.expr] = set()
 
     def resolve_builtin(self, name: str):
         return builtins_map.get(name, None)
 
-    def bind_node(self, node: ast.Name, thing: Binding):
+    def bind_node(self, node: ast.Name, other_node: ast.AST):
         assert node not in self.bindings
-        self.bindings[node] = thing
+        self.bindings[node] = Binding(other_node)
+
+    def node_is_annotation(self, node: ast.Name):
+        self.bindings[node] = Binding(node, True)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign):
+        self.visit(node.target)
+        if node.value:
+            self.visit(node.value)
+        self.annotations.add(node.annotation)
 
     def visit_arg(self, node: ast.arg):
-        if node.annotation is not None:
-            assert isinstance(node.annotation, ast.Name)
-            enclosing_scope = self.scope().enclosing
-            assert enclosing_scope is not None
-            self.resolve_name_load(node.annotation, enclosing_scope)
+        if node.annotation:
+            self.annotations.add(node.annotation)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        if node.returns:
+            self.annotations.add(node.returns)
+        self.visit(node.args)
+        self.visit(node.body)
 
     def visit_Name(self, node: ast.Name):
         if isinstance(node.ctx, ast.Load):
@@ -104,21 +122,18 @@ class NameResolver(ScopingNodeVisitor):
         # The name is user declared
         if result is not None:
             _, declaration_node = result
-            binding = Binding(declaration_node)
-            self.bind_node(node, binding)
+            self.bind_node(node, declaration_node)
             return
 
         # Name doesn't exist yet - it's a new declaration
-        binding = Binding(None)
-        self.bind_node(node, binding)
+        self.bind_node(node, node)
 
     def resolve_name_load(self, node: ast.Name, scope: Scope):
         result = scope.resolve(node.id)
         # The name is user declared
         if result is not None:
             _, declaration_node = result
-            binding = Binding(declaration_node)
-            self.bind_node(node, binding)
+            self.bind_node(node, declaration_node)
             return
 
         builtin = self.resolve_builtin(node.id)

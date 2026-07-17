@@ -1,7 +1,6 @@
 import ast
 from collections import defaultdict
 from functools import singledispatch
-from types import MethodType
 
 from tabulate import tabulate
 
@@ -9,11 +8,17 @@ from python.analysis.ptypes.py_builtins import BuiltinType, UnknownType
 from python.analysis.ptypes.py_list import ListType
 from python.analysis.ptypes.py_tuple import TupleType
 from python.analysis.py_types import (
+    BuiltinClassType,
+    BuiltinFunctionType,
+    BuiltinMethodType,
     ClassType,
     FunctionType,
     IteratorType,
     MethodType,
+    Parameter,
+    ParamKind,
     RangeType,
+    SignatureType,
     TypeTable,
 )
 from python.analysis.scope import Scope
@@ -128,7 +133,6 @@ def print_bindings(bindings):
     headers = ["Use Line", "Name", "Resolves To", "declaration Line"]
     data = defaultdict(list)
     for use, binding in bindings.items():
-
         declaration = binding.node
         if declaration is not None:
             data["use line"].append(getattr(use, "lineno", None))
@@ -152,22 +156,10 @@ def print_type_table(types: TypeTable):
 
 @singledispatch
 def get_type_name(typ) -> str:
+    name = getattr(typ, "name", None)
+    if name:
+        return name
     raise ValueError(f"get type name not implemented for type {typ}")
-
-
-@get_type_name.register
-def _(typ: FunctionType):
-    return typ.name
-
-
-@get_type_name.register
-def _(typ: MethodType):
-    return typ.name
-
-
-@get_type_name.register
-def _(typ: ClassType):
-    return typ.name
 
 
 @get_type_name.register
@@ -178,13 +170,6 @@ def _(typ: ListType):
 @get_type_name.register
 def _(typ: TupleType):
     return f"{typ.name}[{','.join(get_type_name(element) for element in typ.element_types)}]"
-
-
-@get_type_name.register
-def _(typ: BuiltinType):
-    if typ.name is None:
-        return "None"
-    return f"{typ.name}"
 
 
 @get_type_name.register
@@ -208,21 +193,36 @@ def format_type(_) -> str:
 
 
 @format_type.register
-def _(fun: FunctionType):
-    s = f"Function {fun.name}("
+def _(t: Parameter):
+    if t.kind == ParamKind.variable_length_keyword:
+        return f"*{t.name}"
+    if t.kind == ParamKind.variable_length_positional:
+        return f"**{t.name}"
+    s = t.name
+    if t.type is not None:
+        s = f"{s} : {get_type_name(t.type)}"
+    if t.default is not None:
+        s = f"{s} = {ast.unparse(t.default)}"
+    return t.name
 
-    s += ", ".join((get_type_name(typ) for typ in fun.argument_types))
-    s += f") -> {get_type_name(fun.return_type)}"
-    return s
+
+def format_parameter_list(l: list[Parameter]):
+    return ", ".join(format_type(p) for p in l)
+
+
+@format_type.register
+def _(t: SignatureType):
+    return f"({format_parameter_list(t.parameters)}) -> {format_type(t.return_type)}"
+
+
+@format_type.register
+def _(fun: FunctionType):
+    return f"function {fun.name}{format_type(fun.signature)}"
 
 
 @format_type.register
 def _(fun: MethodType):
-    s = f"{fun.name}("
-
-    s += ", ".join((get_type_name(typ) for typ in fun.argument_types))
-    s += f") -> {get_type_name(fun.return_type)}"
-    return s
+    return f"{get_type_name(fun.class_type)}.{fun.name}{format_type(fun.signature)}"
 
 
 @format_type.register
@@ -233,6 +233,21 @@ def _(cls: ClassType):
     for method in cls.methods:
         s += f"    {format_type(method)}\n"
     return s
+
+
+@format_type.register
+def _(t: BuiltinClassType):
+    return f"builtin class {t.name}"
+
+
+@format_type.register
+def _(t: BuiltinFunctionType):
+    return f"builtin function {t.name}"
+
+
+@format_type.register
+def _(t: BuiltinMethodType):
+    return f"builtin method {t.name} on class {t.class_type.name}"
 
 
 class TypedUnparser(ast._Unparser):

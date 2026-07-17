@@ -46,6 +46,7 @@ def pipeline(program: str, debug=False):
     finally:
         if debug:
             print(typed_unparse(tree, types))
+    return
 
     translator = CppTranslator(node_scopes, bindings, types)
     translator.visit(tree)
@@ -59,7 +60,8 @@ def main():
     file = "input.py"
     program = open(file).read()
     s = pipeline(program, debug=True)
-    build_and_run(s)
+    if s:
+        build_and_run(s)
     return
     #
     # print(dump(tree, indent=4))

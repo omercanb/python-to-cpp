@@ -3,20 +3,32 @@ from __future__ import annotations
 import ast
 
 from python.analysis.name_resolution import BindingTable
-from python.analysis.ptypes.py_builtins import builtin_none, builtins_map
+from python.analysis.ptypes.py_builtins import UnknownType, builtin_none, builtins_map
 from python.analysis.ptypes.py_list import ListType
 from python.analysis.ptypes.py_tuple import TupleType
 from python.analysis.py_types import (
     AnnotationError,
+    AnnotationType,
     ClassType,
     FunctionType,
     MethodType,
+    Parameter,
+    ParamKind,
     PyType,
+    SignatureType,
     TypeTable,
 )
 from python.analysis.scope import Scope
 from python.errors import PyToCppError
 from python.utils import dump
+
+
+def parse_function(
+    node: ast.FunctionDef, bindings: BindingTable, types: TypeTable
+) -> FunctionType:
+
+    signature = get_function_type(node, bindings, types)
+    return FunctionType(node.name, signature, node)
 
 
 def parse_method(
@@ -26,10 +38,8 @@ def parse_method(
     types: TypeTable,
 ) -> MethodType:
 
-    argument_types, return_type = get_function_type(
-        node, bindings, types, is_method=True
-    )
-    return MethodType(class_type, node.name, argument_types, return_type, node)
+    signature = get_function_type(node, bindings, types)
+    return MethodType(class_type, node.name, signature, node)
 
 
 def parse_class_stub(
@@ -52,16 +62,6 @@ def parse_class_type(stub: ClassType, bindings: BindingTable, types: TypeTable):
                     _parse_class_fields_from_init(stub, child, method)
                 else:
                     stub.methods.append(method)
-
-
-def parse_function(
-    node: ast.FunctionDef, bindings: BindingTable, types: TypeTable
-) -> FunctionType:
-
-    argument_types, return_type = get_function_type(
-        node, bindings, types, is_method=False
-    )
-    return FunctionType(node.name, argument_types, return_type, node)
 
 
 def _parse_class_fields_from_init(stub, node: ast.FunctionDef, init_method: MethodType):
@@ -97,28 +97,64 @@ def get_function_type(
     node: ast.FunctionDef,
     bindings: BindingTable,
     types: TypeTable,
-    is_method=False,
-) -> tuple[list[PyType], PyType]:
-    args = node.args.args
-    argument_types = []
-    for arg in args:
-        if is_method and arg == args[0]:  # self argument
-            continue
-        if arg.annotation is None:
-            raise AnnotationError(arg, "Argument needs type annotation")
-        argument_types.append(type_of_annotation(arg.annotation, bindings, types))
+) -> SignatureType:
+    parameters = get_parameter_list(node.args, bindings, types)
     if node.returns is None:
-        if is_method:
-            func_type = "Method"
-        else:
-            func_type = "Function"
-        raise AnnotationError(node, f"{func_type} needs return type annotation")
-    return_type = type_of_annotation(node.returns, bindings, types)
-    return argument_types, return_type
+        return_type = UnknownType()
+    else:
+        return_type = type_of_annotation(node.returns, bindings, types)
+    return SignatureType(parameters, return_type)
+
+
+def get_parameter_list(
+    parameters: ast.arguments, bindings: BindingTable, types: TypeTable
+):
+    """Parses the parameter list into a more easy to use type"""
+    defaults = _get_parameter_defaults(parameters)
+
+    parameter_kinds: list[tuple[list[ast.arg], ParamKind]] = [
+        (parameters.posonlyargs, ParamKind.positional_only),
+        (parameters.args, ParamKind.positional_or_keyword),
+        (parameters.kwonlyargs, ParamKind.keyword_only),
+    ]
+    if parameters.vararg is not None:
+        parameter_kinds.append(
+            ([parameters.vararg], ParamKind.variable_length_positional)
+        )
+    if parameters.kwarg is not None:
+        parameter_kinds.append(([parameters.kwarg], ParamKind.variable_length_keyword))
+
+    parsed_parameters = []
+    for parameter_list, parameter_kind in parameter_kinds:
+        for parameter in parameter_list:
+            if parameter.annotation is None:
+                parameter_type = None
+            else:
+                parameter_type = type_of_annotation(
+                    parameter.annotation, bindings, types
+                )
+            default = defaults.get(parameter.arg)
+            parsed_parameters.append(
+                Parameter(parameter.arg, parameter_type, default, parameter_kind)
+            )
+    return parsed_parameters
+
+
+def _get_parameter_defaults(parameters: ast.arguments) -> dict[str, ast.expr]:
+    # Rules for parameter defaults
+    # https://docs.python.org/3/library/ast.html#ast.arguments
+    defaults = {}
+    for parameter, default in zip(reversed(parameters.args), parameters.defaults):
+        defaults[parameter.arg] = default
+    for kw_parameter, default in zip(parameters.kwonlyargs, parameters.kw_defaults):
+        if default is None:
+            continue
+        defaults[kw_parameter.arg] = default
+    return defaults
 
 
 def type_of_annotation(
-    annotation: ast.AST, bindings: BindingTable, types: TypeTable
+    annotation: ast.expr, bindings: BindingTable, types: TypeTable
 ) -> PyType:
     match annotation:
         case ast.Constant():

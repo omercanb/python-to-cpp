@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass, field
+from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 from python.analysis.ptypes.py_builtins import (
+    BuiltinType,
     ContainerType,
     PyType,
     UnknownType,
@@ -22,23 +24,46 @@ type TypeTable = dict[ast.AST, PyType]
 
 @dataclass
 class AnnotationType(PyType):
+    text: str
+
+    def __init__(self, annotation: ast.expr):
+        self.text = ast.unparse(annotation)
+
+
+class ParamKind(Enum):
+    positional_only = auto()  # before /
+    positional_or_keyword = auto()
+    variable_length_positional = auto()  # *args
+    keyword_only = auto()  # after *
+    variable_length_keyword = auto()  # **kwargs
+
+
+@dataclass
+class Parameter:
     name: str
+    type: PyType | None
+    default: ast.expr | None = None
+    kind: ParamKind = ParamKind.positional_or_keyword
+
+
+@dataclass
+class SignatureType:
+    parameters: list[Parameter]
+    return_type: PyType
 
 
 @dataclass
 class FunctionType(PyType):
     name: str
-    argument_types: list[PyType]
-    return_type: PyType
-    node: ast.AST | None
+    signature: SignatureType
+    node: ast.AST
 
 
 @dataclass
 class MethodType(PyType):
     class_type: ClassType
     name: str
-    argument_types: list[PyType]
-    return_type: PyType
+    signature: SignatureType
     node: ast.AST
 
 
@@ -54,17 +79,42 @@ class ClassType(PyType):
     get_item_type: PyType | None = None
 
 
+# We currently have no use for parameters of builtins
+# _UNSET = object()
+#
+#
+# @dataclass
+# class BuiltinParameter:
+#     name: str
+# type: PyType
+#     default: object = _UNSET
+#     kind: ParamKind = ParamKind.positional_or_keyword
+
+
+@dataclass
+class BuiltinSignature:
+    # We don't check for parameters of builtins
+    return_type: PyType
+
+
+@dataclass
+class BuiltinFunctionType(BuiltinType):
+    name: str
+    signature: BuiltinSignature
+
+
+@dataclass
+class BuiltinMethodType(PyType):
+    name: str
+    class_type: BuiltinClassType
+    signature: BuiltinSignature
+
+
+@dataclass
 class BuiltinClassType(PyType):
     name: str
     methods: list[BuiltinMethodType]
     fields: dict[str, PyType]
-
-
-class BuiltinMethodType(PyType):
-    class_type: BuiltinClassType
-    name: str
-    argument_types: list[PyType]
-    return_type: PyType
 
 
 class RangeType(PyType):
@@ -76,9 +126,10 @@ class IteratorType(PyType):
     element_type: PyType
 
 
-builtin_print = FunctionType("print", [], builtin_none, None)
-builtin_len = FunctionType("len", [], builtin_int, None)
-builtin_range = FunctionType("range", [], RangeType(), None)
+builtin_print = BuiltinFunctionType("print", BuiltinSignature(builtin_none))
+builtin_len = BuiltinFunctionType("len", BuiltinSignature(builtin_int))
+builtin_range = BuiltinFunctionType("range", BuiltinSignature(RangeType()))
+
 builtin_funcs = {
     "print": builtin_print,
     "len": builtin_len,
@@ -94,7 +145,7 @@ class AnnotationError(PyToCppError):
     pass
 
 
-def resolve_builtin(name: str) -> FunctionType:
+def resolve_builtin(name: str) -> BuiltinFunctionType:
     assert name in builtin_funcs
     return builtin_funcs[name]
 
@@ -134,9 +185,9 @@ def get_container_attribute_type(
 def get_call_type(base_type):
     match base_type:
         case FunctionType():
-            return base_type.return_type
+            return base_type.signature.return_type
         case MethodType():
-            return base_type.return_type
+            return base_type.signature.return_type
         case ClassType():
             return base_type
         case _:
