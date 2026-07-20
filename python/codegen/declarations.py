@@ -4,7 +4,7 @@ from mypy.nodes import FuncDef
 from mypy.types import CallableType, get_proper_type
 from mypy.visitor import ExpressionVisitor
 
-from python.codegen.mypy_codegen import cpp_type
+from python.codegen.typegen import cpp_type
 
 
 def get_function_type(func: FuncDef) -> CallableType:
@@ -46,6 +46,8 @@ def generate_arguments(
     func = get_function_type(o)
     arguments: list[str] = []
     for argument, argument_type in zip(o.arguments, func.arg_types):
+        if argument.variable.is_self:
+            continue
         argument_name = argument.variable.name
         argument_type_cpp = cpp_type(argument_type)
         if argument.initializer:

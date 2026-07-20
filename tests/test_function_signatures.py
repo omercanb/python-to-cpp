@@ -1,7 +1,7 @@
 """Test that function signatures are correctly translated to C++."""
 
 import pytest
-from mypy.nodes import FuncDef
+from mypy.nodes import ClassDef, FuncDef, TypeInfo
 
 from main import mypy_pipeline_source
 from python.codegen.declarations import generate_func_signature
@@ -32,9 +32,19 @@ def no_params() -> int:
 
 def with_optional(x: int | None) -> str:
     return "ok"
+
+def with_object(x: B) -> B:
+    return B()
+
+class B:
+    pass
+
+class A:
+    def method(self, other: int) -> int:
+        return 1
 """
 
-signatures = {
+function_signatures = {
     "simple": "int simple(int x)",
     "with_defaults": 'std::string with_defaults(int a, std::string b = "hello", double c = 3.14)',
     "multiple_params": "std::string multiple_params(int x, double y, bool z)",
@@ -43,7 +53,11 @@ signatures = {
     "returns_dict": "ptr<dict<int, std::string>> returns_dict(ptr<dict<std::string, int>> d)",
     "no_params": "int no_params()",
     "with_optional": "std::string with_optional(std::optional<int> x)",
+    "with_object": "ptr<B> with_object(ptr<B> x)",
 }
+
+class_name = "A"
+method_signatures = {"method": "int method(int other)"}
 
 
 class TestFunctionSignatures:
@@ -54,18 +68,35 @@ class TestFunctionSignatures:
         result = mypy_pipeline_source(test_code)
         cls.tree = result.tree
         cls.types = result.types
+        cls.expr_translator = ExpressionCodegen(result.types)
 
-    def generate_signature(self, func_name: str) -> str:
+    def generate_function_signature(self, func_name: str) -> str:
         """Generate C++ signature for a function."""
         sym = self.tree.names.get(func_name)
         assert sym and isinstance(sym.node, FuncDef)
-        signature = generate_func_signature(sym.node, ExpressionCodegen(self.types))
+        signature = generate_func_signature(sym.node, self.expr_translator)
         return signature
 
-    @pytest.mark.parametrize("func_name,expected_sig", signatures.items())
-    def test_signature(self, func_name, expected_sig):
+    def generate_method_signature(self, method_name: str, class_name: str) -> str:
+        class_info = self.tree.names.get(class_name)
+        assert class_info and isinstance(class_info.node, TypeInfo)
+        method = class_info.node.names[method_name].node
+        assert isinstance(method, FuncDef)
+        signature = generate_func_signature(method, self.expr_translator)
+        return signature
+
+    @pytest.mark.parametrize("func_name,expected_sig", function_signatures.items())
+    def test_func_signature(self, func_name, expected_sig):
         """Test function signature."""
-        sig = self.generate_signature(func_name)
+        sig = self.generate_function_signature(func_name)
+        assert (
+            sig == expected_sig
+        ), f"Mismatch for {func_name}:\nGot:      {sig}\nExpected: {expected_sig}"
+
+    @pytest.mark.parametrize("func_name,expected_sig", method_signatures.items())
+    def test_method_signature(self, func_name, expected_sig):
+        """Test method signature."""
+        sig = self.generate_method_signature(func_name, class_name)
         assert (
             sig == expected_sig
         ), f"Mismatch for {func_name}:\nGot:      {sig}\nExpected: {expected_sig}"

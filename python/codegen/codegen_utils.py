@@ -3,4 +3,4 @@ def pointer_to(obj: str):
 
 
 def list_of(elements: list[str]):
-    return f"list({', '.join(elements)})"
+    return pointer_to(f"list({{{', '.join(elements)}}})")

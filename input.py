@@ -14,12 +14,12 @@
 #     return 0
 #
 #
-# def l() -> list[int]:
-#     return [1, 2, 3]
-#
-#
-# def example(a: int, y: float) -> float:
-#     return a + y
+def l() -> list[int]:
+    return [1, 2, 3]
+
+
+def example(a: int, y: float) -> float:
+    return a + y
 
 
 def main() -> int:

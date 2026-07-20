@@ -19,6 +19,7 @@ from python.analysis.type_annotation import (
 )
 from python.analysis.type_inference import TypeInferrer
 from python.codegen.codegen import CppTranslator
+from python.codegen.mypy_codegen import StatementCodegen
 from python.formatting import *
 from python.utils import build_and_run, dump
 
@@ -121,27 +122,9 @@ def mypy_pipeline(path: str):
 def main():
     file = "input.py"
     result = mypy_pipeline(file)
-    print(result.tree)
-    #
-    # print(dump(tree, indent=4))
-    # # validate.Validator().visit(tree)
-    #
-    # # scope.ScopeResolver().visit(tree)
-    # definer = symbols.SymbolDefiner()
-    # definer.visit(tree)
-    # definer.scope.print_tree()
-    # ScopeTester(definer.scope).visit(tree)
-    # return
-    #
-    # print("inferring")
-    # inferrer = type_inference.TypeInferrer()
-    # inferrer.visit(tree)
-    # ptypes = inferrer.ptypes
-    # for k, v in ptypes.items():
-    #     print(dump(k), v)
-    #
-    # translated = CppTranslator(ptypes).visit(tree)
-    # build_and_run(translated)
+    codegen = StatementCodegen(result.tree, result.types)
+    output = codegen.generate()
+    print(output)
 
 
 main()

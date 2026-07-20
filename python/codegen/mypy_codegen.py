@@ -12,7 +12,6 @@ from mypy.nodes import (
     ClassDef,
     ComparisonExpr,
     ContinueStmt,
-    DictExpr,
 )
 from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
@@ -29,26 +28,19 @@ from mypy.nodes import (
     MypyFile,
     NameExpr,
     OpExpr,
-    PassStmt,
     ReturnStmt,
     StrExpr,
     UnaryExpr,
     WhileStmt,
 )
 from mypy.traverser import TraverserVisitor
-from mypy.types import (
-    AnyType,
-    Instance,
-    NoneType,
-    ProperType,
-    TupleType,
-    Type,
-    UnionType,
-    get_proper_type,
-)
-from mypy.visitor import ExpressionVisitor, NodeVisitor
+from mypy.types import Type
+from mypy.visitor import ExpressionVisitor
 
+from python.analysis.find_declarations import get_declarations
 from python.codegen.codegen_utils import list_of
+from python.codegen.declarations import generate_func_signature
+from python.codegen.typegen import cpp_type
 
 
 class ExpressionCodegen(ExpressionVisitor[str]):
@@ -118,56 +110,19 @@ class StatementCodegen(TraverserVisitor):
         self.indent_level = 0
         self.output: list[str] = []
 
-    def get_expr(self, o: Expression) -> str:
-        return o.accept(self.expr_codegen)
+    def indent(self):
+        self.indent_level += 4
 
-    def indent(self) -> str:
+    def unindent(self):
+        self.indent_level -= 4
+
+    def indented(self) -> str:
         """Return indentation string."""
         return "  " * self.indent_level
 
     def emit(self, code: str):
         """Emit a line of code."""
-        self.output.append(f"{self.indent()}{code}")
-
-    def get_type_string(self, node: MypyExpression) -> str:
-        """Get C++ type string for a mypy type."""
-        if node in self.types:
-            t = get_proper_type(self.types[node])
-            return str(t)
-        return "auto"
-
-    def visit_func_def(self, o: FuncDef):
-        """Generate a function or method definition"""
-        is_method = o.info is not None
-        if is_method:
-            self.generate_method_def(o)
-        else:
-            self.generate_func_def(o)
-
-    def visit_class_def(self, o: ClassDef):
-        """Generate C++ class definition.
-
-        Args:
-            o.info: class type information
-        """
-        self.emit(f"// Class: {o.name}")
-        # TODO: Generate C++ struct/class
-        super().visit_class_def(o)
-
-    def generate_method_def(self, o: FuncDef):
-        """Generate C++ method definition.
-
-        Similar to visit_func_def, but handle 'self' parameter.
-        """
-        # TODO: Generate C++ method
-        pass
-
-    def generate_func_def(self, o: FuncDef):
-        pass
-
-    # ============================================================
-    # STATEMENTS
-    # ============================================================
+        self.output.append(f"{self.indented()}{code}")
 
     def visit_block(self, o: Block):
         """Generate code for a block of statements."""
@@ -175,65 +130,68 @@ class StatementCodegen(TraverserVisitor):
         super().visit_block(o)
         self.indent_level -= 1
 
-    def visit_assignment_stmt(self, o: AssignmentStmt):
-        """Generate C++ assignment.
+    def get_expr(self, expr: Expression):
+        return expr.accept(self.expr_codegen)
 
-        Args:
-            o.lvalues: what's being assigned to
-            o.rvalue: what's being assigned
-        """
-        # TODO: Handle assignment (e.g., x = 5)
-        self.emit(f"// Assignment")
-        super().visit_assignment_stmt(o)
+    def translate_declaration(self, name: str, typ: Type):
+        return f"{cpp_type(typ)} {name};"
+
+    def generate(self) -> str:
+        """Generate all C++ code."""
+        self.tree.accept(self)
+        return "\n".join(self.output)
+
+    def visit_func_def(self, o: FuncDef):
+        """Generate a function or method definition"""
+        signature = generate_func_signature(o, self.expr_codegen)
+        declarations = get_declarations(o, self.types)
+        declaration_lines = [
+            self.translate_declaration(name, typ) for name, typ in declarations.items()
+        ]
+
+        definition_line = f"{signature} {{"
+        self.emit(definition_line)
+        self.visit_block(o.body)
+        self.emit("}")
+
+    def visit_class_def(self, o: ClassDef):
+        assert False, "Classdef not yet implemented"
+
+    def visit_assignment_stmt(self, o: AssignmentStmt):
+        lhs = self.get_expr(o.lvalues[0])
+        rhs = self.get_expr(o.rvalue)
+        self.emit(f"{lhs} = {rhs}")
 
     def visit_return_stmt(self, o: ReturnStmt):
-        """Generate C++ return statement.
-
-        Args:
-            o.expr: the return value (can be None)
-        """
-        # TODO: Generate return statement
         if o.expr:
-            expr_code = o.expr.accept(self.expr_codegen)
-            self.emit(f"return {expr_code};")
+            self.emit(f"return {self.get_expr(o.expr)};")
         else:
             self.emit("return;")
-        super().visit_return_stmt(o)
 
     def visit_if_stmt(self, o: IfStmt):
-        """Generate C++ if/else statement.
+        # Unlike python ast is a list of if, elif, ..., elif, else
+        conditions = o.expr
+        bodies = o.body
+        for i, (condition, body) in enumerate(zip(conditions, bodies)):
+            condition_cpp = self.get_expr(condition)
+            if i == 0:
+                self.emit(f"if ({condition_cpp}) {{")
+            else:
+                self.emit(f"}} else if ({condition_cpp}) {{")
+            self.visit_block(body)
+        if o.else_body:
+            self.emit("} else {")
+            self.visit_block(o.else_body)
+        self.emit("}")
 
-        Args:
-            o.expr: list of condition expressions
-            o.body: list of body blocks (one per condition)
-            o.else_body: optional else block
-        """
-        # TODO: Generate if statement
-        self.emit("// If statement")
-        super().visit_if_stmt(o)
-
-    def visit_for_stmt(self, o: ForStmt):
-        """Generate C++ for loop.
-
-        Args:
-            o.index: loop variable
-            o.expr: what to iterate over
-            o.body: loop body
-        """
-        # TODO: Generate for loop (e.g., for x in items:)
-        self.emit("// For loop")
-        super().visit_for_stmt(o)
+    def visit_for_stmt(self, _: ForStmt):
+        assert False, "For loop not yet implemented"
 
     def visit_while_stmt(self, o: WhileStmt):
-        """Generate C++ while loop.
-
-        Args:
-            o.expr: condition
-            o.body: loop body
-        """
-        # TODO: Generate while loop
         self.emit("// While loop")
-        super().visit_while_stmt(o)
+        self.emit(f"while ({self.get_expr(o.expr)}) {{")
+        self.visit_block(o.body)
+        self.emit("}")
 
     def visit_expression_stmt(self, o: ExpressionStmt):
         self.emit(self.get_expr(o.expr))
@@ -243,96 +201,3 @@ class StatementCodegen(TraverserVisitor):
 
     def visit_continue_stmt(self, _: ContinueStmt):
         self.emit("continue;")
-
-    # ============================================================
-    # UTILITIES
-    # ============================================================
-
-    def generate(self) -> str:
-        """Generate all C++ code."""
-        self.tree.accept(self)
-        return "\n".join(self.output)
-
-
-def ptr_type(t: str) -> str:
-    return f"ptr<{t}>"
-
-
-def cpp_type(t: Type) -> str:
-    """Convert a mypy type to C++ type string.
-
-    Uses pattern matching to handle different type kinds.
-    """
-    t = get_proper_type(t)
-
-    match t:
-        # Builtin types
-        case Instance(type=type_info) if type_info.fullname == "builtins.int":
-            return "int"
-        case Instance(type=type_info) if type_info.fullname == "builtins.float":
-            return "double"
-        case Instance(type=type_info) if type_info.fullname == "builtins.str":
-            return "std::string"
-        case Instance(type=type_info) if type_info.fullname == "builtins.bool":
-            return "bool"
-
-        # Container types
-        case Instance(type=type_info, args=args) if (
-            type_info.fullname == "builtins.list" and args
-        ):
-            elem_type = cpp_type(args[0])
-            return ptr_type(f"list<{elem_type}>")
-
-        case Instance(type=type_info, args=args) if (
-            type_info.fullname == "builtins.dict" and len(args) >= 2
-        ):
-            key_type = cpp_type(args[0])
-            val_type = cpp_type(args[1])
-            return ptr_type(f"dict<{key_type}, {val_type}>")
-
-        case Instance(type=type_info, args=args) if (
-            type_info.fullname == "builtins.set" and args
-        ):
-            elem_type = cpp_type(args[0])
-            return ptr_type(f"set<{elem_type}>")
-
-        # Tuple with fixed elements
-        case TupleType(items=items):
-            elem_types = ", ".join(cpp_type(item) for item in items)
-            return f"tuple<{elem_types}>"
-
-        # Optional[T] = T | None
-        case UnionType(items=items) if len(items) == 2 and any(
-            isinstance(item, NoneType) for item in items
-        ):
-            non_none = next(item for item in items if not isinstance(item, NoneType))
-            inner = cpp_type(non_none)
-            return f"std::optional<{inner}>"
-
-        # Generic union
-        case UnionType(items=items):
-            types = ", ".join(cpp_type(item) for item in items)
-            return f"std::variant<{types}>"
-
-        # None/void
-        case NoneType():
-            return "void"
-
-        # Any type
-        case AnyType():
-            return "auto"
-
-        # Custom classes
-        case Instance(type=type_info):
-            return type_info.fullname.replace(".", "::")
-
-        # Iterator/Iterable
-        case Instance(type=type_info, args=args) if (
-            "Iterator" in type_info.fullname and args
-        ):
-            elem_type = cpp_type(args[0])
-            return f"Iterator<{elem_type}>"
-
-        # Default fallback
-        case _:
-            assert False, f"Conversion not implemented for type {t}"
