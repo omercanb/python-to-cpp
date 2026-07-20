@@ -85,7 +85,7 @@ class AnalysisResult:
     types: dict[Expression, Type]
 
 
-def mypy_pipeline(path: str):
+def mypy_options():
     opts = Options()
     opts.export_types = True  # required to populate result.types
     opts.preserve_asts = True  # keep the trees alive after checking
@@ -94,6 +94,19 @@ def mypy_pipeline(path: str):
     opts.disallow_untyped_calls = True
     opts.check_untyped_defs = True
     opts.strict_optional = True
+    return opts
+
+
+def mypy_pipeline_source(source: str):
+    opts = mypy_options()
+    result = build.build(sources=[BuildSource(None, "main", source)], options=opts)
+    tree = result.files["main"]
+    types = result.types
+    return AnalysisResult(tree, types)
+
+
+def mypy_pipeline(path: str):
+    opts = mypy_options()
 
     result = build.build(
         sources=[BuildSource(path, "main", None)],
