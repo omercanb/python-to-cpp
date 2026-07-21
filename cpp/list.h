@@ -228,7 +228,8 @@ template <typename T> class list {
         list<T> &l;
         size_t i;
         list_iterator(list<T> &l) : l(l), i(0) {}
-        int next() { return l[i++]; }
+        T current() { return l[i]; }
+        T next() { return l[i++]; }
         bool done() { return i >= l.len(); }
     };
     list_iterator iter() { return list_iterator(*this); }

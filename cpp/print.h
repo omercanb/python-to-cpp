@@ -4,6 +4,7 @@
 #include "ptr.h"
 #include "range.h"
 #include "tuple.h"
+#include "iter.h"
 
 #include <iostream>
 #include <string>

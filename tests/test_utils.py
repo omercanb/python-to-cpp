@@ -3,6 +3,7 @@
 import difflib
 import os
 import subprocess
+import tempfile
 
 
 def run_python_and_capture(path: str) -> subprocess.CompletedProcess:
@@ -53,3 +54,57 @@ def print_output_diff(python_output: str, cpp_output: str) -> None:
     if diff:
         print("\n--- Diff ---")
         print("\n".join(diff))
+
+
+def compile_cpp_test(cpp_file: str) -> str:
+    """Compile a C++ test file and return the executable path.
+
+    Args:
+        cpp_file: Path to the C++ source file
+
+    Returns:
+        Path to the compiled executable
+
+    Raises:
+        RuntimeError: If compilation fails
+    """
+    with tempfile.NamedTemporaryFile(delete=False, suffix="") as exe_file:
+        exe_path = exe_file.name
+
+    # Get project root - assumes tests/ directory structure
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    compile_cmd = [
+        "g++",
+        "-std=c++17",
+        f"-I{project_root}",
+        cpp_file,
+        "-o",
+        exe_path,
+    ]
+
+    result = subprocess.run(compile_cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        os.unlink(exe_path)
+        raise RuntimeError(
+            f"Compilation failed:\n{result.stdout}\n{result.stderr}"
+        )
+
+    return exe_path
+
+
+def run_cpp_test(cpp_file: str) -> subprocess.CompletedProcess:
+    """Compile and run a C++ test file, capturing output.
+
+    Args:
+        cpp_file: Path to the C++ source file
+
+    Returns:
+        CompletedProcess with stdout containing the output
+    """
+    exe_path = compile_cpp_test(cpp_file)
+    try:
+        result = subprocess.run([exe_path], capture_output=True, text=True)
+        return result
+    finally:
+        os.unlink(exe_path)
