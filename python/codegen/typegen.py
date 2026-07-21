@@ -1,11 +1,19 @@
-from mypy.types import Type, get_proper_type, Instance, TupleType, UnionType, NoneType, AnyType
+from mypy.types import (
+    AnyType,
+    Instance,
+    NoneType,
+    TupleType,
+    Type,
+    UnionType,
+    get_proper_type,
+)
 
 
-def ptr_type(t: str) -> str:
+def ptr_type(t: str, constructor=False) -> str:
     return f"ptr<{t}>"
 
 
-def cpp_type(t: Type) -> str:
+def cpp_type(t: Type, constructor=False) -> str:
     """Convert a mypy type to C++ type string.
 
     Uses pattern matching to handle different type kinds.
@@ -28,20 +36,20 @@ def cpp_type(t: Type) -> str:
             type_info.fullname == "builtins.list" and args
         ):
             elem_type = cpp_type(args[0])
-            return ptr_type(f"list<{elem_type}>")
+            return f"list<{elem_type}>"
 
         case Instance(type=type_info, args=args) if (
             type_info.fullname == "builtins.dict" and len(args) >= 2
         ):
             key_type = cpp_type(args[0])
             val_type = cpp_type(args[1])
-            return ptr_type(f"dict<{key_type}, {val_type}>")
+            return f"dict<{key_type}, {val_type}>"
 
         case Instance(type=type_info, args=args) if (
             type_info.fullname == "builtins.set" and args
         ):
             elem_type = cpp_type(args[0])
-            return ptr_type(f"set<{elem_type}>")
+            return f"set<{elem_type}>"
 
         # Tuple with fixed elements
         case TupleType(items=items):
@@ -69,9 +77,8 @@ def cpp_type(t: Type) -> str:
         case AnyType():
             return "auto"
 
-        # Custom classes ptr<A>
         case Instance(type=type_info):
-            return ptr_type(type_info.name)
+            return type_info.name
 
         # Iterator/Iterable
         case Instance(type=type_info, args=args) if (

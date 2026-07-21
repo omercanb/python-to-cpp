@@ -41,6 +41,16 @@ template <typename T> class list {
     list() = default;
     list(std::initializer_list<T> init) : data_(init) {}
 
+    // Construct from any iterable (has iter/done/next/current protocol)
+    template <typename IterableType>
+    list(IterableType &&iterable) {
+        auto iter = iterable.iter();
+        while (!iter.done()) {
+            data_.push_back(iter.current());
+            iter.next();
+        }
+    }
+
     // ---- size / truthiness --------------------------------------------------
     size_type size() const noexcept {
         return static_cast<size_type>(data_.size());

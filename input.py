@@ -5,4 +5,5 @@ def main() -> int:
         nums2.append(n)
     print(nums)
     print(nums2)
+    print(list(map(lambda x: x * 2, nums)))
     return 0

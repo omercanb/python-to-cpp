@@ -153,10 +153,18 @@ def translate_builtin_function_name_to_kwargs(o: CallExpr) -> str:
     return f"_{name}_kwargs"
 
 
-def is_pointer(e: Expression, t: Type):
+def is_pointer(t: Type):
     t = get_proper_type(t)
     if not isinstance(t, Instance):
         return False
     if t.type.fullname in ["builtins.list"]:
         return True
     return False
+
+
+def translate_constructor(t: Type, constructor: str):
+    typ = cpp_type(t)
+    if is_pointer(t):
+        return f"ptr(new {typ}({constructor}))"
+    else:
+        return f"{typ}({constructor})"

@@ -25,6 +25,7 @@ from python.codegen.translation_utils import (
     should_translate_kwargs,
     translate_arguments_with_kwargs,
     translate_builtin_function_name_to_kwargs,
+    translate_constructor,
     translate_lambda_parameters,
     translate_parameters,
 )
@@ -46,7 +47,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         """Handle attribute access considering whether the object will be a pointer or value"""
         # TODO: Handle attribute access
         obj = o.expr.accept(self)
-        if is_pointer(o.expr, self.types[o.expr]):
+        if is_pointer(self.types[o.expr]):
             return f"{obj}->{o.name}"
         else:
             return f"{obj}.{o.name}"
@@ -100,8 +101,13 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return str(o.value)
 
     def visit_list_expr(self, o: ListExpr) -> str:
+        assert is_pointer(self.types[o])
         elements = [element.accept(self) for element in o.items]
-        return list_of(elements)
+        if elements:
+            constructor = f"{{{', '.join(elements)}}}"
+        else:
+            constructor = ""
+        return translate_constructor(self.types[o], constructor)
 
     def visit_tuple_expr(self, o: TupleExpr) -> str:
         items = [item.accept(self) for item in o.items]
