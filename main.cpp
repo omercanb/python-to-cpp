@@ -1,53 +1,17 @@
-#include <iostream>
-#include "print.h"
 #include "list.h"
 #include "ptr.h"
-#include "range.h"
 using namespace py;
-
-
-int main();
-
-int main() {
-    int x;
-    ptr<list<int>> l;
-    int i;
-    int step;
-    int n;
-    range r;
-
-    x = 2;
-    l = ptr(new list<int>({2, 3, 4}));
-    for (size_t i = 0; i < len(l); ++i) {
-        print(l);
-    }
-    for (int i = 0; i < x; ++i) {
-        print("first", i);
-    }
-    for (int i = x; i < (x + 5); ++i) {
-        print("second", i);
-    }
-    for (int i = x; i < (x + 10); i += 2) {
-        print("third", i);
-    }
-    for (int i = x; i > (x - 7); i += -2) {
-        print("fourth", i);
-    }
-    step = x;
-    for (int i = x;; i += step) {
-        if ((step > 0 && i >= (10 * x)) || (step < 0 && i <= (10 * x))) break;
-        print("fifth", i);
-    }
-    step = (-2);
-    for (int i = (5 * x);; i += step) {
-        if ((step > 0 && i >= (10 * x)) || (step < 0 && i <= (10 * x))) break;
-        print("sixth", i);
-    }
-    for (auto n__iter = iter(l); !n__iter.done();) {
-        n = next(n__iter);
-        print("seventh", n);
-    }
-    r = range(10);
-    return 0;
+ptr<list<int>> l() {
+    return ptr(new list({1, 2, 3}));
 }
 
+double example(int a, double y) {
+    return (a + y);
+}
+
+int main() {
+    int a;
+    a = 1;
+    a = 2;
+    return 0;
+}

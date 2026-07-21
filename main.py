@@ -125,6 +125,7 @@ def main():
     codegen = StatementCodegen(result.tree, result.types)
     output = codegen.generate()
     print(output)
+    build_and_run(output)
 
 
 main()

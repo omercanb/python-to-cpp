@@ -96,6 +96,9 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return list_of(elements)
 
 
+includes = ["list.h", "ptr.h"]
+
+
 class StatementCodegen(TraverserVisitor):
     """Generate C++ code from mypy AST statements."""
 
@@ -111,14 +114,14 @@ class StatementCodegen(TraverserVisitor):
         self.output: list[str] = []
 
     def indent(self):
-        self.indent_level += 4
+        self.indent_level += 1
 
     def unindent(self):
-        self.indent_level -= 4
+        self.indent_level -= 1
 
     def indented(self) -> str:
         """Return indentation string."""
-        return "  " * self.indent_level
+        return "    " * self.indent_level
 
     def emit(self, code: str):
         """Emit a line of code."""
@@ -126,9 +129,9 @@ class StatementCodegen(TraverserVisitor):
 
     def visit_block(self, o: Block):
         """Generate code for a block of statements."""
-        self.indent_level += 1
+        self.indent()
         super().visit_block(o)
-        self.indent_level -= 1
+        self.unindent()
 
     def get_expr(self, expr: Expression):
         return expr.accept(self.expr_codegen)
@@ -136,8 +139,14 @@ class StatementCodegen(TraverserVisitor):
     def translate_declaration(self, name: str, typ: Type):
         return f"{cpp_type(typ)} {name};"
 
+    def generate_includes(self):
+        for include in includes:
+            self.emit(f'#include "{include}"')
+        self.emit(f"using namespace py;")
+
     def generate(self) -> str:
         """Generate all C++ code."""
+        self.generate_includes()
         self.tree.accept(self)
         return "\n".join(self.output)
 
@@ -151,8 +160,14 @@ class StatementCodegen(TraverserVisitor):
 
         definition_line = f"{signature} {{"
         self.emit(definition_line)
-        self.visit_block(o.body)
+        self.indent()
+        for declaration in declaration_lines:
+            self.emit(declaration)
+        for stmt in o.body.body:
+            stmt.accept(self)
+        self.unindent()
         self.emit("}")
+        self.emit("")
 
     def visit_class_def(self, o: ClassDef):
         assert False, "Classdef not yet implemented"
@@ -160,7 +175,7 @@ class StatementCodegen(TraverserVisitor):
     def visit_assignment_stmt(self, o: AssignmentStmt):
         lhs = self.get_expr(o.lvalues[0])
         rhs = self.get_expr(o.rvalue)
-        self.emit(f"{lhs} = {rhs}")
+        self.emit(f"{lhs} = {rhs};")
 
     def visit_return_stmt(self, o: ReturnStmt):
         if o.expr:
