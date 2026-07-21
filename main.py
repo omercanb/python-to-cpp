@@ -63,6 +63,20 @@ def mypy_pipeline(path: str):
     return AnalysisResult(tree, types)
 
 
+def translate(path: str):
+    result = mypy_pipeline(path)
+    codegen = StatementCodegen(result.tree, result.types)
+    output = codegen.generate()
+    return output
+
+
+def translate_source(source: str):
+    result = mypy_pipeline_source(source)
+    codegen = StatementCodegen(result.tree, result.types)
+    output = codegen.generate()
+    return output
+
+
 def main():
     file = "input.py"
     result = mypy_pipeline(file)

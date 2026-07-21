@@ -1,5 +1,9 @@
+#pragma once
+
 #include <climits>
 #include <iostream>
+#include <string>
+
 class range_iterator;
 class range;
 std::ostream &operator<<(std::ostream &os, const range &r);
@@ -54,3 +58,13 @@ std::ostream &operator<<(std::ostream &os, const range &r) {
     os << ")";
     return os;
 };
+
+// str() - convert range to string representation
+inline std::string str(const range &r) {
+    std::string result = "range(" + std::to_string(r.start) + ", " + std::to_string(r.stop);
+    if (r.step != 1) {
+        result += ", " + std::to_string(r.step);
+    }
+    result += ")";
+    return result;
+}

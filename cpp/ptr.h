@@ -70,4 +70,10 @@ template <typename T> size_t len(ptr<T> &p) { return len(*(p.object)); }
 
 template <typename T> auto iter(ptr<T> p) { return p->iter(); }
 
+// str() - dereference and convert to string
+template <typename T>
+std::string str(const ptr<T> &p) {
+    return str(*p.object);
+}
+
 } // namespace py

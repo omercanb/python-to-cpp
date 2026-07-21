@@ -3,7 +3,7 @@ import glob
 import os
 import subprocess
 
-from main import pipeline
+from main import mypy_pipeline, translate_source
 from python.utils import build_and_run_capture
 
 test_path = "tests/test_files"
@@ -34,7 +34,7 @@ class TestIdenticalOutput:
     def run_file(self, filename: str):
         program = open(filename).read()
         # The main function is not handled in any special way for translation to c++
-        cpp_program = pipeline(program)
+        cpp_program = translate_source(program)
         cpp_output = build_and_run_capture(cpp_program)
         python_output = self.run_python_and_capture(filename)
         print("Python Output")
