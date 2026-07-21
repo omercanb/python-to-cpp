@@ -5,10 +5,12 @@ from mypy.nodes import (
     IndexExpr,
     IntExpr,
     ListExpr,
+    Lvalue,
     MemberExpr,
     NameExpr,
     OpExpr,
     StrExpr,
+    TupleExpr,
     UnaryExpr,
 )
 from mypy.types import Type
@@ -28,6 +30,9 @@ class ExpressionCodegen(ExpressionVisitor[str]):
 
     def __init__(self, types_dict: dict[MypyExpression, Type]):
         self.types = types_dict
+        # Keeps track of wether the current expression is an lvalue
+        # Set from outside the class
+        self.lvalue = False
 
     def visit_name_expr(self, o: NameExpr) -> str:
         return o.name
@@ -80,3 +85,10 @@ class ExpressionCodegen(ExpressionVisitor[str]):
     def visit_list_expr(self, o: ListExpr) -> str:
         elements = [element.accept(self) for element in o.items]
         return list_of(elements)
+
+    def visit_tuple_expr(self, o: TupleExpr) -> str:
+        items = [item.accept(self) for item in o.items]
+        if self.lvalue:
+            return f"destructure({', '.join(items)})"
+        else:
+            return f"tuple({', '.join(items)})"

@@ -1,48 +1,29 @@
 #include "list.h"
 #include "ptr.h"
 #include "print.h"
+#include "tuple.h"
 using namespace py;
 int main() {
+    int a;
+    int b;
     int x;
-    ptr<list<int>> l;
-    int i;
-    int step;
+    std::string s;
+    int p;
+    int q;
+    int m;
     int n;
-    x = 2;
-    l = ptr(new list({2, 3, 4}));
-    for (size_t i = 0; i < len(l); ++i) {
-        print(l);
-    }
-    for (int i = 0; i < x; ++i) {
-        print("first", i);
-    }
-    for (int i = x; i < (x + 5); ++i) {
-        print("second", i);
-    }
-    for (int i = x; i < (x + 10); i += 2) {
-        print("third", i);
-    }
-    for (int i = x;; i += -2) {
-        if ((-2 > 0 && i >= (x - 7)) || (-2 < 0 && i <= (x - 7))) break;
-        print("fourth", i);
-    }
-    step = x;
-    for (int i = x;; i += step) {
-        if ((step > 0 && i >= (10 * x)) || (step < 0 && i <= (10 * x))) break;
-        print("fifth", i);
-    }
-    step = -2;
-    for (int i = (5 * x);; i += step) {
-        if ((step > 0 && i >= (10 * x)) || (step < 0 && i <= (10 * x))) break;
-        print("sixth", i);
-    }
-    for (auto n__iter = iter(l); !n__iter.done();) {
-        n = next(n__iter);
-        print("seventh", n);
-    }
-    for (auto n__iter = iter(l); !n__iter.done();) {
-        n = next(n__iter);
-        print("eight", n);
-    }
+    tuple<int, int> t;
+    tuple<int, int> t2;
+    destructure(a, b) = tuple(1, 2);
+    print("Test 1 - Simple destructure:", a, b);
+    destructure(a, b) = tuple(10, 20);
+    print("Test 2 - Reassign:", a, b);
+    destructure(x, s) = tuple(42, "hello");
+    print("Test 3 - Mixed types:", x, s);
+    destructure(p, q) = tuple(100, 200);
+    destructure(m, n) = tuple(p, q);
+    print("Test 4 - Chained destructure:", m, n);
+    t = tuple(1, 2);
+    t2 = t;
     return 0;
 }

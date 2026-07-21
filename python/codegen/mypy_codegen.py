@@ -25,7 +25,7 @@ from python.codegen.for_loop import translate_for_stmt
 from python.codegen.translation_utils import translate_func_signature
 from python.codegen.typegen import cpp_type
 
-includes = ["list.h", "ptr.h", "print.h"]
+includes = ["list.h", "ptr.h", "print.h", "tuple.h"]
 
 
 class StatementCodegen(TraverserVisitor):
@@ -62,7 +62,8 @@ class StatementCodegen(TraverserVisitor):
         super().visit_block(o)
         self.unindent()
 
-    def get_expr(self, expr: Expression):
+    def get_expr(self, expr: Expression, lvalue=False):
+        self.expr_codegen.lvalue = lvalue
         return expr.accept(self.expr_codegen)
 
     def translate_declaration(self, name: str, typ: Type):
@@ -102,7 +103,8 @@ class StatementCodegen(TraverserVisitor):
         assert False, "Classdef not yet implemented"
 
     def visit_assignment_stmt(self, o: AssignmentStmt):
-        lhs = self.get_expr(o.lvalues[0])
+        print(o.lvalues)
+        lhs = self.get_expr(o.lvalues[0], lvalue=True)
         rhs = self.get_expr(o.rvalue)
         self.emit(f"{lhs} = {rhs};")
 

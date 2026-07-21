@@ -7,6 +7,7 @@ namespace py {
 // Forward declarations for types that will define str()
 template <typename T> class list;
 template <typename T> class ptr;
+template <typename... Ts> class tuple;
 
 // str() overloads for primitives
 inline std::string str(int x) { return std::to_string(x); }

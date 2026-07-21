@@ -16,4 +16,7 @@ def main() -> int:
     m, n = (p, q)
     print("Test 4 - Chained destructure:", m, n)
 
+    t = (1, 2)
+    t2 = t
+
     return 0
