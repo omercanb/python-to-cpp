@@ -4,11 +4,13 @@ from mypy.nodes import (
     FloatExpr,
     IndexExpr,
     IntExpr,
+    LambdaExpr,
     ListExpr,
     Lvalue,
     MemberExpr,
     NameExpr,
     OpExpr,
+    ReturnStmt,
     StrExpr,
     TupleExpr,
     UnaryExpr,
@@ -19,9 +21,12 @@ from mypy.visitor import ExpressionVisitor
 from python.codegen.builtins import is_builtin_with_kwargs
 from python.codegen.codegen_utils import list_of
 from python.codegen.translation_utils import (
+    is_pointer,
     should_translate_kwargs,
     translate_arguments_with_kwargs,
     translate_builtin_function_name_to_kwargs,
+    translate_lambda_parameters,
+    translate_parameters,
 )
 
 
@@ -41,7 +46,10 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         """Handle attribute access considering whether the object will be a pointer or value"""
         # TODO: Handle attribute access
         obj = o.expr.accept(self)
-        return f"{obj}.{o.name}"
+        if is_pointer(o.expr, self.types[o.expr]):
+            return f"{obj}->{o.name}"
+        else:
+            return f"{obj}.{o.name}"
 
     def visit_call_expr(self, o: CallExpr) -> str:
         callee = o.callee.accept(self)
@@ -54,6 +62,15 @@ class ExpressionCodegen(ExpressionVisitor[str]):
             arguments = [arg.accept(self) for arg in o.args]
 
         return f"{callee}({', '.join(arguments)})"
+
+    def visit_lambda_expr(self, o: LambdaExpr) -> str:
+        arguments = translate_lambda_parameters(o)
+        ret = o.body.body[-1]
+        assert isinstance(ret, ReturnStmt)
+        expr = ret.expr
+        assert expr is not None
+        body = expr.accept(self)
+        return f"[=]({', '.join(arguments)}) {{ return {body}; }}"
 
     def visit_op_expr(self, o: OpExpr) -> str:
         left = o.left.accept(self)
@@ -77,7 +94,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return str(o.value)
 
     def visit_str_expr(self, o: StrExpr) -> str:
-        return f'"{o.value}"'
+        return f'"{repr(o.value)}"'
 
     def visit_float_expr(self, o: FloatExpr) -> str:
         return str(o.value)

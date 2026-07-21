@@ -1,11 +1,11 @@
-#include <iostream>
-#include <cassert>
-#include "../../cpp/print.h"
 #include "../../cpp/list.h"
+#include "../../cpp/print.h"
+#include <cassert>
+#include <iostream>
 using namespace py;
 
 // Test utilities
-void assert_true(bool condition, const std::string& test_name) {
+void assert_true(bool condition, const std::string &test_name) {
     if (!condition) {
         std::cerr << "FAIL: " << test_name << "\n";
         exit(1);
@@ -42,8 +42,10 @@ void test_enumerate_loop() {
 
     while (!e.done()) {
         auto t = e.current();
-        assert_true(t.get<0>() == expected_indices[count], "enumerate loop index");
-        assert_true(t.get<1>() == expected_values[count], "enumerate loop value");
+        assert_true(t.get<0>() == expected_indices[count],
+                    "enumerate loop index");
+        assert_true(t.get<1>() == expected_values[count],
+                    "enumerate loop value");
         e.next();
         count++;
     }
@@ -76,7 +78,7 @@ void test_map() {
     nums.append(3);
 
     auto double_val = [](int x) { return x * 2; };
-    auto m = map(nums, double_val);
+    auto m = map(double_val, nums);
 
     assert_true(!m.done(), "map not done");
     int val = m.current();
@@ -94,10 +96,62 @@ void test_filter() {
     auto is_even = [](int x) { return x % 2 == 0; };
     auto f = filter(nums, is_even);
 
-    assert_true(!f.done(), "filter not done");
+    assert_true(!f.done(), "filter not done at start");
     int val = f.current();
     assert_true(val == 2, "filter first even value 2");
     assert_true(true, "test_filter");
+}
+
+void test_filter_loop() {
+    list<int> nums;
+    nums.append(1);
+    nums.append(2);
+    nums.append(3);
+    nums.append(4);
+    nums.append(5);
+    nums.append(6);
+
+    auto is_even = [](int x) { return x % 2 == 0; };
+    auto f = filter(nums, is_even);
+
+    int expected[] = {2, 4, 6};
+    int count = 0;
+
+    while (!f.done()) {
+        int val = f.current();
+        assert_true(val == expected[count], "filter loop value");
+        f.next();
+        count++;
+    }
+    assert_true(count == 3, "filter loop iterated 3 times");
+    assert_true(f.done(), "filter done after iteration");
+    assert_true(true, "test_filter_loop");
+}
+
+void test_enumerate_for_loop_pattern() {
+    list<int> nums;
+    nums.append(10);
+    nums.append(20);
+    nums.append(30);
+
+    int expected_indices[] = {0, 1, 2};
+    int expected_values[] = {10, 20, 30};
+    int count = 0;
+
+    // This is the pattern the transpiler generates:
+    // for (auto __iter = iter(enumerate(nums)); !__iter.done();) {
+    //     destructure(i, n) = next(__iter);
+    //     ...
+    // }
+    for (auto __iter = py::iter(py::enumerate(nums)); !__iter.done();) {
+        int i, n;
+        py::destructure(i, n) = py::next(__iter);
+        assert_true(i == expected_indices[count], "enumerate for loop index");
+        assert_true(n == expected_values[count], "enumerate for loop value");
+        count++;
+    }
+    assert_true(count == 3, "enumerate for loop iterated 3 times");
+    assert_true(true, "test_enumerate_for_loop_pattern");
 }
 
 int main() {
@@ -106,6 +160,8 @@ int main() {
     test_zip();
     test_map();
     test_filter();
+    test_filter_loop();
+    test_enumerate_for_loop_pattern();
     std::cout << "\nAll tests passed!\n";
     return 0;
 }

@@ -3,4 +3,7 @@ def pointer_to(obj: str):
 
 
 def list_of(elements: list[str]):
-    return pointer_to(f"list({{{', '.join(elements)}}})")
+    if elements:
+        return pointer_to(f"list({{{', '.join(elements)}}})")
+    else:
+        assert False, "We don't support empty lists for now"

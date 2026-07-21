@@ -1,7 +1,8 @@
 from mypy.nodes import CallExpr
+from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
-from mypy.nodes import FuncDef, NameExpr
-from mypy.types import CallableType, Type, get_proper_type
+from mypy.nodes import FuncDef, LambdaExpr, MemberExpr, NameExpr
+from mypy.types import CallableType, Instance, ProperType, Type, get_proper_type
 from mypy.visitor import ExpressionVisitor
 
 from python.codegen.builtins import (
@@ -64,6 +65,15 @@ def translate_parameters(
             s = f"{argument_type_cpp} {argument_name}"
         arguments.append(s)
     return arguments
+
+
+def translate_lambda_parameters(o: LambdaExpr) -> list[str]:
+    params = []
+    for argument in o.arguments:
+        name = argument.variable.name
+        s = f"auto {name}"
+        params.append(s)
+    return params
 
 
 def parse_arguments(
@@ -141,3 +151,12 @@ def translate_builtin_function_name_to_kwargs(o: CallExpr) -> str:
     assert isinstance(o.callee, NameExpr)
     name = o.callee.name
     return f"_{name}_kwargs"
+
+
+def is_pointer(e: Expression, t: Type):
+    t = get_proper_type(t)
+    if not isinstance(t, Instance):
+        return False
+    if t.type.fullname in ["builtins.list"]:
+        return True
+    return False
