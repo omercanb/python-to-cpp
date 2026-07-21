@@ -94,7 +94,7 @@ void test_filter() {
     nums.append(4);
 
     auto is_even = [](int x) { return x % 2 == 0; };
-    auto f = filter(nums, is_even);
+    auto f = filter(is_even, nums);
 
     assert_true(!f.done(), "filter not done at start");
     int val = f.current();
@@ -112,7 +112,7 @@ void test_filter_loop() {
     nums.append(6);
 
     auto is_even = [](int x) { return x % 2 == 0; };
-    auto f = filter(nums, is_even);
+    auto f = filter(is_even, nums);
 
     int expected[] = {2, 4, 6};
     int count = 0;

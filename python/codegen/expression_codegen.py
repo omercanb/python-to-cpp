@@ -75,7 +75,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         expr = ret.expr
         assert expr is not None
         body = expr.accept(self)
-        return f"[=]({', '.join(arguments)}) {{ return {body}; }}"
+        return f"[]({', '.join(arguments)}) {{ return {body}; }}"
 
     def visit_op_expr(self, o: OpExpr) -> str:
         left = o.left.accept(self)
@@ -92,8 +92,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return f"{base}[{index}]"
 
     def visit_comparison_expr(self, o: ComparisonExpr) -> str:
-        # TODO: Generate comparison
-        return "comparison"
+        return f"{o.operands[0].accept(self)} {o.operators[0]} {o.operands[1].accept(self)}"
 
     def visit_int_expr(self, o: IntExpr) -> str:
         return str(o.value)

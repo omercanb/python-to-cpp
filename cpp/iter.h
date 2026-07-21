@@ -108,7 +108,7 @@ template <typename IterType, typename Pred> class filter_iter {
 };
 
 template <typename Container, typename Pred>
-auto filter(Container &&c, Pred pred) {
+auto filter(Pred pred, Container &&c) {
     return filter_iter<decltype(iter(c)), Pred>(iter(c), pred);
 }
 
