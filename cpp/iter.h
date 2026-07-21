@@ -185,4 +185,12 @@ auto next(filter_iter<IterType, Pred> &f) {
     return val;
 }
 
+// ---- Deduction guide for list construction from iterables ----
+// Defined here (not in list.h) because it needs iter() functions to be declared
+// #include "list.h"
+//
+// template <typename IterableType>
+// list(IterableType &&) ->
+// list<decltype(iter(std::declval<IterableType>()).current())>;
+//
 } // namespace py

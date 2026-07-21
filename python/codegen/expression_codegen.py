@@ -19,7 +19,7 @@ from mypy.types import Type
 from mypy.visitor import ExpressionVisitor
 
 from python.codegen.builtins import is_builtin_with_kwargs
-from python.codegen.codegen_utils import list_of
+from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
     is_pointer,
     should_translate_kwargs,
@@ -62,7 +62,11 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         else:
             arguments = [arg.accept(self) for arg in o.args]
 
-        return f"{callee}({', '.join(arguments)})"
+        call = f"{callee}({', '.join(arguments)})"
+        if is_pointer(self.types[o]):
+            return pointer_to(call)
+        else:
+            return call
 
     def visit_lambda_expr(self, o: LambdaExpr) -> str:
         arguments = translate_lambda_parameters(o)

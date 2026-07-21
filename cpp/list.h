@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "str.h"
+#include "iter.h"
 #include "ptr.h"
+#include "str.h"
 #include <algorithm>
 #include <cstddef>
 #include <functional>
@@ -41,13 +42,15 @@ template <typename T> class list {
     list() = default;
     list(std::initializer_list<T> init) : data_(init) {}
 
-    // Construct from any iterable (has iter/done/next/current protocol)
-    template <typename IterableType>
-    list(IterableType &&iterable) {
-        auto iter = iterable.iter();
-        while (!iter.done()) {
-            data_.push_back(iter.current());
-            iter.next();
+    // Construct from any iterable - requires explicit type: list<int>(map(...))
+    // (deduction guide in iter.h handles type inference)
+    // template <typename IterableType>
+
+    template <typename IterableType> list(IterableType &&iterable) {
+        auto it = py::iter(iterable);
+        while (!it.done()) {
+            data_.push_back(it.current());
+            it.next();
         }
     }
 
@@ -280,5 +283,10 @@ template <typename T> std::string str(const list<T> &l) {
     result += "]";
     return result;
 }
+
+// Deduction guide
+template <typename IterableType>
+list(IterableType &&)
+    -> list<decltype(iter(std::declval<IterableType &>()).current())>;
 
 } // namespace py
