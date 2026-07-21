@@ -21,6 +21,7 @@ from mypy.types import Type
 
 from python.analysis.find_declarations import get_declarations
 from python.codegen.expression_codegen import ExpressionCodegen
+from python.codegen.for_loop_debug import print_for_stmt
 from python.codegen.translation_utils import translate_func_signature
 from python.codegen.typegen import cpp_type
 
@@ -127,8 +128,12 @@ class StatementCodegen(TraverserVisitor):
             self.visit_block(o.else_body)
         self.emit("}")
 
-    def visit_for_stmt(self, _: ForStmt):
-        assert False, "For loop not yet implemented"
+    def visit_for_stmt(self, o: ForStmt):
+        # Debug: print the for loop structure
+        debug_info = print_for_stmt(o)
+        self.emit(f"// {debug_info.replace(chr(10), chr(10) + '// ')}")
+        self.emit("// For loop not yet implemented")
+        # TODO: Implement for loop code generation
 
     def visit_while_stmt(self, o: WhileStmt):
         self.emit("// While loop")

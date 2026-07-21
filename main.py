@@ -79,6 +79,7 @@ def translate_source(source: str):
 
 def main():
     file = "input.py"
+    validate(file)
     result = mypy_pipeline(file)
     codegen = StatementCodegen(result.tree, result.types)
     output = codegen.generate()
