@@ -11,5 +11,7 @@ def main() -> int:
     print(a, end="()")
     print(b, end="()")
     print(c)
+    # Orders swapped
+    print(a, b, c, end="end", sep="sep")
 
     return 0

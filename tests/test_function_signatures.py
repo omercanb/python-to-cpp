@@ -4,8 +4,8 @@ import pytest
 from mypy.nodes import ClassDef, FuncDef, TypeInfo
 
 from main import mypy_pipeline_source
-from python.codegen.declarations import generate_func_signature
-from python.codegen.mypy_codegen import ExpressionCodegen
+from python.codegen.translation_utils import translate_func_signature
+from python.codegen.expression_codegen import ExpressionCodegen
 
 # Test Python functions with various signatures
 test_code = """
@@ -74,7 +74,7 @@ class TestFunctionSignatures:
         """Generate C++ signature for a function."""
         sym = self.tree.names.get(func_name)
         assert sym and isinstance(sym.node, FuncDef)
-        signature = generate_func_signature(sym.node, self.expr_translator)
+        signature = translate_func_signature(sym.node, self.expr_translator)
         return signature
 
     def generate_method_signature(self, method_name: str, class_name: str) -> str:
@@ -82,7 +82,7 @@ class TestFunctionSignatures:
         assert class_info and isinstance(class_info.node, TypeInfo)
         method = class_info.node.names[method_name].node
         assert isinstance(method, FuncDef)
-        signature = generate_func_signature(method, self.expr_translator)
+        signature = translate_func_signature(method, self.expr_translator)
         return signature
 
     @pytest.mark.parametrize("func_name,expected_sig", function_signatures.items())

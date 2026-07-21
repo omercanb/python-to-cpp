@@ -1,4 +1,6 @@
+from main import translate_source
 from python.utils import build_and_run_capture
+from tests.test_utils import print_output_diff, run_python_and_capture
 
 
 class TestPrintBuiltin:
@@ -42,3 +44,18 @@ a,b,c
 True False
 """
         assert result.stdout.strip() == expected_output.strip()
+
+    def test_input_py_matches_python(self):
+        """Test that input.py produces identical output between Python and C++."""
+        # Read and translate input.py
+        with open("input.py") as f:
+            program = f.read()
+
+        cpp_program = translate_source(program)
+        cpp_output = build_and_run_capture(cpp_program)
+        python_output = run_python_and_capture("input.py")
+
+        # Print outputs for debugging
+        print_output_diff(python_output.stdout, cpp_output.stdout)
+
+        assert cpp_output.stdout == python_output.stdout

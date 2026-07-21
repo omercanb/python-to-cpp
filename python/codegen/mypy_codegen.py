@@ -4,99 +4,27 @@ Fill in the visit_* methods to generate C++ code.
 Separated into expression and statement visitors.
 """
 
-from mypy.nodes import (
-    AssignmentStmt,
-    Block,
-    BreakStmt,
-    CallExpr,
-    ClassDef,
-    ComparisonExpr,
-    ContinueStmt,
-)
+from mypy.nodes import AssignmentStmt, Block, BreakStmt, ClassDef, ContinueStmt
 from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import (
     ExpressionStmt,
-    FloatExpr,
     ForStmt,
     FuncDef,
     IfStmt,
-    IndexExpr,
-    IntExpr,
-    ListExpr,
-    MemberExpr,
     MypyFile,
-    NameExpr,
-    OpExpr,
     ReturnStmt,
-    StrExpr,
-    UnaryExpr,
     WhileStmt,
 )
 from mypy.traverser import TraverserVisitor
 from mypy.types import Type
-from mypy.visitor import ExpressionVisitor
 
 from python.analysis.find_declarations import get_declarations
-from python.codegen.codegen_utils import list_of
-from python.codegen.declarations import generate_func_signature
+from python.codegen.expression_codegen import ExpressionCodegen
+from python.codegen.translation_utils import translate_func_signature
 from python.codegen.typegen import cpp_type
 
-
-class ExpressionCodegen(ExpressionVisitor[str]):
-    """Generate C++ code for expressions."""
-
-    def __init__(self, types_dict: dict[MypyExpression, Type]):
-        self.types = types_dict
-
-    def visit_name_expr(self, o: NameExpr) -> str:
-        return o.name
-
-    def visit_member_expr(self, o: MemberExpr) -> str:
-        """Handle attribute access considering wether the object will be a pointer or value"""
-        # TODO: Handle attribute access
-        obj = o.expr.accept(self)
-        return f"{obj}.{o.name}"
-
-    def visit_call_expr(self, o: CallExpr) -> str:
-        # TODO consider if we need to worry about the ordering difference between kw arguements in python and arguments in c++
-        callee = o.callee.accept(self)
-        arguments = [arg.accept(self) for arg in o.args]
-        return f"{callee}({', '.join(arguments)})"
-
-    def visit_op_expr(self, o: OpExpr) -> str:
-        left = o.left.accept(self)
-        right = o.right.accept(self)
-        return f"({left} {o.op} {right})"
-
-    def visit_unary_expr(self, o: UnaryExpr) -> str:
-        operand = o.expr.accept(self)
-        return f"{o.op}{operand}"
-
-    def visit_index_expr(self, o: IndexExpr) -> str:
-        base = o.base.accept(self)
-        index = o.index.accept(self)
-        return f"{base}[{index}]"
-
-    def visit_comparison_expr(self, o: ComparisonExpr) -> str:
-        # TODO: Generate comparison
-        return "comparison"
-
-    def visit_int_expr(self, o: IntExpr) -> str:
-        return str(o.value)
-
-    def visit_str_expr(self, o: StrExpr) -> str:
-        return f'"{o.value}"'
-
-    def visit_float_expr(self, o: FloatExpr) -> str:
-        return str(o.value)
-
-    def visit_list_expr(self, o: ListExpr) -> str:
-        elements = [element.accept(self) for element in o.items]
-        return list_of(elements)
-
-
-includes = ["list.h", "ptr.h"]
+includes = ["list.h", "ptr.h", "print.h"]
 
 
 class StatementCodegen(TraverserVisitor):
@@ -152,7 +80,7 @@ class StatementCodegen(TraverserVisitor):
 
     def visit_func_def(self, o: FuncDef):
         """Generate a function or method definition"""
-        signature = generate_func_signature(o, self.expr_codegen)
+        signature = translate_func_signature(o, self.expr_codegen)
         declarations = get_declarations(o, self.types)
         declaration_lines = [
             self.translate_declaration(name, typ) for name, typ in declarations.items()
@@ -209,7 +137,7 @@ class StatementCodegen(TraverserVisitor):
         self.emit("}")
 
     def visit_expression_stmt(self, o: ExpressionStmt):
-        self.emit(self.get_expr(o.expr))
+        self.emit(f"{self.get_expr(o.expr)};")
 
     def visit_break_stmt(self, _: BreakStmt):
         self.emit("break;")
