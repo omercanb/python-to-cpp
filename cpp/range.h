@@ -1,5 +1,6 @@
 #pragma once
 
+#include "str.h"
 #include <climits>
 #include <iostream>
 #include <string>

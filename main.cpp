@@ -5,70 +5,44 @@ using namespace py;
 int main() {
     int x;
     ptr<list<int>> l;
+    int i;
     int step;
-    ptr<list<double>> l2;
-    ptr<range> r;
+    int n;
     x = 2;
     l = ptr(new list({2, 3, 4}));
-    // ForStmt {
-//   target: Name(i)
-//   iter: Name(range)(Name(len)(Name(l)))
-//   item_type: int
-//   iterator_type: typing.Iterator[int]
-// }
-    // For loop not yet implemented
-    // ForStmt {
-//   target: Name(i)
-//   iter: Name(range)(Name(x))
-//   item_type: int
-//   iterator_type: typing.Iterator[int]
-// }
-    // For loop not yet implemented
-    // ForStmt {
-//   target: Name(i)
-//   iter: Name(range)(Name(x), OpExpr)
-//   item_type: int
-//   iterator_type: typing.Iterator[int]
-// }
-    // For loop not yet implemented
-    // ForStmt {
-//   target: Name(i)
-//   iter: Name(range)(Name(x), OpExpr, IntExpr)
-//   item_type: int
-//   iterator_type: typing.Iterator[int]
-// }
-    // For loop not yet implemented
-    // ForStmt {
-//   target: Name(i)
-//   iter: Name(range)(Name(x), OpExpr, UnaryExpr)
-//   item_type: int
-//   iterator_type: typing.Iterator[int]
-// }
-    // For loop not yet implemented
+    for (size_t i = 0; i < len(l); ++i) {
+        print(l);
+    }
+    for (int i = 0; i < x; ++i) {
+        print("first", i);
+    }
+    for (int i = x; i < (x + 5); ++i) {
+        print("second", i);
+    }
+    for (int i = x; i < (x + 10); i += 2) {
+        print("third", i);
+    }
+    for (int i = x;; i += -2) {
+        if ((-2 > 0 && i >= (x - 7)) || (-2 < 0 && i <= (x - 7))) break;
+        print("fourth", i);
+    }
     step = x;
-    // ForStmt {
-//   target: Name(i)
-//   iter: Name(range)(Name(x), OpExpr, Name(step))
-//   item_type: int
-//   iterator_type: typing.Iterator[int]
-// }
-    // For loop not yet implemented
+    for (int i = x;; i += step) {
+        if ((step > 0 && i >= (10 * x)) || (step < 0 && i <= (10 * x))) break;
+        print("fifth", i);
+    }
     step = -2;
-    // ForStmt {
-//   target: Name(i)
-//   iter: Name(range)(OpExpr, OpExpr, Name(step))
-//   item_type: int
-//   iterator_type: typing.Iterator[int]
-// }
-    // For loop not yet implemented
-    // ForStmt {
-//   target: Name(n)
-//   iter: Name(l)
-//   item_type: int
-//   iterator_type: typing.Iterator[int]
-// }
-    // For loop not yet implemented
-    l2 = ptr(new list({2.0, 3.0}));
-    r = range(10);
+    for (int i = (5 * x);; i += step) {
+        if ((step > 0 && i >= (10 * x)) || (step < 0 && i <= (10 * x))) break;
+        print("sixth", i);
+    }
+    for (auto n__iter = iter(l); !n__iter.done();) {
+        n = next(n__iter);
+        print("seventh", n);
+    }
+    for (auto n__iter = iter(l); !n__iter.done();) {
+        n = next(n__iter);
+        print("eight", n);
+    }
     return 0;
 }

@@ -1,151 +1,162 @@
-from __future__ import annotations
+"""For loop translation from MyPy AST to C++."""
 
-import ast
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from python.codegen.codegen import CppTranslator
+from mypy.nodes import CallExpr, ForStmt, IntExpr, NameExpr, OpExpr
+from mypy.nodes import Expression as MypyExpression
 
 
-def match_for(self: CppTranslator, node: ast.For):
-    if isinstance(node.target, ast.Name):
-        self.test_declare_name(node.target)
-    match node.iter:
+def translate_for_stmt(codegen, for_stmt: ForStmt) -> None:
+    """Translate a MyPy ForStmt to C++ code."""
+    # Match on the iterator expression type
+    if isinstance(for_stmt.expr, CallExpr) and isinstance(
+        for_stmt.expr.callee, NameExpr
+    ):
+        func_name = for_stmt.expr.callee.name
+
         # for i in range(len(list))
-        case ast.Call(
-            func=ast.Name(), args=[ast.Call(func=ast.Name(), args=[inner_object])]
-        ) as call if (
-            isinstance(call.func, ast.Name)  # To silence pyright
-            and isinstance(call.args[0], ast.Call)
-            and isinstance(call.args[0].func, ast.Name)
-            and call.func.id == "range"
-            and call.args[0].func.id == "len"
+        if (
+            func_name == "range"
+            and len(for_stmt.expr.args) == 1
+            and isinstance(for_stmt.expr.args[0], CallExpr)
+            and isinstance(for_stmt.expr.args[0].callee, NameExpr)
+            and for_stmt.expr.args[0].callee.name == "len"
         ):
-            for_range_len(self, node, inner_object)
-        # for i in range(number)
-        case ast.Call(func=ast.Name()) as call if (
-            isinstance(call.func, ast.Name) and call.func.id == "range"
-        ):
-            for_range(self, node)
-        # for i in list
-        case _:
-            for_generic(self, node)
+            inner_iterable = for_stmt.expr.args[0].args[0]
+            translate_for_range_len(codegen, for_stmt, inner_iterable)
+            return
+
+        # for i in range(...)
+        if func_name == "range":
+            translate_for_range(codegen, for_stmt)
+            return
+
+    # for i in iterable (generic)
+    translate_for_generic(codegen, for_stmt)
 
 
-def for_range_len(self: CppTranslator, node: ast.For, inner_iterable: ast.expr):
-    assert isinstance(node.target, ast.Name)
-    target = self.visit(node.target)
-    for_line = f"for (size_t {target} = 0; {target} < len({self.visit(inner_iterable)}); ++{target})"
-    write_for(self, for_line, node.body)
+def translate_for_range_len(
+    codegen, for_stmt: ForStmt, inner_iterable: MypyExpression
+) -> None:
+    """Translate: for i in range(len(list))"""
+    assert isinstance(for_stmt.index, NameExpr)
+    target = for_stmt.index.name
+    inner_iter_expr = codegen.get_expr(inner_iterable)
+    for_line = f"for (size_t {target} = 0; {target} < len({inner_iter_expr}); ++{target})"
+    write_for(codegen, for_line, for_stmt.body)
 
 
-def _const_int(node: ast.expr) -> int | None:
-    """Extract a compile-time int from a literal, incl. unary +/-."""
-    match node:
-        case ast.Constant(value=int() as v) if not isinstance(v, bool):
-            return v
-        case ast.UnaryOp(
-            op=ast.USub(), operand=ast.Constant(value=int() as v)
-        ) if not isinstance(v, bool):
-            return -v
-        case ast.UnaryOp(
-            op=ast.UAdd(), operand=ast.Constant(value=int() as v)
-        ) if not isinstance(v, bool):
-            return v
-        case _:
-            return None
+def _extract_int_constant(expr: MypyExpression) -> int | None:
+    """Extract compile-time int from a literal, incl. unary +/-."""
+    if isinstance(expr, IntExpr):
+        return expr.value
+    if isinstance(expr, OpExpr):
+        # Handle unary minus: -5
+        if expr.op == "-" and isinstance(expr.left, IntExpr):
+            return -expr.left.value
+        if expr.op == "+" and isinstance(expr.left, IntExpr):
+            return expr.left.value
+    return None
 
 
-def for_range(self: CppTranslator, node: ast.For) -> None:
-    call = node.iter
-    assert isinstance(call, ast.Call)
-
+def translate_for_range(codegen, for_stmt: ForStmt) -> None:
+    """Translate: for i in range(stop) or range(start, stop) or range(start, stop, step)"""
+    assert isinstance(for_stmt.expr, CallExpr)
+    call = for_stmt.expr
     args = call.args
+
     if len(args) in (1, 2):
-        for_range_no_step(self, node)
+        translate_for_range_no_step(codegen, for_stmt, args)
         return
 
     if len(args) == 3:
-        step = _const_int(args[2])
+        step = _extract_int_constant(args[2])
         if step is not None:
-            for_range_constant_step(self, node, step)
+            translate_for_range_constant_step(codegen, for_stmt, args, step)
         else:
-            for_range_unkown_step(self, node)
+            translate_for_range_unknown_step(codegen, for_stmt, args)
         return
 
-    for_generic(self, node)
+    # Fallback to generic
+    translate_for_generic(codegen, for_stmt)
 
 
-def for_range_no_step(self: CppTranslator, node: ast.For):
-    target = self.visit(node.target)
-    assert isinstance(node.iter, ast.Call)
-    step_args = node.iter.args
-    if len(step_args) == 1:
-        start = 0
-        stop = step_args[0]
-        for_line = f"for (int {target} = 0; {target} < {self.visit(stop)}; ++{target})"
-    else:  # len(step_args) == 2:
-        start, stop = step_args
-        for_line = f"for (int {target} = {self.visit(start)}; {target} < {self.visit(stop)}; ++{target})"
-    write_for(self, for_line, node.body)
+def translate_for_range_no_step(
+    codegen, for_stmt: ForStmt, args: list[MypyExpression]
+) -> None:
+    """Translate: for i in range(stop) or range(start, stop)"""
+    assert isinstance(for_stmt.index, NameExpr)
+    target = for_stmt.index.name
+
+    if len(args) == 1:
+        stop = codegen.get_expr(args[0])
+        for_line = f"for (int {target} = 0; {target} < {stop}; ++{target})"
+    else:  # len(args) == 2
+        start = codegen.get_expr(args[0])
+        stop = codegen.get_expr(args[1])
+        for_line = f"for (int {target} = {start}; {target} < {stop}; ++{target})"
+
+    write_for(codegen, for_line, for_stmt.body)
 
 
-def for_range_constant_step(self: CppTranslator, node: ast.For, step: int):
-    target = self.visit(node.target)
-    # We use the constant step to generate a < or > sign on the for condition
-    assert isinstance(node.iter, ast.Call)
-    start, stop = node.iter.args[:2]
-    start = self.visit(start)
-    stop = self.visit(stop)
+def translate_for_range_constant_step(
+    codegen, for_stmt: ForStmt, args: list[MypyExpression], step: int
+) -> None:
+    """Translate: for i in range(start, stop, constant_step)"""
+    assert isinstance(for_stmt.index, NameExpr)
+    target = for_stmt.index.name
+    start = codegen.get_expr(args[0])
+    stop = codegen.get_expr(args[1])
+
     if step > 0:
-        for_line = (
-            f"for (int {target} = {start}; {target} < {stop}; {target} += {step})"
-        )
+        for_line = f"for (int {target} = {start}; {target} < {stop}; {target} += {step})"
     else:
-        for_line = (
-            f"for (int {target} = {start}; {target} > {stop}; {target} += {step})"
-        )
-    write_for(self, for_line, node.body)
+        for_line = f"for (int {target} = {start}; {target} > {stop}; {target} += {step})"
+
+    write_for(codegen, for_line, for_stmt.body)
 
 
-def for_range_unkown_step(self: CppTranslator, node: ast.For):
-    assert isinstance(node.iter, ast.Call)
-    target = self.visit(node.target)
-    start, stop, step = node.iter.args
-    start = self.visit(start)
-    stop = self.visit(stop)
-    step = self.visit(step)
+def translate_for_range_unknown_step(
+    codegen, for_stmt: ForStmt, args: list[MypyExpression]
+) -> None:
+    """Translate: for i in range(start, stop, dynamic_step)"""
+    assert isinstance(for_stmt.index, NameExpr)
+    target = for_stmt.index.name
+    start = codegen.get_expr(args[0])
+    stop = codegen.get_expr(args[1])
+    step = codegen.get_expr(args[2])
+
     for_line = f"for (int {target} = {start};; {target} += {step})"
     first_line = f"if (({step} > 0 && {target} >= {stop}) || ({step} < 0 && {target} <= {stop})) break;"
-    write_for(self, for_line, node.body, first_line)
+    write_for(codegen, for_line, for_stmt.body, first_line)
 
 
-def for_generic(self: CppTranslator, node: ast.For):
-    target = self.visit(node.target)
-    iterable = self.visit(node.iter)
-    assert isinstance(node.target, ast.Name)
-    var = f"{node.target.id}__iter"
-    for_line = f"for (auto {var} = iter({iterable}); !{var}.done();)"
-    self.stmt(f"{for_line} {{")
-    self.indent()
-    self.stmt(f"{target} = next({var});")
-    for child in node.body:
-        self.visit(child)
-    self.unindent()
-    self.stmt("}")
+def translate_for_generic(codegen, for_stmt: ForStmt) -> None:
+    """Translate: for var in iterable (generic iterator protocol)"""
+    assert isinstance(for_stmt.index, NameExpr)
+    target = for_stmt.index.name
+    iterable = codegen.get_expr(for_stmt.expr)
+    iter_var = f"{target}__iter"
+
+    codegen.emit(f"for (auto {iter_var} = iter({iterable}); !{iter_var}.done();) {{")
+    codegen.indent()
+    codegen.emit(f"{target} = next({iter_var});")
+    for stmt in for_stmt.body.body:
+        stmt.accept(codegen)
+    codegen.unindent()
+    codegen.emit("}")
 
 
 def write_for(
-    self: CppTranslator,
+    codegen,
     for_init: str,
-    body: list[ast.stmt],
+    body,
     first_loop_line: str | None = None,
-):
-    self.stmt(f"{for_init} {{")
-    self.indent()
+) -> None:
+    """Write a C++ for loop with optional first line inside the loop."""
+    codegen.emit(f"{for_init} {{")
+    codegen.indent()
     if first_loop_line:
-        self.stmt(first_loop_line)
-    for child in body:
-        self.visit(child)
-    self.unindent()
-    self.stmt("}")
+        codegen.emit(first_loop_line)
+    for stmt in body.body:
+        stmt.accept(codegen)
+    codegen.unindent()
+    codegen.emit("}")

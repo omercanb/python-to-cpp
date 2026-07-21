@@ -1,6 +1,14 @@
 """Save the variables that need to be declared inside each function"""
 
-from mypy.nodes import AssignmentStmt, Expression, FuncDef, Lvalue, NameExpr, TupleExpr
+from mypy.nodes import (
+    AssignmentStmt,
+    Expression,
+    ForStmt,
+    FuncDef,
+    Lvalue,
+    NameExpr,
+    TupleExpr,
+)
 from mypy.traverser import TraverserVisitor
 from mypy.types import CallableType, Type, get_proper_type
 
@@ -17,6 +25,9 @@ class _DeclarationCollector(TraverserVisitor):
         for lvalue in o.lvalues:
             self.check_names(lvalue)
         o.rvalue.accept(self)
+
+    def visit_for_stmt(self, o: ForStmt) -> None:
+        self.check_names(o.index)
 
     def check_names(self, lvalue: Lvalue) -> None:
         """Recursively collect all names in an lvalue."""

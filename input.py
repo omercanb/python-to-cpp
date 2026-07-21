@@ -36,6 +36,6 @@ def main() -> int:
         print("sixth", i)
     for n in l:
         print("seventh", n)
-    l2 = [2.0, 3.0]
-    r = range(10)
+    for n in l:
+        print("eight", n)
     return 0

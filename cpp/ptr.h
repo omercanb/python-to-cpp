@@ -2,6 +2,7 @@
 
 // A refcounted pointer that copies python objects
 
+#include "str.h"
 #include <iostream>
 namespace py {
 template <typename T> class ptr {

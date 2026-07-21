@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "str.h"
 #include "ptr.h"
 #include <algorithm>
 #include <cstddef>
@@ -258,8 +259,7 @@ list<T> operator*(typename list<T>::size_type n, const list<T> &a) {
 template <typename T> inline size_t len(list<T> &l) { return l.size(); }
 
 // str() - convert list to string representation
-template <typename T>
-std::string str(const list<T> &l) {
+template <typename T> std::string str(const list<T> &l) {
     std::string result = "[";
     for (size_t i = 0; i < l.size(); ++i) {
         if (i > 0)
