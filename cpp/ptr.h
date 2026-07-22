@@ -3,6 +3,7 @@
 // A refcounted pointer that copies python objects
 
 #include "str.h"
+#include "truthy.h"
 #include <iostream>
 namespace py {
 template <typename T> class ptr {
@@ -74,6 +75,11 @@ template <typename T> auto iter(ptr<T> p) { return p->iter(); }
 // str() - dereference and convert to string
 template <typename T> std::string str(const ptr<T> &p) {
     return str(*p.object);
+}
+
+// to_bool() - dereference and forward truthiness
+template <typename T> inline bool to_bool(const ptr<T> &p) {
+    return to_bool(*p.object);
 }
 
 template <typename T1, typename T2>

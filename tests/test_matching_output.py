@@ -2,7 +2,7 @@ import glob
 
 import pytest
 
-from main import translate_source
+from main import translate_source, validate
 from python.utils import build_and_run_capture
 from tests.test_utils import print_output_diff, run_python_and_capture
 
@@ -15,6 +15,7 @@ class TestIdenticalOutput:
     @pytest.mark.parametrize("filename", paths, ids=lambda p: p.split("/")[-1])
     def test_file(self, filename: str):
         """Test that a Python file produces identical output between Python and C++."""
+        validate(filename)
         program = open(filename).read()
         cpp_program = translate_source(program)
         cpp_output = build_and_run_capture(cpp_program)

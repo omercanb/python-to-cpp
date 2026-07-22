@@ -31,7 +31,7 @@ def is_builtin_with_kwargs(fullname: str) -> bool:
 
 OP_MAP = {"is": "__is", "/": "fdiv", "//": "idiv", "%": "mod", "**": "pow"}
 
-SCALAR_CONSTRUCTORS = {"int": "to_int", "float": "to_float"}
+SCALAR_CONSTRUCTORS = {"int": "to_int", "float": "to_float", "bool": "to_bool"}
 
 NON_POINTER_TYPES = {
     "int",

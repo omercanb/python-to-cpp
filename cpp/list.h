@@ -55,10 +55,10 @@ template <typename T> class list {
     }
 
     // ---- size / truthiness --------------------------------------------------
-    size_type size() const noexcept {
+    size_type __len__() const noexcept {
         return static_cast<size_type>(data_.size());
     }
-    size_type len() const noexcept { return size(); }
+    size_type len() const noexcept { return __len__(); }
     bool empty() const noexcept { return data_.empty(); }
     explicit operator bool() const noexcept {
         return !data_.empty();
@@ -78,7 +78,7 @@ template <typename T> class list {
 
     // insert is LENIENT: clamps, never raises. insert(len, x) == append.
     void insert(size_type i, const T &x) {
-        long long n = size();
+        long long n = __len__();
         if (i < 0) {
             i += n;
             if (i < 0)
@@ -104,7 +104,7 @@ template <typename T> class list {
     T pop(size_type i = -1) {
         if (data_.empty())
             throw IndexError("pop from empty list");
-        long long n = size();
+        long long n = __len__();
         if (i < 0)
             i += n;
         if (i < 0 || i >= n)
@@ -115,7 +115,7 @@ template <typename T> class list {
     }
 
     void extend(ptr<list<T>> &other) {
-        auto len = other->size();
+        auto len = other->__len__();
         for (size_type i = 0; i < len; ++i) {
             this->append((*other)[i]);
         }
@@ -127,7 +127,7 @@ template <typename T> class list {
     // start/stop are clamped exactly as CPython does.
     size_type index(const T &value, size_type start = 0,
                     std::optional<size_type> stop = std::nullopt) const {
-        long long n = size();
+        long long n = __len__();
         long long s = start;
         long long e = stop.value_or(n);
         if (s < 0) {
@@ -202,7 +202,7 @@ template <typename T> class list {
     list<T> operator*(size_type n) const {
         list<T> out;
         if (n > 0) {
-            out.data_.reserve(static_cast<std::size_t>(n * size()));
+            out.data_.reserve(static_cast<std::size_t>(n * __len__()));
             for (long long k = 0; k < n; ++k)
                 out.data_.insert(out.data_.end(), data_.begin(), data_.end());
         }
@@ -252,7 +252,7 @@ template <typename T> class list {
 
     // strict integer-index normalization shared by [], delItem
     std::size_t normIndex(long long i) const {
-        long long n = size();
+        long long n = __len__();
         if (i < 0)
             i += n;
         if (i < 0 || i >= n)
@@ -270,12 +270,12 @@ list<T> operator*(typename list<T>::size_type n, const list<T> &a) {
     return a * n;
 }
 
-template <typename T> inline size_t len(list<T> &l) { return l.size(); }
+template <typename T> inline size_t len(list<T> &l) { return l.__len__(); }
 
 // str() - convert list to string representation
 template <typename T> std::string str(const list<T> &l) {
     std::string result = "[";
-    for (size_t i = 0; i < l.size(); ++i) {
+    for (size_t i = 0; i < l.__len__(); ++i) {
         if (i > 0)
             result += ", ";
         result += str(l[i]);

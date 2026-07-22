@@ -203,3 +203,8 @@ def translate_binary_expr(op: str, expr1: str, expr2: str):
         return f"{OP_MAP[op]}({expr1}, {expr2})"
     else:
         return f"({expr1} {op} {expr2})"
+
+
+def is_truthy(expr: str) -> str:
+    """Wrap a C++ expression with Python's truthiness rules (bool()/`if`/`while`/`not`)."""
+    return f"to_bool({expr})"

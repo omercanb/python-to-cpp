@@ -23,11 +23,12 @@ from python.analysis.find_declarations import get_declarations
 from python.codegen.codegen_utils import pointer_to
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.for_loop import translate_for_stmt
-from python.codegen.translation_utils import translate_func_signature
+from python.codegen.translation_utils import is_truthy, translate_func_signature
 from python.codegen.typegen import cpp_type, ptr_type, is_pointer
 
 includes = [
     "types.h",
+    "truthy.h",
     "iter.h",
     "tuple.h",
     "ptr.h",
@@ -132,9 +133,9 @@ class StatementCodegen(TraverserVisitor):
         for i, (condition, body) in enumerate(zip(conditions, bodies)):
             condition_cpp = self.get_expr(condition)
             if i == 0:
-                self.emit(f"if ({condition_cpp}) {{")
+                self.emit(f"if ({is_truthy(condition_cpp)}) {{")
             else:
-                self.emit(f"}} else if ({condition_cpp}) {{")
+                self.emit(f"}} else if ({is_truthy(condition_cpp)}) {{")
             self.visit_block(body)
         if o.else_body:
             self.emit("} else {")
@@ -146,7 +147,7 @@ class StatementCodegen(TraverserVisitor):
 
     def visit_while_stmt(self, o: WhileStmt):
         self.emit("// While loop")
-        self.emit(f"while ({self.get_expr(o.expr)}) {{")
+        self.emit(f"while ({is_truthy(self.get_expr(o.expr))}) {{")
         self.visit_block(o.body)
         self.emit("}")
 

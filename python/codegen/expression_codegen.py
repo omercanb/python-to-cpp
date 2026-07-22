@@ -20,6 +20,7 @@ from mypy.visitor import ExpressionVisitor
 
 from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
+    is_truthy,
     should_translate_kwargs,
     should_wrap_call_in_pointer,
     translate_arguments_with_kwargs,
@@ -44,6 +45,10 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         self.lvalue = False
 
     def visit_name_expr(self, o: NameExpr) -> str:
+        if o.fullname == "builtins.True":
+            return "true"
+        if o.fullname == "builtins.False":
+            return "false"
         return o.name
 
     def visit_member_expr(self, o: MemberExpr) -> str:
@@ -92,6 +97,8 @@ class ExpressionCodegen(ExpressionVisitor[str]):
 
     def visit_unary_expr(self, o: UnaryExpr) -> str:
         operand = o.expr.accept(self)
+        if o.op == "not":
+            return f"!{is_truthy(operand)}"
         return f"{o.op}{operand}"
 
     def visit_index_expr(self, o: IndexExpr) -> str:
