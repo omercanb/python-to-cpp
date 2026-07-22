@@ -11,6 +11,7 @@ from mypy.nodes import (
     NameExpr,
     OpExpr,
     ReturnStmt,
+    SetExpr,
     StrExpr,
     TupleExpr,
     UnaryExpr,
@@ -31,6 +32,7 @@ from python.codegen.translation_utils import (
     translate_constructor,
     translate_constructor_special_cases,
     translate_lambda_parameters,
+    translate_method_name,
     translate_parameters,
 )
 from python.codegen.typegen import is_pointer
@@ -56,7 +58,8 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         """Handle attribute access considering whether the object will be a pointer or value"""
         # TODO: Handle attribute access
         obj = o.expr.accept(self)
-        return f"{obj}{access_operator(self.types[o.expr])}{o.name}"
+        name = translate_method_name(o.name)
+        return f"{obj}{access_operator(self.types[o.expr])}{name}"
 
     def visit_call_expr(self, o: CallExpr) -> str:
         callee = o.callee.accept(self)
@@ -104,6 +107,11 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         base = o.base.accept(self)
         index = o.index.accept(self)
         return f"{base}{access_operator(base_type)}__getitem__({index})"
+
+    def visit_set_expr(self, o: SetExpr) -> str:
+        elements = [item.accept(self) for item in o.items]
+        constructor = f"{{{', '.join(elements)}}}" if elements else ""
+        return translate_constructor(self.types[o], constructor)
 
     def visit_dict_expr(self, o: DictExpr) -> str:
         pairs = []

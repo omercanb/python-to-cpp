@@ -1,8 +1,8 @@
 def main() -> int:
     d = {1: 10, 2: 20, 3: 30}
 
-    # Iteration order is unspecified on the C++ side, so anything that
-    # depends on order goes through sorted() first.
+    # Iteration order is unspecified, so order-dependent output goes
+    # through sorted().
     print(len(d))
     print(d[1], d[2], d[3])
     print(sorted(d))

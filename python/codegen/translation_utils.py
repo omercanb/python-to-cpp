@@ -8,6 +8,7 @@ from mypy.types import CallableType, Type, get_proper_type
 from mypy.visitor import ExpressionVisitor
 
 from python.codegen.builtins import (
+    METHOD_RENAMES,
     OP_MAP,
     POINTER_TYPES,
     SCALAR_CONSTRUCTORS,
@@ -203,6 +204,11 @@ def translate_binary_expr(op: str, expr1: str, expr2: str):
         return f"{OP_MAP[op]}({expr1}, {expr2})"
     else:
         return f"({expr1} {op} {expr2})"
+
+
+def translate_method_name(name: str) -> str:
+    """Python method name to its C++ spelling (set.union -> union_)."""
+    return METHOD_RENAMES.get(name, name)
 
 
 def access_operator(t: Type) -> str:

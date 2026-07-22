@@ -5,6 +5,7 @@
 #include "str.h"
 #include "truthy.h"
 #include <iostream>
+#include <utility>
 namespace py {
 template <typename T> class ptr {
     // Hold a pointer to an object
@@ -75,7 +76,22 @@ template <typename T> class ptr {
 
 template <typename T> _int len(const ptr<T> &p) { return len(*(p.object)); }
 
-template <typename T> auto iter(ptr<T> p) { return p->iter(); }
+// Keeps the ptr alive alongside the container's own iterator: the inner
+// iterators hold a bare reference, which would dangle while iterating a
+// temporary (`for x in [1, 2, 3]`).
+template <typename T> class owning_iter {
+  public:
+    ptr<T> owner; // declared first: must outlive inner
+    decltype(std::declval<T &>().iter()) inner;
+
+    owning_iter(ptr<T> p) : owner(p), inner(p->iter()) {}
+
+    decltype(auto) current() { return inner.current(); }
+    decltype(auto) next() { return inner.next(); }
+    bool done() { return inner.done(); }
+};
+
+template <typename T> auto iter(ptr<T> p) { return owning_iter<T>(p); }
 
 // str() - dereference and convert to string
 template <typename T> std::string str(const ptr<T> &p) {

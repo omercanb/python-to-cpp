@@ -39,6 +39,7 @@ includes = [
     "ptr.h",
     "list.h",
     "dict.h",
+    "set.h",
     "print.h",
     "scalars.h",
     "mathops.h",
@@ -123,8 +124,7 @@ class StatementCodegen(TraverserVisitor):
     def visit_assignment_stmt(self, o: AssignmentStmt):
         target = o.lvalues[0]
         rhs = self.get_expr(o.rvalue)
-        # a[i] = x goes through __setitem__ rather than assigning to a
-        # reference, so dict can insert on a key it doesn't have yet.
+        # a[i] = x goes through __setitem__ so dict can insert new keys.
         if isinstance(target, IndexExpr):
             base = self.get_expr(target.base)
             index = self.get_expr(target.index)

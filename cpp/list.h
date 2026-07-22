@@ -51,8 +51,8 @@ template <typename T> class list {
     T &operator[](size_type i) { return data_[normIndex(i)]; }
     const T &operator[](size_type i) const { return data_[normIndex(i)]; }
 
-    // What generated code calls for a[i] and a[i] = x. Both are strict:
-    // out of range raises IndexError, unlike dict's insert-on-write.
+    // What generated code calls for a[i] and a[i] = x. Strict, unlike
+    // dict's insert-on-write.
     T &__getitem__(size_type i) { return data_[normIndex(i)]; }
     const T &__getitem__(size_type i) const { return data_[normIndex(i)]; }
     void __setitem__(size_type i, const T &value) {

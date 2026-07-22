@@ -43,8 +43,7 @@ class _DeclarationCollector(TraverserVisitor):
                 self.check_names(item)
 
         elif isinstance(lvalue, (IndexExpr, MemberExpr)):
-            # d[k] = ... / obj.attr = ... write into something that already
-            # exists, so there is nothing new to declare.
+            # d[k] = ... / obj.attr = ... write into something that exists.
             pass
         else:
             assert False, "Other assigns not yet supported"
