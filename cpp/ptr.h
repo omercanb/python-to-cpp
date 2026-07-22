@@ -68,7 +68,7 @@ template <typename T> class ptr {
     decltype(auto) operator[](size_t i) const { return (*object[i]); }
 };
 
-template <typename T> size_t len(ptr<T> &p) { return len(*(p.object)); }
+template <typename T> size_t len(const ptr<T> &p) { return len(*(p.object)); }
 
 template <typename T> auto iter(ptr<T> p) { return p->iter(); }
 

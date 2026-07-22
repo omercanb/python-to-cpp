@@ -5,6 +5,7 @@
 #include "iter.h"
 #include "ptr.h"
 #include "str.h"
+#include "types.h"
 #include <algorithm>
 #include <cstddef>
 #include <functional>
@@ -36,7 +37,7 @@ struct TypeError : PyException {
 template <typename T> class list {
   public:
     using value_type = T;
-    using size_type = size_t;
+    using size_type = _int;
 
     // ---- construction -------------------------------------------------------
     list() = default;
@@ -44,7 +45,6 @@ template <typename T> class list {
 
     // Construct from any iterable - requires explicit type: list<int>(map(...))
     // (deduction guide in iter.h handles type inference)
-    // template <typename IterableType>
 
     template <typename IterableType> list(IterableType &&iterable) {
         auto it = py::iter(iterable);
@@ -54,7 +54,6 @@ template <typename T> class list {
         }
     }
 
-    // ---- size / truthiness --------------------------------------------------
     size_type __len__() const noexcept {
         return static_cast<size_type>(data_.size());
     }
@@ -64,21 +63,20 @@ template <typename T> class list {
         return !data_.empty();
     } // `if a:`
 
-    // ---- integer indexing: a[i]  (STRICT, like CPython) ---------------------
     T &operator[](size_type i) { return data_[normIndex(i)]; }
     const T &operator[](size_type i) const { return data_[normIndex(i)]; }
-    // ---- deletion -----------------------------------------------------------
     void delItem(size_type i) { // del a[i]  (strict)
         data_.erase(data_.begin() + normIndex(i));
     }
 
-    // ---- list methods -----
     void append(const T &x) { data_.push_back(x); }
     void append(T &&x) { data_.push_back(std::move(x)); }
 
     // insert is LENIENT: clamps, never raises. insert(len, x) == append.
-    void insert(size_type i, const T &x) {
-        long long n = __len__();
+    // i is signed (unlike size_type) so a negative "from the end" index
+    // survives the `i < 0` check below instead of wrapping around.
+    void insert(_int i, const T &x) {
+        _int n = __len__();
         if (i < 0) {
             i += n;
             if (i < 0)
@@ -89,7 +87,6 @@ template <typename T> class list {
         data_.insert(data_.begin() + i, x);
     }
 
-    // remove: first element == value, else ValueError
     void remove(const T &value) {
         for (auto it = data_.begin(); it != data_.end(); ++it) {
             if (*it == value) {
@@ -100,11 +97,10 @@ template <typename T> class list {
         throw ValueError("list.remove(x): x not in list");
     }
 
-    // pop(i=-1): bounds-checked. Empty -> IndexError("pop from empty list").
-    T pop(size_type i = -1) {
+    T pop(_int i = -1) {
         if (data_.empty())
             throw IndexError("pop from empty list");
-        long long n = __len__();
+        _int n = __len__();
         if (i < 0)
             i += n;
         if (i < 0 || i >= n)
@@ -114,7 +110,7 @@ template <typename T> class list {
         return value;
     }
 
-    void extend(ptr<list<T>> &other) {
+    void extend(const ptr<list<T>> &other) {
         auto len = other->__len__();
         for (size_type i = 0; i < len; ++i) {
             this->append((*other)[i]);
@@ -123,13 +119,11 @@ template <typename T> class list {
 
     void clear() noexcept { data_.clear(); }
 
-    // index(value, start=0, stop=size): ValueError if not found.
-    // start/stop are clamped exactly as CPython does.
-    size_type index(const T &value, size_type start = 0,
-                    std::optional<size_type> stop = std::nullopt) const {
-        long long n = __len__();
-        long long s = start;
-        long long e = stop.value_or(n);
+    _int index(const T &value, size_type start = 0,
+               std::optional<size_type> stop = std::nullopt) const {
+        _int n = __len__();
+        _int s = start;
+        _int e = stop.value_or(n);
         if (s < 0) {
             s += n;
             if (s < 0)
@@ -140,7 +134,7 @@ template <typename T> class list {
         } // note: not clamped to 0, matching CPython
         else if (e > n)
             e = n;
-        for (long long k = s; k < e; ++k) {
+        for (_int k = s; k < e; ++k) {
             if (data_[static_cast<std::size_t>(k)] == value)
                 return k;
         }
@@ -149,8 +143,8 @@ template <typename T> class list {
         throw ValueError(m.str());
     }
 
-    size_type count(const T &value) const {
-        size_type c = 0;
+    _int count(const T &value) const {
+        _int c = 0;
         for (const auto &e : data_)
             if (e == value)
                 ++c;
@@ -170,7 +164,13 @@ template <typename T> class list {
 
     void reverse() noexcept { std::reverse(data_.begin(), data_.end()); }
 
-    list<T> copy() const { return list<T>(data_); } // shallow, like list.copy()
+    // Returns ptr<list<T>> (not list<T>) since every Python list value is
+    // pointer-wrapped in the transpiler. Copy-constructs explicitly via
+    // *this rather than list<T>(data_), since list<T>(data_) resolves to
+    // the generic "construct from any iterable" constructor (data_ is a
+    // std::vector<T>, which has no py::iter() overload) instead of an
+    // actual copy.
+    ptr<list<T>> copy() const { return ptr(new list<T>(*this)); }
 
     // ---- membership / iteration --------------------------------------------
     bool contains(const T &value) const { // `value in a`
@@ -203,7 +203,7 @@ template <typename T> class list {
         list<T> out;
         if (n > 0) {
             out.data_.reserve(static_cast<std::size_t>(n * __len__()));
-            for (long long k = 0; k < n; ++k)
+            for (_int k = 0; k < n; ++k)
                 out.data_.insert(out.data_.end(), data_.begin(), data_.end());
         }
         return out;
@@ -251,8 +251,8 @@ template <typename T> class list {
     std::vector<T> data_;
 
     // strict integer-index normalization shared by [], delItem
-    std::size_t normIndex(long long i) const {
-        long long n = __len__();
+    std::size_t normIndex(_int i) const {
+        _int n = __len__();
         if (i < 0)
             i += n;
         if (i < 0 || i >= n)
@@ -270,7 +270,9 @@ list<T> operator*(typename list<T>::size_type n, const list<T> &a) {
     return a * n;
 }
 
-template <typename T> inline size_t len(list<T> &l) { return l.__len__(); }
+template <typename T> inline size_t len(const list<T> &l) {
+    return l.__len__();
+}
 
 // str() - convert list to string representation
 template <typename T> std::string str(const list<T> &l) {

@@ -9,14 +9,13 @@
 #include "mathops.h"
 using namespace py;
 int main() {
-    ptr<list<_int>> l;
-    l = ptr(new list<_int>({1LL, 2LL, 3LL, 4LL}));
-    // While loop
-    while (to_bool(l)) {
-        print(1LL);
-        print(l);
-        print(l->pop());
-        print("l: ", l);
-    }
-    return 0LL;
+    _int a;
+    print(pow(10LL, 10LL));
+    print(idiv(-10LL, 3LL));
+    print(idiv(10LL, 3LL));
+    print(fdiv(5LL, 2LL));
+    print(pow(0.5, 4LL));
+    print((50.0 * 100LL));
+    a = pow(10LL, 10LL);
+    return a;
 }
