@@ -27,3 +27,6 @@ def get_kwarg_defaults(fullname: str) -> dict[str, StrExpr]:
 def is_builtin_with_kwargs(fullname: str) -> bool:
     """Check if a function is a registered builtin with kwargs."""
     return fullname in BUILTINS
+
+
+OP_MAP = {"is": "__is", "/": "fdiv", "//": "idiv", "%": "mod", "**": "pow"}

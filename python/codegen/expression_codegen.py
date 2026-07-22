@@ -18,12 +18,12 @@ from mypy.nodes import (
 from mypy.types import Type
 from mypy.visitor import ExpressionVisitor
 
-from python.codegen.builtins import is_builtin_with_kwargs
 from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
     is_pointer,
     should_translate_kwargs,
     translate_arguments_with_kwargs,
+    translate_binary_expr,
     translate_builtin_function_name_to_kwargs,
     translate_callee_special_cases,
     translate_comparison,
@@ -86,7 +86,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
     def visit_op_expr(self, o: OpExpr) -> str:
         left = o.left.accept(self)
         right = o.right.accept(self)
-        return f"({left} {o.op} {right})"
+        return translate_binary_expr(o.op, left, right)
 
     def visit_unary_expr(self, o: UnaryExpr) -> str:
         operand = o.expr.accept(self)
@@ -104,6 +104,8 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return str(o.value)
 
     def visit_str_expr(self, o: StrExpr) -> str:
+        # Repr returns the string enclosed by '' so we remove those
+        # We use repr to escape things like newlines
         return f'"{repr(o.value)[1:-1]}"'
 
     def visit_float_expr(self, o: FloatExpr) -> str:

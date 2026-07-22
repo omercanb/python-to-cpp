@@ -8,6 +8,7 @@ from mypy.types import CallableType, Instance, ProperType, Type, get_proper_type
 from mypy.visitor import ExpressionVisitor, NodeVisitor
 
 from python.codegen.builtins import (
+    OP_MAP,
     get_kwarg_defaults,
     get_kwarg_order,
     is_builtin_with_kwargs,
@@ -189,9 +190,13 @@ def translate_comparison(expr: ComparisonExpr, expr_translator: ExpressionVisito
     for op, expr1, expr2 in pairwise_comparisons:
         expr1 = expr1.accept(expr_translator)
         expr2 = expr2.accept(expr_translator)
-        if op == "is":
-            terms.append(f"__is({expr1}, {expr2})")
-        else:
-            terms.append(f"({expr1} {op} {expr2})")
+        terms.append(translate_binary_expr(op, expr1, expr2))
     full_comparison = " && ".join(terms)
     return f"({full_comparison})"
+
+
+def translate_binary_expr(op: str, expr1: str, expr2: str):
+    if op in OP_MAP:
+        return f"{OP_MAP[op]}({expr1}, {expr2})"
+    else:
+        return f"({expr1} {op} {expr2})"
