@@ -187,14 +187,25 @@ def translate_constructor(t: Type, constructor: str):
         return f"{typ}({constructor})"
 
 
+def translate_membership(op: str, item: str, container: str, container_type: Type) -> str:
+    """`x in c` / `x not in c` -> c.__contains__(x), operands swapped."""
+    call = call_method(container, container_type, "__contains__", item)
+    return call if op == "in" else f"!{call}"
+
+
 def translate_comparison(expr: ComparisonExpr, expr_translator: ExpressionVisitor[str]):
     """Translate a python comparison like a < b < c into a < b && b < c"""
     pairwise_comparisons = expr.pairwise()
     terms = []  # Individual comaprisons to be connected by 'and'
     for op, expr1, expr2 in pairwise_comparisons:
-        expr1 = expr1.accept(expr_translator)
-        expr2 = expr2.accept(expr_translator)
-        terms.append(translate_binary_expr(op, expr1, expr2))
+        left = expr1.accept(expr_translator)
+        right = expr2.accept(expr_translator)
+        if op in ("in", "not in"):
+            terms.append(
+                translate_membership(op, left, right, expr_translator.types[expr2])
+            )
+        else:
+            terms.append(translate_binary_expr(op, left, right))
     full_comparison = " && ".join(terms)
     return f"({full_comparison})"
 
@@ -211,9 +222,14 @@ def translate_method_name(name: str) -> str:
     return METHOD_RENAMES.get(name, name)
 
 
-def access_operator(t: Type) -> str:
-    """`->` for pointer-backed values (list, dict, objects), `.` otherwise."""
-    return "->" if is_pointer(t) else "."
+def member_access(obj: str, obj_type: Type, name: str) -> str:
+    """`obj.name` or `obj->name`, depending on whether obj is pointer-backed."""
+    return f"{obj}{'->' if is_pointer(obj_type) else '.'}{name}"
+
+
+def call_method(obj: str, obj_type: Type, name: str, *args: str) -> str:
+    """Call a method on a Python value, eg. `c->__contains__(x)`."""
+    return f"{member_access(obj, obj_type, name)}({', '.join(args)})"
 
 
 def is_truthy(expr: str) -> str:

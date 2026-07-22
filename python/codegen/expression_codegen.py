@@ -21,8 +21,9 @@ from mypy.visitor import ExpressionVisitor
 
 from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
-    access_operator,
+    call_method,
     is_truthy,
+    member_access,
     should_translate_kwargs,
     should_wrap_call_in_pointer,
     translate_arguments_with_kwargs,
@@ -59,7 +60,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         # TODO: Handle attribute access
         obj = o.expr.accept(self)
         name = translate_method_name(o.name)
-        return f"{obj}{access_operator(self.types[o.expr])}{name}"
+        return member_access(obj, self.types[o.expr], name)
 
     def visit_call_expr(self, o: CallExpr) -> str:
         callee = o.callee.accept(self)
@@ -103,10 +104,9 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return f"{o.op}{operand}"
 
     def visit_index_expr(self, o: IndexExpr) -> str:
-        base_type = self.types[o.base]
         base = o.base.accept(self)
         index = o.index.accept(self)
-        return f"{base}{access_operator(base_type)}__getitem__({index})"
+        return call_method(base, self.types[o.base], "__getitem__", index)
 
     def visit_set_expr(self, o: SetExpr) -> str:
         elements = [item.accept(self) for item in o.items]

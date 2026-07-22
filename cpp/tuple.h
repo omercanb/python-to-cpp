@@ -3,10 +3,30 @@
 #include "hash.h"
 #include "str.h"
 #include <tuple>
+#include <type_traits>
 #include <string>
 #include <sstream>
 
 namespace py {
+
+namespace detail {
+// Python compares values of unrelated types as unequal rather than
+// erroring, so `in` over a mixed tuple skips incomparable elements.
+template <typename A, typename B, typename = void>
+struct comparable : std::false_type {};
+template <typename A, typename B>
+struct comparable<A, B,
+                  std::void_t<decltype(std::declval<const A &>() ==
+                                       std::declval<const B &>())>>
+    : std::true_type {};
+
+template <typename A, typename B> bool eq(const A &a, const B &b) {
+    if constexpr (comparable<A, B>::value)
+        return a == b;
+    else
+        return false;
+}
+} // namespace detail
 
 // Generic tuple wrapper around std::tuple
 template <typename... Ts> class tuple {
@@ -29,6 +49,16 @@ template <typename... Ts> class tuple {
 
     // Python-like __len__()
     int __len__() const { return sizeof...(Ts); }
+
+    template <typename U> bool __contains__(const U &value) const {
+        bool found = false;
+        std::apply(
+            [&](const auto &...elems) {
+                ((found = found || detail::eq(value, elems)), ...);
+            },
+            data);
+        return found;
+    }
 
     // Assignment operator - forwards to underlying std::tuple
     template <typename... Us>
@@ -69,6 +99,16 @@ template <typename T1, typename T2> class tuple<T1, T2> {
     }
 
     int __len__() const { return 2; }
+
+    template <typename U> bool __contains__(const U &value) const {
+        bool found = false;
+        std::apply(
+            [&](const auto &...elems) {
+                ((found = found || detail::eq(value, elems)), ...);
+            },
+            data);
+        return found;
+    }
 
     // Direct access for convenience
     T1 &first() { return std::get<0>(data); }

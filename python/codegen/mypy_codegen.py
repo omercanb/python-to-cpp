@@ -25,7 +25,7 @@ from python.codegen.codegen_utils import pointer_to
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.for_loop import translate_for_stmt
 from python.codegen.translation_utils import (
-    access_operator,
+    call_method,
     is_truthy,
     translate_func_signature,
 )
@@ -129,8 +129,8 @@ class StatementCodegen(TraverserVisitor):
         if isinstance(target, IndexExpr):
             base = self.get_expr(target.base)
             index = self.get_expr(target.index)
-            access = access_operator(self.types[target.base])
-            self.emit(f"{base}{access}__setitem__({index}, {rhs});")
+            call = call_method(base, self.types[target.base], "__setitem__", index, rhs)
+            self.emit(f"{call};")
             return
         lhs = self.get_expr(target, lvalue=True)
         self.emit(f"{lhs} = {rhs};")
