@@ -26,7 +26,7 @@ from python.codegen.for_loop import translate_for_stmt
 from python.codegen.translation_utils import is_pointer, translate_func_signature
 from python.codegen.typegen import cpp_type, ptr_type
 
-includes = ["iter.h", "tuple.h", "ptr.h", "list.h", "print.h"]
+includes = ["iter.h", "tuple.h", "ptr.h", "list.h", "print.h", "scalars.h"]
 
 
 class StatementCodegen(TraverserVisitor):

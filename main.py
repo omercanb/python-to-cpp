@@ -81,6 +81,7 @@ def main():
     file = "input.py"
     validate(file)
     result = mypy_pipeline(file)
+    print(result.tree)
     codegen = StatementCodegen(result.tree, result.types)
     output = codegen.generate()
     print(output)

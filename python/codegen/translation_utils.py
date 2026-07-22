@@ -1,3 +1,5 @@
+from typing import Optional
+
 from mypy.nodes import CallExpr, ComparisonExpr
 from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
@@ -151,6 +153,16 @@ def translate_builtin_function_name_to_kwargs(o: CallExpr) -> str:
     assert isinstance(o.callee, NameExpr)
     name = o.callee.name
     return f"_{name}_kwargs"
+
+
+def translate_callee_special_cases(callee: Expression) -> Optional[str]:
+    if not isinstance(callee, NameExpr):
+        return
+    # If it is a constructor
+    if callee.name in ("int", "float"):
+        return f"_{callee.name}"
+
+    return
 
 
 def is_pointer(t: Type):

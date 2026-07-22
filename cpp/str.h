@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <charconv>
 #include <string>
 
 namespace py {
@@ -12,7 +14,17 @@ template <typename... Ts> class tuple;
 // str() overloads for primitives
 inline std::string str(int x) { return std::to_string(x); }
 
-inline std::string str(double x) { return std::to_string(x); }
+inline std::string str(double x) {
+    std::array<char, 32> buf;
+    auto result = std::to_chars(buf.data(), buf.data() + buf.size(), x);
+    std::string s(buf.data(), result.ptr);
+    if (s.find('.') == std::string::npos && s.find('e') == std::string::npos &&
+        s.find("inf") == std::string::npos &&
+        s.find("nan") == std::string::npos) {
+        s += ".0";
+    }
+    return s;
+}
 
 inline std::string str(bool x) { return x ? "True" : "False"; }
 

@@ -25,6 +25,7 @@ from python.codegen.translation_utils import (
     should_translate_kwargs,
     translate_arguments_with_kwargs,
     translate_builtin_function_name_to_kwargs,
+    translate_callee_special_cases,
     translate_comparison,
     translate_constructor,
     translate_lambda_parameters,
@@ -63,6 +64,10 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         else:
             arguments = [arg.accept(self) for arg in o.args]
 
+        special_case = translate_callee_special_cases(o.callee)
+        if special_case:
+            callee = special_case
+
         call = f"{callee}({', '.join(arguments)})"
         if is_pointer(self.types[o]):
             return pointer_to(call)
@@ -99,7 +104,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return str(o.value)
 
     def visit_str_expr(self, o: StrExpr) -> str:
-        return f'"{repr(o.value)}"'
+        return f'"{repr(o.value)[1:-1]}"'
 
     def visit_float_expr(self, o: FloatExpr) -> str:
         return str(o.value)

@@ -3,33 +3,25 @@
 #include "ptr.h"
 #include "list.h"
 #include "print.h"
+#include "scalars.h"
 using namespace py;
 int main() {
-    ptr<list<int>> nums;
-    ptr<list<int>> a;
-    std::string s;
-    ptr<list<int>> filtered;
-    int x;
-    int y;
-    int i;
-    int n;
-    nums = ptr(new list<int>({1, 2, 3, 4, 5}));
-    a = ptr(new list(map([](auto x) { return (x * 2); }, nums)));
-    print(a);
-    for (auto __iter = iter(map([](auto x) { return str(x); }, nums)); !__iter.done();) {
-        s = next(__iter);
-        print(s);
-    }
-    filtered = ptr(new list(filter([](auto x) { return (((x % 2) == 0)); }, nums)));
-    print(filtered);
-    for (auto __iter = iter(zip(nums, a)); !__iter.done();) {
-        destructure(x, y) = next(__iter);
-        print(x, y);
-    }
-    nums = a;
-    for (auto __iter = iter(enumerate(nums)); !__iter.done();) {
-        destructure(i, n) = next(__iter);
-        print(i, n);
-    }
+    double a;
+    int b;
+    double c;
+    std::string float_str;
+    double f1;
+    std::string int_str;
+    int i1;
+    int i2;
+    a = 2.0;
+    b = _int(a);
+    c = _float(b);
+    float_str = "  0.10 ";
+    f1 = _float(float_str);
+    int_str = "100";
+    i1 = _int(int_str);
+    i2 = _int(int_str, 2);
+    print(a, b, c, f1, i1, i2);
     return 0;
 }
