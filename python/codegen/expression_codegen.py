@@ -25,6 +25,7 @@ from python.codegen.translation_utils import (
     should_translate_kwargs,
     translate_arguments_with_kwargs,
     translate_builtin_function_name_to_kwargs,
+    translate_comparison,
     translate_constructor,
     translate_lambda_parameters,
     translate_parameters,
@@ -92,7 +93,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return f"{base}[{index}]"
 
     def visit_comparison_expr(self, o: ComparisonExpr) -> str:
-        return f"{o.operands[0].accept(self)} {o.operators[0]} {o.operands[1].accept(self)}"
+        return translate_comparison(o, self)
 
     def visit_int_expr(self, o: IntExpr) -> str:
         return str(o.value)

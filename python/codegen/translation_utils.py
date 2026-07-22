@@ -1,9 +1,9 @@
-from mypy.nodes import CallExpr
+from mypy.nodes import CallExpr, ComparisonExpr
 from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import FuncDef, LambdaExpr, MemberExpr, NameExpr
 from mypy.types import CallableType, Instance, ProperType, Type, get_proper_type
-from mypy.visitor import ExpressionVisitor
+from mypy.visitor import ExpressionVisitor, NodeVisitor
 
 from python.codegen.builtins import (
     get_kwarg_defaults,
@@ -168,3 +168,18 @@ def translate_constructor(t: Type, constructor: str):
         return f"ptr(new {typ}({constructor}))"
     else:
         return f"{typ}({constructor})"
+
+
+def translate_comparison(expr: ComparisonExpr, expr_translator: ExpressionVisitor[str]):
+    """Translate a python comparison like a < b < c into a < b && b < c"""
+    pairwise_comparisons = expr.pairwise()
+    terms = []  # Individual comaprisons to be connected by 'and'
+    for op, expr1, expr2 in pairwise_comparisons:
+        expr1 = expr1.accept(expr_translator)
+        expr2 = expr2.accept(expr_translator)
+        if op == "is":
+            terms.append(f"__is({expr1}, {expr2})")
+        else:
+            terms.append(f"({expr1} {op} {expr2})")
+    full_comparison = " && ".join(terms)
+    return f"({full_comparison})"

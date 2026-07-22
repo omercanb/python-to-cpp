@@ -72,9 +72,13 @@ template <typename T> size_t len(ptr<T> &p) { return len(*(p.object)); }
 template <typename T> auto iter(ptr<T> p) { return p->iter(); }
 
 // str() - dereference and convert to string
-template <typename T>
-std::string str(const ptr<T> &p) {
+template <typename T> std::string str(const ptr<T> &p) {
     return str(*p.object);
+}
+
+template <typename T1, typename T2>
+bool __is(const ptr<T1> &p1, const ptr<T2> &p2) {
+    return (void *)p1.object == (void *)p2.object;
 }
 
 } // namespace py

@@ -20,7 +20,7 @@ int main() {
         s = next(__iter);
         print(s);
     }
-    filtered = ptr(new list(filter([](auto x) { return (x % 2) == 0; }, nums)));
+    filtered = ptr(new list(filter([](auto x) { return (((x % 2) == 0)); }, nums)));
     print(filtered);
     for (auto __iter = iter(zip(nums, a)); !__iter.done();) {
         destructure(x, y) = next(__iter);
