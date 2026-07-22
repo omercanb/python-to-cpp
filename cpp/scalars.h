@@ -1,30 +1,33 @@
+#pragma once
+
+#include "types.h"
 #include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <stdexcept>
 #include <string>
 
-int _int(int v) { return v; }
-int _int(double v) { return static_cast<int>(v); }
-int _int(bool v) { return v ? 1 : 0; }
+inline _int to_int(_int v) { return v; }
+inline _int to_int(_float v) { return static_cast<_int>(v); }
+inline _int to_int(bool v) { return v ? 1 : 0; }
 
-int _int(const std::string &s, int base = 10) {
+inline _int to_int(const std::string &s, _int base = 10) {
     std::string t = s;
     t.erase(0, t.find_first_not_of(" \t\n"));
     t.erase(t.find_last_not_of(" \t\n") + 1);
     size_t pos;
-    int result =
+    _int result =
         std::stoll(t, &pos, base); // throws std::invalid_argument on failure
     if (pos != t.size())
         throw std::invalid_argument("invalid literal for int(): " + s);
     return result;
 }
 
-double _float(int v) { return v; }
-double _float(double v) { return v; }
-double _float(bool v) { return v ? 1.0 : 0.0; }
+inline _float to_float(_int v) { return v; }
+inline _float to_float(_float v) { return v; }
+inline _float to_float(bool v) { return v ? 1.0 : 0.0; }
 
-double _float(const std::string &s) {
+inline _float to_float(const std::string &s) {
     std::string t = s;
     t.erase(0, t.find_first_not_of(" \t\n"));
     t.erase(t.find_last_not_of(" \t\n") + 1);
@@ -39,7 +42,7 @@ double _float(const std::string &s) {
         return NAN;
 
     size_t pos;
-    double result = std::stod(t, &pos); // handles scientific notation
+    _float result = std::stod(t, &pos); // handles scientific notation
     if (pos != t.size())
         throw std::invalid_argument("could not convert string to float: " + s);
     return result;

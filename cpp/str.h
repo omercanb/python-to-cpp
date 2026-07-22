@@ -1,5 +1,6 @@
 #pragma once
 
+#include "types.h"
 #include <array>
 #include <charconv>
 #include <string>
@@ -12,9 +13,9 @@ template <typename T> class ptr;
 template <typename... Ts> class tuple;
 
 // str() overloads for primitives
-inline std::string str(int x) { return std::to_string(x); }
+inline std::string str(_int x) { return std::to_string(x); }
 
-inline std::string str(double x) {
+inline std::string str(_float x) {
     std::array<char, 32> buf;
     auto result = std::to_chars(buf.data(), buf.data() + buf.size(), x);
     std::string s(buf.data(), result.ptr);

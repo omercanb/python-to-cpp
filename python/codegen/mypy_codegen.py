@@ -23,10 +23,19 @@ from python.analysis.find_declarations import get_declarations
 from python.codegen.codegen_utils import pointer_to
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.for_loop import translate_for_stmt
-from python.codegen.translation_utils import is_pointer, translate_func_signature
-from python.codegen.typegen import cpp_type, ptr_type
+from python.codegen.translation_utils import translate_func_signature
+from python.codegen.typegen import cpp_type, ptr_type, is_pointer
 
-includes = ["iter.h", "tuple.h", "ptr.h", "list.h", "print.h", "scalars.h", "mathops.h"]
+includes = [
+    "types.h",
+    "iter.h",
+    "tuple.h",
+    "ptr.h",
+    "list.h",
+    "print.h",
+    "scalars.h",
+    "mathops.h",
+]
 
 
 class StatementCodegen(TraverserVisitor):
@@ -69,10 +78,7 @@ class StatementCodegen(TraverserVisitor):
 
     def translate_declaration(self, name: str, typ: Type):
         cpp = cpp_type(typ)
-        if is_pointer(typ):
-            return f"{ptr_type(cpp)} {name};"
-        else:
-            return f"{cpp} {name};"
+        return f"{cpp} {name};"
 
     def generate_includes(self):
         for include in includes:

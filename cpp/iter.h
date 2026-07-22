@@ -2,16 +2,17 @@
 
 #include "str.h"
 #include "tuple.h"
+#include "types.h"
 #include <memory>
 
 namespace py {
 
 // ---- enumerate ----
-// Wraps an iterator and produces tuple<int, element_type>
+// Wraps an iterator and produces tuple<_int, element_type>
 template <typename IterType> class enumerate_iter {
   public:
     IterType iter_;
-    int index;
+    _int index;
 
     enumerate_iter(IterType iter) : iter_(iter), index(0) {}
 
@@ -24,7 +25,7 @@ template <typename IterType> class enumerate_iter {
 
     // Get current (index, element) as a tuple
     auto current() {
-        return tuple<int, decltype(iter_.current())>(index, iter_.current());
+        return tuple<_int, decltype(iter_.current())>(index, iter_.current());
     }
 };
 

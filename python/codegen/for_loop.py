@@ -98,11 +98,11 @@ def translate_for_range_no_step(
 
     if len(args) == 1:
         stop = codegen.get_expr(args[0])
-        for_line = f"for (int {target} = 0; {target} < {stop}; ++{target})"
+        for_line = f"for (_int {target} = 0; {target} < {stop}; ++{target})"
     else:  # len(args) == 2
         start = codegen.get_expr(args[0])
         stop = codegen.get_expr(args[1])
-        for_line = f"for (int {target} = {start}; {target} < {stop}; ++{target})"
+        for_line = f"for (_int {target} = {start}; {target} < {stop}; ++{target})"
 
     write_for(codegen, for_line, for_stmt.body)
 
@@ -118,11 +118,11 @@ def translate_for_range_constant_step(
 
     if step > 0:
         for_line = (
-            f"for (int {target} = {start}; {target} < {stop}; {target} += {step})"
+            f"for (_int {target} = {start}; {target} < {stop}; {target} += {step})"
         )
     else:
         for_line = (
-            f"for (int {target} = {start}; {target} > {stop}; {target} += {step})"
+            f"for (_int {target} = {start}; {target} > {stop}; {target} += {step})"
         )
 
     write_for(codegen, for_line, for_stmt.body)
@@ -138,7 +138,7 @@ def translate_for_range_unknown_step(
     stop = codegen.get_expr(args[1])
     step = codegen.get_expr(args[2])
 
-    for_line = f"for (int {target} = {start};; {target} += {step})"
+    for_line = f"for (_int {target} = {start};; {target} += {step})"
     first_line = f"if (({step} > 0 && {target} >= {stop}) || ({step} < 0 && {target} <= {stop})) break;"
     write_for(codegen, for_line, for_stmt.body, first_line)
 

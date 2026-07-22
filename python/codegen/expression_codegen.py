@@ -20,17 +20,18 @@ from mypy.visitor import ExpressionVisitor
 
 from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
-    is_pointer,
     should_translate_kwargs,
+    should_wrap_call_in_pointer,
     translate_arguments_with_kwargs,
     translate_binary_expr,
     translate_builtin_function_name_to_kwargs,
-    translate_callee_special_cases,
     translate_comparison,
     translate_constructor,
+    translate_constructor_special_cases,
     translate_lambda_parameters,
     translate_parameters,
 )
+from python.codegen.typegen import is_pointer
 
 
 class ExpressionCodegen(ExpressionVisitor[str]):
@@ -64,12 +65,13 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         else:
             arguments = [arg.accept(self) for arg in o.args]
 
-        special_case = translate_callee_special_cases(o.callee)
+        argument_list = ", ".join(arguments)
+        special_case = translate_constructor_special_cases(o.callee)
         if special_case:
             callee = special_case
 
         call = f"{callee}({', '.join(arguments)})"
-        if is_pointer(self.types[o]):
+        if should_wrap_call_in_pointer(o.callee):
             return pointer_to(call)
         else:
             return call
@@ -101,7 +103,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return translate_comparison(o, self)
 
     def visit_int_expr(self, o: IntExpr) -> str:
-        return str(o.value)
+        return f"{str(o.value)}LL"
 
     def visit_str_expr(self, o: StrExpr) -> str:
         # Repr returns the string enclosed by '' so we remove those

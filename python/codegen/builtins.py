@@ -8,7 +8,7 @@ BUILTINS = {
         "kwargs": ["sep", "end"],
         "defaults": {
             "sep": StrExpr(" "),
-            "end": StrExpr("\\n"),
+            "end": StrExpr("\n"),
         },
     }
 }
@@ -30,3 +30,18 @@ def is_builtin_with_kwargs(fullname: str) -> bool:
 
 
 OP_MAP = {"is": "__is", "/": "fdiv", "//": "idiv", "%": "mod", "**": "pow"}
+
+SCALAR_CONSTRUCTORS = {"int": "to_int", "float": "to_float"}
+
+NON_POINTER_TYPES = {
+    "int",
+    "float",
+    "str",
+    "bool",
+    "map",
+    "filter",
+    "zip",
+    "enumerate",
+}
+
+POINTER_TYPES = {"list", "dict", "set"}

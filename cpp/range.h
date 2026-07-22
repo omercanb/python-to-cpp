@@ -1,6 +1,7 @@
 #pragma once
 
 #include "str.h"
+#include "types.h"
 #include <climits>
 #include <iostream>
 #include <string>
@@ -11,11 +12,11 @@ std::ostream &operator<<(std::ostream &os, const range &r);
 
 class range {
   public:
-    int start;
-    int stop;
-    int step;
+    _int start;
+    _int stop;
+    _int step;
     range() { start = stop = step = 0; }
-    range(int start, int stop = INT_MAX, int step = 1) {
+    range(_int start, _int stop = INT_MAX, _int step = 1) {
         if (stop == INT_MAX) {
             stop = start;
             start = 0;
@@ -30,9 +31,9 @@ class range {
 class range_iterator {
   public:
     range r;
-    int cur;
+    _int cur;
     range_iterator(range r) : r(r), cur(r.start) {}
-    int next() {
+    _int next() {
         auto temp = cur;
         cur += r.step;
         return temp;

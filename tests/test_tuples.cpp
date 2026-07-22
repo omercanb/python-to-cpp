@@ -1,6 +1,6 @@
-#include <iostream>
-#include "../cpp/tuple.h"
 #include "../cpp/print.h"
+#include "../cpp/tuple.h"
+#include <iostream>
 using namespace py;
 
 int main() {

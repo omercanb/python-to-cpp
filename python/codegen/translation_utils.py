@@ -3,17 +3,19 @@ from typing import Optional
 from mypy.nodes import CallExpr, ComparisonExpr
 from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
-from mypy.nodes import FuncDef, LambdaExpr, MemberExpr, NameExpr
-from mypy.types import CallableType, Instance, ProperType, Type, get_proper_type
-from mypy.visitor import ExpressionVisitor, NodeVisitor
+from mypy.nodes import FuncDef, LambdaExpr, NameExpr
+from mypy.types import CallableType, Type, get_proper_type
+from mypy.visitor import ExpressionVisitor
 
 from python.codegen.builtins import (
     OP_MAP,
+    POINTER_TYPES,
+    SCALAR_CONSTRUCTORS,
     get_kwarg_defaults,
     get_kwarg_order,
     is_builtin_with_kwargs,
 )
-from python.codegen.typegen import cpp_type
+from python.codegen.typegen import cpp_type, cpp_type_name, is_pointer
 
 
 def get_function_type(func: FuncDef) -> CallableType:
@@ -46,6 +48,8 @@ def translate_func_signature(
     func = get_function_type(o)
     return_type = cpp_type(func.ret_type)
     name = o.name
+    if name == "main":
+        return_type = "int"
     arguments = translate_parameters(o, expr_translator)
     signature = f"{return_type} {name}({', '.join(arguments)})"
     return signature
@@ -156,27 +160,26 @@ def translate_builtin_function_name_to_kwargs(o: CallExpr) -> str:
     return f"_{name}_kwargs"
 
 
-def translate_callee_special_cases(callee: Expression) -> Optional[str]:
+def translate_constructor_special_cases(callee: Expression) -> Optional[str]:
     if not isinstance(callee, NameExpr):
         return
     # If it is a constructor
-    if callee.name in ("int", "float"):
-        return f"_{callee.name}"
-
+    if callee.name in SCALAR_CONSTRUCTORS:
+        return SCALAR_CONSTRUCTORS[callee.name]
     return
 
 
-def is_pointer(t: Type):
-    t = get_proper_type(t)
-    if not isinstance(t, Instance):
+def should_wrap_call_in_pointer(callee: Expression) -> bool:
+    """Call's that are constructors like list() or map() need to be wrapped in ptr(new x)"""
+    if not isinstance(callee, NameExpr):
         return False
-    if t.type.fullname in ["builtins.list"]:
+    if callee.name in POINTER_TYPES:
         return True
     return False
 
 
 def translate_constructor(t: Type, constructor: str):
-    typ = cpp_type(t)
+    typ = cpp_type_name(t)
     if is_pointer(t):
         return f"ptr(new {typ}({constructor}))"
     else:

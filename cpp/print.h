@@ -1,10 +1,10 @@
 #pragma once
-#include "str.h"
+#include "iter.h"
 #include "list.h"
 #include "ptr.h"
 #include "range.h"
+#include "str.h"
 #include "tuple.h"
-#include "iter.h"
 
 #include <iostream>
 #include <string>
@@ -16,17 +16,18 @@ namespace py {
 // Internal implementation - takes sep, end, and variadic args explicitly
 // Called by transpiler when kwargs are present
 template <class... Args>
-void _print_kwargs(const std::string &sep, const std::string &end, Args... args) {
+void _print_kwargs(const std::string &sep, const std::string &end,
+                   Args... args) {
     std::string result;
     bool first = true;
 
     // Fold expression: for each arg, add separator if not first, then the arg
     (([&] {
-        if (!first)
-            result += sep;
-        result += str(args);
-        first = false;
-    }()),
+         if (!first)
+             result += sep;
+         result += py::str(args);
+         first = false;
+     }()),
      ...);
 
     std::cout << result << end;
@@ -38,14 +39,11 @@ void _print_kwargs(const std::string &sep, const std::string &end) {
 }
 
 // Public API - no kwargs, uses default sep and end
-template <class... Args>
-void print(Args... args) {
+template <class... Args> void print(Args... args) {
     _print_kwargs(" ", "\n", args...);
 }
 
 // Public API - no arguments
-void print() {
-    _print_kwargs(" ", "\n");
-}
+void print() { _print_kwargs(" ", "\n"); }
 
 } // namespace py
