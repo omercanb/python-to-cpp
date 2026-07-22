@@ -1,5 +1,6 @@
 #pragma once
 
+#include "hash.h"
 #include "str.h"
 #include <tuple>
 #include <string>
@@ -101,7 +102,26 @@ template <typename T1, typename T2> class tuple<T1, T2> {
 // str() for tuple - convert to Python-like representation (a, b)
 template <typename T1, typename T2>
 std::string str(const tuple<T1, T2> &t) {
-    return "(" + str(t.first()) + ", " + str(t.second()) + ")";
+    return "(" + repr(t.first()) + ", " + repr(t.second()) + ")";
+}
+
+// ---- equality / hashing -----------------------------------------------------
+// Needed both for `t1 == t2` and for tuples used as dict keys / set elements.
+// std::tuple already compares element-wise.
+template <typename... Ts, typename... Us>
+bool operator==(const tuple<Ts...> &a, const tuple<Us...> &b) {
+    return a.data == b.data;
+}
+template <typename... Ts, typename... Us>
+bool operator!=(const tuple<Ts...> &a, const tuple<Us...> &b) {
+    return !(a == b);
+}
+
+template <typename... Ts> inline size_t hash(const tuple<Ts...> &t) {
+    size_t seed = sizeof...(Ts);
+    std::apply([&](const Ts &...elems) { ((seed = hash_combine(seed, hash(elems))), ...); },
+               t.data);
+    return seed;
 }
 
 // Destructuring - creates a tuple of references

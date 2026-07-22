@@ -5,7 +5,9 @@ from mypy.nodes import (
     Expression,
     ForStmt,
     FuncDef,
+    IndexExpr,
     Lvalue,
+    MemberExpr,
     NameExpr,
     TupleExpr,
 )
@@ -39,6 +41,11 @@ class _DeclarationCollector(TraverserVisitor):
             # Destructuring: x, y = ...
             for item in lvalue.items:
                 self.check_names(item)
+
+        elif isinstance(lvalue, (IndexExpr, MemberExpr)):
+            # d[k] = ... / obj.attr = ... write into something that already
+            # exists, so there is nothing new to declare.
+            pass
         else:
             assert False, "Other assigns not yet supported"
 

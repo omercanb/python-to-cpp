@@ -33,6 +33,7 @@ includes = [
     "tuple.h",
     "ptr.h",
     "list.h",
+    "dict.h",
     "print.h",
     "scalars.h",
     "mathops.h",

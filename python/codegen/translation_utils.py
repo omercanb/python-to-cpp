@@ -205,6 +205,11 @@ def translate_binary_expr(op: str, expr1: str, expr2: str):
         return f"({expr1} {op} {expr2})"
 
 
+def access_operator(t: Type) -> str:
+    """`->` for pointer-backed values (list, dict, objects), `.` otherwise."""
+    return "->" if is_pointer(t) else "."
+
+
 def is_truthy(expr: str) -> str:
     """Wrap a C++ expression with Python's truthiness rules (bool()/`if`/`while`/`not`)."""
     return f"to_bool({expr})"

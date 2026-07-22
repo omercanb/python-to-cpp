@@ -1,3 +1,4 @@
+import cProfile
 import sys
 from dataclasses import dataclass
 
@@ -77,7 +78,7 @@ def translate_source(source: str):
     return output
 
 
-def main():
+def full_pipeline():
     file = "input.py"
     validate(file)
     result = mypy_pipeline(file)
@@ -86,6 +87,10 @@ def main():
     output = codegen.generate()
     print(output)
     build_and_run(output)
+
+
+def main():
+    full_pipeline()
 
 
 main()

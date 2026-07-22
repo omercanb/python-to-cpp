@@ -1,4 +1,4 @@
-from mypy.nodes import CallExpr, ComparisonExpr
+from mypy.nodes import CallExpr, ComparisonExpr, DictExpr
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import (
     FloatExpr,
@@ -20,6 +20,7 @@ from mypy.visitor import ExpressionVisitor
 
 from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
+    access_operator,
     is_truthy,
     should_translate_kwargs,
     should_wrap_call_in_pointer,
@@ -32,7 +33,7 @@ from python.codegen.translation_utils import (
     translate_lambda_parameters,
     translate_parameters,
 )
-from python.codegen.typegen import is_pointer
+from python.codegen.typegen import is_dict, is_pointer
 
 
 class ExpressionCodegen(ExpressionVisitor[str]):
@@ -55,10 +56,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         """Handle attribute access considering whether the object will be a pointer or value"""
         # TODO: Handle attribute access
         obj = o.expr.accept(self)
-        if is_pointer(self.types[o.expr]):
-            return f"{obj}->{o.name}"
-        else:
-            return f"{obj}.{o.name}"
+        return f"{obj}{access_operator(self.types[o.expr])}{o.name}"
 
     def visit_call_expr(self, o: CallExpr) -> str:
         callee = o.callee.accept(self)
@@ -102,9 +100,27 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return f"{o.op}{operand}"
 
     def visit_index_expr(self, o: IndexExpr) -> str:
+        # Only this expression is the lvalue; the base and the subscript
+        # nested inside it are reads, so clear the flag before descending.
+        is_lvalue = self.lvalue
+        self.lvalue = False
+        base_type = self.types[o.base]
         base = o.base.accept(self)
         index = o.index.accept(self)
+        # Reading d[k] has to raise KeyError on a missing key, but writing
+        # d[k] = v has to insert. operator[] can't tell those apart, so
+        # reads go through __getitem__ instead.
+        if not is_lvalue and is_dict(base_type):
+            return f"{base}{access_operator(base_type)}__getitem__({index})"
         return f"{base}[{index}]"
+
+    def visit_dict_expr(self, o: DictExpr) -> str:
+        pairs = []
+        for key, value in o.items:
+            assert key is not None, "dict unpacking (**) is not supported"
+            pairs.append(f"{{{key.accept(self)}, {value.accept(self)}}}")
+        constructor = f"{{{', '.join(pairs)}}}" if pairs else ""
+        return translate_constructor(self.types[o], constructor)
 
     def visit_comparison_expr(self, o: ComparisonExpr) -> str:
         return translate_comparison(o, self)

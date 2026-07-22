@@ -101,6 +101,16 @@ def cpp_type_name(t: Type) -> str:
             assert False, f"Conversion not implemented for type {t}"
 
 
+def is_dict(t: Type) -> bool:
+    """Returns whether a type is a dict.
+
+    Dict reads and writes generate different C++: d[k] inserts on a missing
+    key (the write path), while a read has to raise KeyError instead.
+    """
+    t = get_proper_type(t)
+    return isinstance(t, Instance) and t.type.fullname == "builtins.dict"
+
+
 def is_pointer(t: Type) -> bool:
     """Returns whether a type is a pointer"""
     t = get_proper_type(t)

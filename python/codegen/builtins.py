@@ -1,6 +1,14 @@
 """Builtin function definitions and utilities for code generation."""
 
-from mypy.nodes import StrExpr
+from mypy.nodes import NameExpr, StrExpr
+
+
+def bool_expr(value: bool) -> NameExpr:
+    """A True/False literal carrying the fullname the codegen matches on."""
+    node = NameExpr("True" if value else "False")
+    node.fullname = "builtins.True" if value else "builtins.False"
+    return node
+
 
 # Define builtin functions and their properties
 BUILTINS = {
@@ -10,7 +18,14 @@ BUILTINS = {
             "sep": StrExpr(" "),
             "end": StrExpr("\n"),
         },
-    }
+    },
+    # sorted(iterable, *, key=None, reverse=False). key= is not supported yet.
+    "builtins.sorted": {
+        "kwargs": ["reverse"],
+        "defaults": {
+            "reverse": bool_expr(False),
+        },
+    },
 }
 
 

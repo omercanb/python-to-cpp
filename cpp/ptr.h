@@ -64,11 +64,16 @@ template <typename T> class ptr {
             delete refcount;
         }
     }
-    decltype(auto) operator[](size_t i) { return (*object)[i]; }
-    decltype(auto) operator[](size_t i) const { return (*object[i]); }
+    // Templated on the index type so non-integer keys (dict) work too.
+    template <typename I> decltype(auto) operator[](const I &i) {
+        return (*object)[i];
+    }
+    template <typename I> decltype(auto) operator[](const I &i) const {
+        return (*object)[i];
+    }
 };
 
-template <typename T> size_t len(const ptr<T> &p) { return len(*(p.object)); }
+template <typename T> _int len(const ptr<T> &p) { return len(*(p.object)); }
 
 template <typename T> auto iter(ptr<T> p) { return p->iter(); }
 

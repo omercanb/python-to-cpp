@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "exceptions.h"
 #include "iter.h"
 #include "ptr.h"
 #include "str.h"
@@ -18,21 +19,7 @@
 
 namespace py {
 
-// ---- Python-style exceptions ------------------------------------------------
-// Deriving from std::runtime_error so transpiled try/except maps to try/catch.
-
-struct PyException : std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
-struct IndexError : PyException {
-    using PyException::PyException;
-};
-struct ValueError : PyException {
-    using PyException::PyException;
-};
-struct TypeError : PyException {
-    using PyException::PyException;
-};
+// Exceptions (IndexError, ValueError, ...) now live in exceptions.h
 
 template <typename T> class list {
   public:
@@ -65,7 +52,7 @@ template <typename T> class list {
 
     T &operator[](size_type i) { return data_[normIndex(i)]; }
     const T &operator[](size_type i) const { return data_[normIndex(i)]; }
-    void delItem(size_type i) { // del a[i]  (strict)
+    void __delitem__(size_type i) { // del a[i]  (strict)
         data_.erase(data_.begin() + normIndex(i));
     }
 
@@ -173,7 +160,7 @@ template <typename T> class list {
     ptr<list<T>> copy() const { return ptr(new list<T>(*this)); }
 
     // ---- membership / iteration --------------------------------------------
-    bool contains(const T &value) const { // `value in a`
+    bool __contains__(const T &value) const { // `value in a`
         for (const auto &e : data_)
             if (e == value)
                 return true;
@@ -270,8 +257,23 @@ list<T> operator*(typename list<T>::size_type n, const list<T> &a) {
     return a * n;
 }
 
-template <typename T> inline size_t len(const list<T> &l) {
+template <typename T> inline _int len(const list<T> &l) {
     return l.__len__();
+}
+
+// sorted(iterable, *, reverse=False) - returns a new list, leaving the
+// argument untouched. The _kwargs form is what the code generator emits
+// when the call actually passes reverse=, mirroring print/_print_kwargs.
+template <typename T> ptr<list<T>> sorted(const ptr<list<T>> &l) {
+    auto out = l->copy();
+    out->sort();
+    return out;
+}
+template <typename T>
+ptr<list<T>> _sorted_kwargs(bool reverse, const ptr<list<T>> &l) {
+    auto out = l->copy();
+    out->sort(reverse);
+    return out;
 }
 
 // str() - convert list to string representation
@@ -280,7 +282,7 @@ template <typename T> std::string str(const list<T> &l) {
     for (size_t i = 0; i < l.__len__(); ++i) {
         if (i > 0)
             result += ", ";
-        result += str(l[i]);
+        result += repr(l[i]); // elements use repr(), like Python
     }
     result += "]";
     return result;
