@@ -10,6 +10,7 @@ from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import (
     ExpressionStmt,
     ForStmt,
+    IndexExpr,
     FuncDef,
     IfStmt,
     MypyFile,
@@ -23,7 +24,11 @@ from python.analysis.find_declarations import get_declarations
 from python.codegen.codegen_utils import pointer_to
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.for_loop import translate_for_stmt
-from python.codegen.translation_utils import is_truthy, translate_func_signature
+from python.codegen.translation_utils import (
+    access_operator,
+    is_truthy,
+    translate_func_signature,
+)
 from python.codegen.typegen import cpp_type, ptr_type, is_pointer
 
 includes = [
@@ -116,9 +121,17 @@ class StatementCodegen(TraverserVisitor):
         assert False, "Classdef not yet implemented"
 
     def visit_assignment_stmt(self, o: AssignmentStmt):
-        print(o.lvalues)
-        lhs = self.get_expr(o.lvalues[0], lvalue=True)
+        target = o.lvalues[0]
         rhs = self.get_expr(o.rvalue)
+        # a[i] = x goes through __setitem__ rather than assigning to a
+        # reference, so dict can insert on a key it doesn't have yet.
+        if isinstance(target, IndexExpr):
+            base = self.get_expr(target.base)
+            index = self.get_expr(target.index)
+            access = access_operator(self.types[target.base])
+            self.emit(f"{base}{access}__setitem__({index}, {rhs});")
+            return
+        lhs = self.get_expr(target, lvalue=True)
         self.emit(f"{lhs} = {rhs};")
 
     def visit_return_stmt(self, o: ReturnStmt):

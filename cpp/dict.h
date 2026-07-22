@@ -1,11 +1,8 @@
 #pragma once
 
 // Python dict semantics on top of std::unordered_map.
-//
-// Ordering: CPython dicts are insertion-ordered (guaranteed since 3.7),
-// which would need a second, dense insertion-order array alongside the
-// hash table. We deliberately don't reproduce that - iteration order here
-// is unspecified, so transpiled programs must sort before comparing.
+// Unlike CPython (insertion-ordered since 3.7), iteration order here is
+// unspecified, so transpiled programs must sort before comparing.
 
 #include "exceptions.h"
 #include "hash.h"
@@ -41,13 +38,10 @@ template <typename K, typename V> class dict {
     explicit operator bool() const noexcept { return !data_.empty(); }
 
     // ---- item access --------------------------------------------------------
-    // Write path: d[k] = v. Inserts a default-constructed value when the
-    // key is absent, exactly like std::unordered_map::operator[].
+    // Inserts on a missing key, like std::unordered_map::operator[].
     V &operator[](const K &key) { return data_[key]; }
 
-    // Read path: d[k]. Python raises KeyError for a missing key, which
-    // operator[] can't do (it can't tell a read from a write), so reads
-    // are routed here by the code generator instead.
+    // d[k] read: raises KeyError on a missing key.
     V &__getitem__(const K &key) {
         auto it = data_.find(key);
         if (it == data_.end())
@@ -74,8 +68,8 @@ template <typename K, typename V> class dict {
     }
 
     // ---- dict methods -------------------------------------------------------
-    // get(key, default=None): never raises. Without a default, a missing
-    // key yields a value-initialized V (our stand-in for None).
+    // get(key, default=None): never raises; without a default a missing
+    // key yields a value-initialized V.
     V get(const K &key) const {
         auto it = data_.find(key);
         return it == data_.end() ? V() : it->second;
@@ -103,8 +97,7 @@ template <typename K, typename V> class dict {
         return value;
     }
 
-    // popitem(): CPython pops in LIFO order; with no insertion order to
-    // draw on we remove an arbitrary item instead.
+    // CPython pops LIFO; with no insertion order we pop an arbitrary item.
     tuple<K, V> popitem() {
         if (data_.empty())
             throw KeyError("popitem(): dictionary is empty");
@@ -132,8 +125,7 @@ template <typename K, typename V> class dict {
 
     ptr<dict<K, V>> copy() const { return ptr(new dict<K, V>(*this)); }
 
-    // keys()/values()/items(): CPython returns live views onto the dict.
-    // These are snapshots - a later mutation is not reflected back.
+    // Snapshots, not CPython's live views.
     ptr<list<K>> keys() const {
         auto out = ptr(new list<K>());
         for (const auto &entry : data_)
@@ -154,8 +146,7 @@ template <typename K, typename V> class dict {
     }
 
     // ---- comparison ---------------------------------------------------------
-    // Order-independent, like Python: equal iff same keys mapping to equal
-    // values. std::unordered_map::operator== already works this way.
+    // Order-independent, like Python.
     bool operator==(const dict<K, V> &o) const { return data_ == o.data_; }
     bool operator!=(const dict<K, V> &o) const { return data_ != o.data_; }
 
@@ -195,9 +186,7 @@ inline _int len(const dict<K, V> &d) {
     return d.__len__();
 }
 
-// sorted(d) sorts a dict's keys, since iterating a dict yields its keys.
-// Iteration order here is unspecified, so this is how transpiled programs
-// get a deterministic view of a dict.
+// sorted(d) sorts the keys, since iterating a dict yields keys.
 template <typename K, typename V> ptr<list<K>> sorted(const ptr<dict<K, V>> &d) {
     auto out = d->keys();
     out->sort();

@@ -33,10 +33,8 @@ inline std::string str(const std::string &s) { return s; }
 
 inline std::string str(const char *s) { return std::string(s); }
 
-// ---- repr() -----------------------------------------------------------------
-// Differs from str() only for strings, which repr() quotes. Containers
-// render their elements with repr(), which is why Python shows
-// {'a': 1} rather than {a: 1}.
+// repr() - like str(), but quotes strings. Containers render their
+// elements with repr(), so Python shows {'a': 1} not {a: 1}.
 inline std::string repr(const std::string &s) { return "'" + s + "'"; }
 inline std::string repr(const char *s) { return "'" + std::string(s) + "'"; }
 template <typename T> std::string repr(const T &x) { return str(x); }

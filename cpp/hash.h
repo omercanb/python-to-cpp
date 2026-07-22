@@ -10,13 +10,8 @@
 namespace py {
 
 // ---- hash() - Python hashing ----
-// Required by dict keys and set elements. The contract (per the Python
-// glossary) is that objects comparing equal must hash equal.
-//
-// Note: CPython also guarantees hash(1) == hash(1.0) == hash(True),
-// because those compare equal. That can't arise here - dict<_int, V> and
-// dict<_float, V> are distinct C++ types, so keys of different types are
-// never compared against each other in the first place.
+// Required by dict keys and set elements: objects comparing equal must
+// hash equal.
 
 inline size_t hash(_int x) { return std::hash<_int>{}(x); }
 inline size_t hash(_float x) { return std::hash<_float>{}(x); }
@@ -47,9 +42,8 @@ template <typename T> inline size_t hash(const T &x) {
     return static_cast<size_t>(x.__hash__());
 }
 
-// Functor form, for std::unordered_map / std::unordered_set.
-// Declared after every hash() overload above so ordinary lookup finds
-// them all (ADL alone would miss py::hash for std::string keys).
+// Functor form for std::unordered_map/set. Must come after every hash()
+// overload: ADL alone would miss py::hash for std::string keys.
 template <typename T> struct hasher {
     size_t operator()(const T &x) const { return hash(x); }
 };

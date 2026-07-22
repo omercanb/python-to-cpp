@@ -19,8 +19,6 @@
 
 namespace py {
 
-// Exceptions (IndexError, ValueError, ...) now live in exceptions.h
-
 template <typename T> class list {
   public:
     using value_type = T;
@@ -52,6 +50,15 @@ template <typename T> class list {
 
     T &operator[](size_type i) { return data_[normIndex(i)]; }
     const T &operator[](size_type i) const { return data_[normIndex(i)]; }
+
+    // What generated code calls for a[i] and a[i] = x. Both are strict:
+    // out of range raises IndexError, unlike dict's insert-on-write.
+    T &__getitem__(size_type i) { return data_[normIndex(i)]; }
+    const T &__getitem__(size_type i) const { return data_[normIndex(i)]; }
+    void __setitem__(size_type i, const T &value) {
+        data_[normIndex(i)] = value;
+    }
+
     void __delitem__(size_type i) { // del a[i]  (strict)
         data_.erase(data_.begin() + normIndex(i));
     }
@@ -59,9 +66,7 @@ template <typename T> class list {
     void append(const T &x) { data_.push_back(x); }
     void append(T &&x) { data_.push_back(std::move(x)); }
 
-    // insert is LENIENT: clamps, never raises. insert(len, x) == append.
-    // i is signed (unlike size_type) so a negative "from the end" index
-    // survives the `i < 0` check below instead of wrapping around.
+    // Clamps instead of raising: insert(len, x) == append.
     void insert(_int i, const T &x) {
         _int n = __len__();
         if (i < 0) {
@@ -151,12 +156,7 @@ template <typename T> class list {
 
     void reverse() noexcept { std::reverse(data_.begin(), data_.end()); }
 
-    // Returns ptr<list<T>> (not list<T>) since every Python list value is
-    // pointer-wrapped in the transpiler. Copy-constructs explicitly via
-    // *this rather than list<T>(data_), since list<T>(data_) resolves to
-    // the generic "construct from any iterable" constructor (data_ is a
-    // std::vector<T>, which has no py::iter() overload) instead of an
-    // actual copy.
+    // Copies via *this; list<T>(data_) would hit the iterable constructor.
     ptr<list<T>> copy() const { return ptr(new list<T>(*this)); }
 
     // ---- membership / iteration --------------------------------------------
@@ -261,9 +261,8 @@ template <typename T> inline _int len(const list<T> &l) {
     return l.__len__();
 }
 
-// sorted(iterable, *, reverse=False) - returns a new list, leaving the
-// argument untouched. The _kwargs form is what the code generator emits
-// when the call actually passes reverse=, mirroring print/_print_kwargs.
+// sorted(iterable, *, reverse=False) - returns a new list.
+// _sorted_kwargs is emitted when the call passes reverse=, like print.
 template <typename T> ptr<list<T>> sorted(const ptr<list<T>> &l) {
     auto out = l->copy();
     out->sort();
@@ -282,7 +281,7 @@ template <typename T> std::string str(const list<T> &l) {
     for (size_t i = 0; i < l.__len__(); ++i) {
         if (i > 0)
             result += ", ";
-        result += repr(l[i]); // elements use repr(), like Python
+        result += repr(l[i]);
     }
     result += "]";
     return result;

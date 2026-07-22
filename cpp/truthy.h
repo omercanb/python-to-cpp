@@ -9,11 +9,9 @@
 namespace py {
 
 // ---- to_bool() - Python truthiness ----
-// Concrete overrides for scalars, then Optional[T] (T | None), then a
-// generic fallback used by containers/classes: prefer a native
-// `operator bool()` (e.g. list<T> already has one), else call __bool__(),
-// else use __len__() != 0, else default to True - mirroring CPython's own
-// bool() resolution order (__bool__, then __len__, then True).
+// Scalars and strings get concrete overloads; everything else falls back
+// to operator bool(), then __bool__(), then __len__() != 0, then True -
+// mirroring CPython's resolution order.
 
 inline bool to_bool(_int x) { return x != 0; }
 inline bool to_bool(_float x) { return x != 0.0; }

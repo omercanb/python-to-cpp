@@ -33,7 +33,7 @@ from python.codegen.translation_utils import (
     translate_lambda_parameters,
     translate_parameters,
 )
-from python.codegen.typegen import is_dict, is_pointer
+from python.codegen.typegen import is_pointer
 
 
 class ExpressionCodegen(ExpressionVisitor[str]):
@@ -100,19 +100,10 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return f"{o.op}{operand}"
 
     def visit_index_expr(self, o: IndexExpr) -> str:
-        # Only this expression is the lvalue; the base and the subscript
-        # nested inside it are reads, so clear the flag before descending.
-        is_lvalue = self.lvalue
-        self.lvalue = False
         base_type = self.types[o.base]
         base = o.base.accept(self)
         index = o.index.accept(self)
-        # Reading d[k] has to raise KeyError on a missing key, but writing
-        # d[k] = v has to insert. operator[] can't tell those apart, so
-        # reads go through __getitem__ instead.
-        if not is_lvalue and is_dict(base_type):
-            return f"{base}{access_operator(base_type)}__getitem__({index})"
-        return f"{base}[{index}]"
+        return f"{base}{access_operator(base_type)}__getitem__({index})"
 
     def visit_dict_expr(self, o: DictExpr) -> str:
         pairs = []
