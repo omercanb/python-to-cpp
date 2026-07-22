@@ -36,7 +36,7 @@ void test_getitem_missing_raises() {
 }
 
 void test_contains() {
-    dict<std::string, _int> d;
+    dict<str, _int> d;
     d["a"] = 1;
     assert_true(d.__contains__("a"), "contains() true for a present key");
     assert_true(!d.__contains__("zz"), "contains() false for an absent key");
@@ -187,15 +187,15 @@ void test_iteration_yields_keys() {
 }
 
 void test_string_keys_and_str() {
-    dict<std::string, _int> d;
+    dict<str, _int> d;
     d["a"] = 1;
     assert_true(d.__getitem__("a") == 1, "string keys work");
-    assert_true(str(d) == "{'a': 1}",
+    assert_true(to_str(d) == "{'a': 1}",
                 "str() quotes string keys via repr(), like Python");
 }
 
 void test_tuple_keys() {
-    dict<tuple<_int, _int>, std::string> d;
+    dict<tuple<_int, _int>, str> d;
     d[tuple<_int, _int>(1, 2)] = "a";
     assert_true(d.__contains__(tuple<_int, _int>(1, 2)),
                 "tuples work as dict keys (hashable)");

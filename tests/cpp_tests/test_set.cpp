@@ -159,10 +159,10 @@ void test_sorted_gives_stable_order() {
 
 void test_str_and_string_elements() {
     set<_int> empty;
-    assert_true(str(empty) == "set()", "an empty set prints as set(), not {}");
-    set<std::string> s;
+    assert_true(to_str(empty) == "set()", "an empty set prints as set(), not {}");
+    set<str> s;
     s.add("a");
-    assert_true(str(s) == "{'a'}", "str() quotes string elements via repr()");
+    assert_true(to_str(s) == "{'a'}", "str() quotes string elements via repr()");
 }
 
 void test_copy_is_independent() {

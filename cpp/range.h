@@ -62,11 +62,11 @@ std::ostream &operator<<(std::ostream &os, const range &r) {
 };
 
 // str() - convert range to string representation
-inline std::string str(const range &r) {
+inline py::str to_str(const range &r) {
     std::string result = "range(" + std::to_string(r.start) + ", " + std::to_string(r.stop);
     if (r.step != 1) {
         result += ", " + std::to_string(r.step);
     }
     result += ")";
-    return result;
+    return py::str(result);
 }

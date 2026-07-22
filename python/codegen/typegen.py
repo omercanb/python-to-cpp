@@ -36,7 +36,7 @@ def cpp_type_name(t: Type) -> str:
         case Instance(type=type_info) if type_info.fullname == "builtins.float":
             return "_float"
         case Instance(type=type_info) if type_info.fullname == "builtins.str":
-            return "std::string"
+            return "str"
         case Instance(type=type_info) if type_info.fullname == "builtins.bool":
             return "bool"
 

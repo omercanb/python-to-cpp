@@ -1,5 +1,6 @@
 #pragma once
 
+#include "str.h"
 #include "types.h"
 #include <algorithm>
 #include <cctype>
@@ -11,15 +12,15 @@ inline _int to_int(_int v) { return v; }
 inline _int to_int(_float v) { return static_cast<_int>(v); }
 inline _int to_int(bool v) { return v ? 1 : 0; }
 
-inline _int to_int(const std::string &s, _int base = 10) {
-    std::string t = s;
+inline _int to_int(const py::str &s, _int base = 10) {
+    std::string t = s.raw();
     t.erase(0, t.find_first_not_of(" \t\n"));
     t.erase(t.find_last_not_of(" \t\n") + 1);
     size_t pos;
     _int result =
         std::stoll(t, &pos, base); // throws std::invalid_argument on failure
     if (pos != t.size())
-        throw std::invalid_argument("invalid literal for int(): " + s);
+        throw std::invalid_argument("invalid literal for int(): " + s.raw());
     return result;
 }
 
@@ -27,8 +28,8 @@ inline _float to_float(_int v) { return v; }
 inline _float to_float(_float v) { return v; }
 inline _float to_float(bool v) { return v ? 1.0 : 0.0; }
 
-inline _float to_float(const std::string &s) {
-    std::string t = s;
+inline _float to_float(const py::str &s) {
+    std::string t = s.raw();
     t.erase(0, t.find_first_not_of(" \t\n"));
     t.erase(t.find_last_not_of(" \t\n") + 1);
 
@@ -44,6 +45,6 @@ inline _float to_float(const std::string &s) {
     size_t pos;
     _float result = std::stod(t, &pos); // handles scientific notation
     if (pos != t.size())
-        throw std::invalid_argument("could not convert string to float: " + s);
+        throw std::invalid_argument("could not convert string to float: " + s.raw());
     return result;
 }

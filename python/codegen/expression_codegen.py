@@ -128,9 +128,9 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return f"{str(o.value)}LL"
 
     def visit_str_expr(self, o: StrExpr) -> str:
-        # Repr returns the string enclosed by '' so we remove those
-        # We use repr to escape things like newlines
-        return f'"{repr(o.value)[1:-1]}"'
+        # Wrapped in str(...) so literals carry the string methods, like
+        # Python. repr() escapes newlines; its quotes are stripped.
+        return f'str("{repr(o.value)[1:-1]}")'
 
     def visit_float_expr(self, o: FloatExpr) -> str:
         return str(o.value)

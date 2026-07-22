@@ -239,10 +239,10 @@ ptr<list<T>> _sorted_kwargs(bool reverse, const ptr<set<T>> &s) {
 }
 
 // str() - {1, 2, 3}; empty prints as set(), since {} is an empty dict.
-template <typename T> std::string str(const set<T> &s) {
+template <typename T> str to_str(const set<T> &s) {
     if (s.__len__() == 0)
-        return "set()";
-    std::string result = "{";
+        return str("set()");
+    str result = "{";
     bool first = true;
     for (const auto &v : s.raw()) {
         if (!first)

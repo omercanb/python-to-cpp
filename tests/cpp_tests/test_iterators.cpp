@@ -58,7 +58,7 @@ void test_zip() {
     nums.append(1);
     nums.append(2);
 
-    list<std::string> strs;
+    list<str> strs;
     strs.append("a");
     strs.append("b");
 

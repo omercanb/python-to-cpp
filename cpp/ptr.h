@@ -93,9 +93,9 @@ template <typename T> class owning_iter {
 
 template <typename T> auto iter(ptr<T> p) { return owning_iter<T>(p); }
 
-// str() - dereference and convert to string
-template <typename T> std::string str(const ptr<T> &p) {
-    return str(*p.object);
+// to_str() - dereference and convert
+template <typename T> str to_str(const ptr<T> &p) {
+    return to_str(*p.object);
 }
 
 // to_bool() - dereference and forward truthiness

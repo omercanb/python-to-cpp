@@ -200,8 +200,8 @@ ptr<list<K>> _sorted_kwargs(bool reverse, const ptr<dict<K, V>> &d) {
 }
 
 // str() - {k: v, ...} with elements rendered via repr(), like Python
-template <typename K, typename V> std::string str(const dict<K, V> &d) {
-    std::string result = "{";
+template <typename K, typename V> str to_str(const dict<K, V> &d) {
+    str result = "{";
     bool first = true;
     for (const auto &entry : d.raw()) {
         if (!first)

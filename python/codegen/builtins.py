@@ -49,7 +49,12 @@ OP_MAP = {"is": "__is", "/": "fdiv", "//": "idiv", "%": "mod", "**": "pow"}
 # Python method names that collide with C++ keywords.
 METHOD_RENAMES = {"union": "union_"}
 
-SCALAR_CONSTRUCTORS = {"int": "to_int", "float": "to_float", "bool": "to_bool"}
+SCALAR_CONSTRUCTORS = {
+    "int": "to_int",
+    "float": "to_float",
+    "bool": "to_bool",
+    "str": "to_str",
+}
 
 NON_POINTER_TYPES = {
     "int",

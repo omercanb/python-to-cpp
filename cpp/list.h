@@ -208,19 +208,6 @@ template <typename T> class list {
     bool operator>(const list<T> &o) const { return data_ > o.data_; }
     bool operator>=(const list<T> &o) const { return data_ >= o.data_; }
 
-    // ---- repr: best-effort `print(a)` ("[1, 2, 3]", strings quoted) ---------
-    std::string repr() const {
-        std::ostringstream os;
-        os << '[';
-        for (std::size_t k = 0; k < data_.size(); ++k) {
-            if (k)
-                os << ", ";
-            reprElem(os, data_[k]);
-        }
-        os << ']';
-        return os.str();
-    }
-
     const std::vector<T> &raw() const noexcept { return data_; } // escape hatch
 
     class list_iterator {
@@ -275,9 +262,9 @@ ptr<list<T>> _sorted_kwargs(bool reverse, const ptr<list<T>> &l) {
     return out;
 }
 
-// str() - convert list to string representation
-template <typename T> std::string str(const list<T> &l) {
-    std::string result = "[";
+// to_str() - [1, 2, 3]
+template <typename T> str to_str(const list<T> &l) {
+    str result = "[";
     for (size_t i = 0; i < l.__len__(); ++i) {
         if (i > 0)
             result += ", ";

@@ -38,6 +38,7 @@ includes = [
     "tuple.h",
     "ptr.h",
     "list.h",
+    "strops.h",
     "dict.h",
     "set.h",
     "print.h",

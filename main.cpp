@@ -4,6 +4,7 @@
 #include "tuple.h"
 #include "ptr.h"
 #include "list.h"
+#include "strops.h"
 #include "dict.h"
 #include "set.h"
 #include "print.h"

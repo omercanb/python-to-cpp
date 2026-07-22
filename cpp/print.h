@@ -16,16 +16,16 @@ namespace py {
 // Internal implementation - takes sep, end, and variadic args explicitly
 // Called by transpiler when kwargs are present
 template <class... Args>
-void _print_kwargs(const std::string &sep, const std::string &end,
+void _print_kwargs(const str &sep, const str &end,
                    Args... args) {
-    std::string result;
+    str result;
     bool first = true;
 
     // Fold expression: for each arg, add separator if not first, then the arg
     (([&] {
          if (!first)
              result += sep;
-         result += py::str(args);
+         result += py::to_str(args);
          first = false;
      }()),
      ...);
@@ -34,7 +34,7 @@ void _print_kwargs(const std::string &sep, const std::string &end,
 }
 
 // Overload for no arguments with kwargs
-void _print_kwargs(const std::string &sep, const std::string &end) {
+void _print_kwargs(const str &sep, const str &end) {
     std::cout << end;
 }
 

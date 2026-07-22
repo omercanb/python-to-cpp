@@ -99,10 +99,10 @@ template <typename T1, typename T2> class tuple<T1, T2> {
     tuple_iterator iter() { return tuple_iterator(*this); }
 };
 
-// str() for tuple - convert to Python-like representation (a, b)
+// to_str() for tuple - (a, b)
 template <typename T1, typename T2>
-std::string str(const tuple<T1, T2> &t) {
-    return "(" + repr(t.first()) + ", " + repr(t.second()) + ")";
+str to_str(const tuple<T1, T2> &t) {
+    return str("(") + repr(t.first()) + ", " + repr(t.second()) + ")";
 }
 
 // ---- equality / hashing -----------------------------------------------------
