@@ -33,29 +33,22 @@ template <typename T> class set {
         }
     }
 
-    // ---- size / truthiness --------------------------------------------------
     size_type __len__() const noexcept {
         return static_cast<size_type>(data_.size());
     }
-    size_type len() const noexcept { return __len__(); }
-    bool empty() const noexcept { return data_.empty(); }
-    explicit operator bool() const noexcept { return !data_.empty(); }
 
-    bool __contains__(const T &value) const { // `x in s`
+    bool __contains__(const T &value) const {
         return data_.find(value) != data_.end();
     }
 
-    // ---- mutating methods ---------------------------------------------------
     void add(const T &value) { data_.insert(value); }
 
-    // remove() raises when absent, discard() does not - the only difference.
     void remove(const T &value) {
         if (data_.erase(value) == 0)
             throw KeyError("element not found");
     }
     void discard(const T &value) { data_.erase(value); }
 
-    // Removes an arbitrary element, like Python.
     T pop() {
         if (data_.empty())
             throw KeyError("pop from an empty set");
@@ -91,7 +84,6 @@ template <typename T> class set {
         }
     }
 
-    // ---- non-mutating methods -----------------------------------------------
     // `union` is a C++ keyword; codegen rewrites s.union(...) to union_.
     ptr<set<T>> union_(const ptr<set<T>> &other) const {
         auto out = ptr(new set<T>(*this));
@@ -120,7 +112,6 @@ template <typename T> class set {
 
     ptr<set<T>> copy() const { return ptr(new set<T>(*this)); }
 
-    // ---- predicates ---------------------------------------------------------
     bool issubset(const ptr<set<T>> &other) const {
         for (const auto &v : data_)
             if (!other->__contains__(v))
@@ -140,9 +131,6 @@ template <typename T> class set {
         return true;
     }
 
-    // ---- comparison ---------------------------------------------------------
-    // Subset ordering, so it is partial: two sets can be unequal with
-    // neither one below the other.
     bool operator==(const set<T> &o) const { return data_ == o.data_; }
     bool operator!=(const set<T> &o) const { return data_ != o.data_; }
     bool operator<=(const set<T> &o) const {
@@ -157,7 +145,6 @@ template <typename T> class set {
     bool operator>=(const set<T> &o) const { return o <= *this; }
     bool operator>(const set<T> &o) const { return o < *this; }
 
-    // ---- iteration ----------------------------------------------------------
     class set_iterator {
       public:
         using data_type = std::unordered_set<T, hasher<T>>;
@@ -171,7 +158,9 @@ template <typename T> class set {
     };
     set_iterator iter() const { return set_iterator(data_); }
 
-    const std::unordered_set<T, hasher<T>> &raw() const noexcept { return data_; }
+    const std::unordered_set<T, hasher<T>> &raw() const noexcept {
+        return data_;
+    }
 
   private:
     std::unordered_set<T, hasher<T>> data_;

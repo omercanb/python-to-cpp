@@ -63,4 +63,11 @@ def main() -> int:
         total = total + x
     print(total)
 
+    s1 = {(1, 2), (1, 3)}
+    print(sorted(s1))
+    s2 = {(1, 2), (1, 2)}
+    print(sorted(s2))
+    s3 = {"Hello", "World"}
+    print(sorted(s3))
+
     return 0

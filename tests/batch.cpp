@@ -372,6 +372,9 @@ int run() {
     ptr<set<_int>> drop;
     _int total;
     _int x;
+    ptr<set<tuple<_int, _int>>> s1;
+    ptr<set<tuple<_int, _int>>> s2;
+    ptr<set<str>> s3;
     s = ptr(new set<_int>({3LL, 1LL, 2LL, 1LL}));
     print(len(s));
     print(sorted(s));
@@ -428,6 +431,12 @@ int run() {
         total = (total + x);
     }
     print(total);
+    s1 = ptr(new set<tuple<_int, _int>>({tuple(1LL, 2LL), tuple(1LL, 3LL)}));
+    print(sorted(s1));
+    s2 = ptr(new set<tuple<_int, _int>>({tuple(1LL, 2LL), tuple(1LL, 2LL)}));
+    print(sorted(s2));
+    s3 = ptr(new set<str>({str("Hello"), str("World")}));
+    print(sorted(s3));
     return 0LL;
 }
 }

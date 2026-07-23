@@ -79,8 +79,19 @@ def _batch_source(translations: list[tuple[str, str]]) -> str:
     )
 
 
-@pytest.fixture(scope="session")
-def batched_binary():
+def _compile_one(path: str) -> subprocess.CompletedProcess:
+    """Translate, compile and run a single program on its own."""
+    tmp_directory = tempfile.mkdtemp()
+    source = os.path.join(tmp_directory, "main.cpp")
+    exe = os.path.join(tmp_directory, "main")
+    Path(source).write_text(translate_source(open(path).read()))
+
+    compiled = compile_cpp(source, exe)
+    assert compiled.returncode == 0, f"{path} failed to compile:\n{compiled.stderr}"
+    return subprocess.run([exe], capture_output=True, text=True)
+
+
+def _compile_batched() -> str:
     """Compile every test program into a single binary.
 
     Both the compile and macOS's ~0.175s first-run check on a new executable
@@ -99,19 +110,31 @@ def batched_binary():
         f.write(_batch_source(translations))
 
     compiled = compile_cpp(source, exe)
-    assert compiled.returncode == 0, f"batch compile failed:\n{compiled.stderr}"
+    assert compiled.returncode == 0, (
+        f"batch compile failed -- line numbers below refer to {source}.\n"
+        f"Re-run with --separate-compile to see which program is at fault.\n"
+        f"{compiled.stderr}"
+    )
     return exe
+
+
+@pytest.fixture(scope="session")
+def run_program(request):
+    """Return a function running one test program, capturing its output."""
+    if request.config.getoption("--separate-compile"):
+        return _compile_one
+
+    exe = _compile_batched()
+    return lambda path: subprocess.run(
+        [exe, os.path.basename(path)], capture_output=True, text=True
+    )
 
 
 class TestIdenticalOutput:
     @pytest.mark.parametrize("filename", paths, ids=lambda p: p.split("/")[-1])
-    def test_file(self, filename: str, batched_binary: str):
+    def test_file(self, filename: str, run_program):
         """Test that a Python file produces identical output between Python and C++."""
-        cpp_output = subprocess.run(
-            [batched_binary, os.path.basename(filename)],
-            capture_output=True,
-            text=True,
-        )
+        cpp_output = run_program(filename)
         python_output = run_python_and_capture(filename)
         print_output_diff(python_output.stdout, cpp_output.stdout)
         assert cpp_output.stdout == python_output.stdout
