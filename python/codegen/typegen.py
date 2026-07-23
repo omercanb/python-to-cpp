@@ -44,25 +44,25 @@ def cpp_type_name(t: Type) -> str:
         case Instance(type=type_info, args=args) if (
             type_info.fullname == "builtins.list" and args
         ):
-            elem_type = cpp_type_name(args[0])
+            elem_type = cpp_type(args[0])
             return f"list<{elem_type}>"
 
         case Instance(type=type_info, args=args) if (
             type_info.fullname == "builtins.dict" and len(args) >= 2
         ):
-            key_type = cpp_type_name(args[0])
-            val_type = cpp_type_name(args[1])
+            key_type = cpp_type(args[0])
+            val_type = cpp_type(args[1])
             return f"dict<{key_type}, {val_type}>"
 
         case Instance(type=type_info, args=args) if (
             type_info.fullname == "builtins.set" and args
         ):
-            elem_type = cpp_type_name(args[0])
+            elem_type = cpp_type(args[0])
             return f"set<{elem_type}>"
 
         # Tuple with fixed elements
         case TupleType(items=items):
-            elem_types = ", ".join(cpp_type_name(item) for item in items)
+            elem_types = ", ".join(cpp_type(item) for item in items)
             return f"tuple<{elem_types}>"
 
         # Optional[T] = T | None
@@ -122,6 +122,9 @@ def is_pointer(t: Type) -> bool:
             return False
         # None/void
         case NoneType():
+            return False
+        # Any becomes `auto`, which is never explicitly ptr-wrapped
+        case AnyType():
             return False
 
         # Default fallback

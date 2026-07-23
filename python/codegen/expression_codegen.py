@@ -16,7 +16,7 @@ from mypy.nodes import (
     TupleExpr,
     UnaryExpr,
 )
-from mypy.types import Type
+from mypy.types import TupleType, Type, get_proper_type
 from mypy.visitor import ExpressionVisitor
 
 from python.codegen.codegen_utils import list_of, pointer_to
@@ -35,6 +35,7 @@ from python.codegen.translation_utils import (
     translate_lambda_parameters,
     translate_method_name,
     translate_parameters,
+    translate_tuple_access,
 )
 from python.codegen.typegen import is_pointer
 
@@ -77,11 +78,11 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         if special_case:
             callee = special_case
 
-        call = f"{callee}({', '.join(arguments)})"
         if should_wrap_call_in_pointer(o.callee):
-            return pointer_to(call)
-        else:
-            return call
+            # Spell out the element type: an argument-less list()/set()
+            # gives the compiler nothing to deduce it from.
+            return translate_constructor(self.types[o], ", ".join(arguments))
+        return f"{callee}({', '.join(arguments)})"
 
     def visit_lambda_expr(self, o: LambdaExpr) -> str:
         arguments = translate_lambda_parameters(o)
@@ -105,8 +106,11 @@ class ExpressionCodegen(ExpressionVisitor[str]):
 
     def visit_index_expr(self, o: IndexExpr) -> str:
         base = o.base.accept(self)
+        base_type = get_proper_type(self.types[o.base])
+        if isinstance(base_type, TupleType):
+            return translate_tuple_access(base_type, o, base)
         index = o.index.accept(self)
-        return call_method(base, self.types[o.base], "__getitem__", index)
+        return call_method(base, base_type, "__getitem__", index)
 
     def visit_set_expr(self, o: SetExpr) -> str:
         elements = [item.accept(self) for item in o.items]

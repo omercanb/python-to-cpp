@@ -10,11 +10,13 @@ from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import (
     ExpressionStmt,
     ForStmt,
-    IndexExpr,
     FuncDef,
     IfStmt,
+    IndexExpr,
     MypyFile,
     ReturnStmt,
+    SymbolTable,
+    Var,
     WhileStmt,
 )
 from mypy.traverser import TraverserVisitor
@@ -29,7 +31,7 @@ from python.codegen.translation_utils import (
     is_truthy,
     translate_func_signature,
 )
-from python.codegen.typegen import cpp_type, ptr_type, is_pointer
+from python.codegen.typegen import cpp_type, is_pointer, ptr_type
 
 includes = [
     "types.h",
@@ -89,14 +91,29 @@ class StatementCodegen(TraverserVisitor):
         cpp = cpp_type(typ)
         return f"{cpp} {name};"
 
+    def generate_declarations(self, declarations: SymbolTable):
+        for name, item in declarations.items():
+            # tree.names also holds functions, classes, imports and the
+            # module dunders (__name__, __spec__, ...), none of which are
+            # user globals to declare.
+            if not isinstance(item.node, Var) or name.startswith("__"):
+                continue
+            t = item.type
+            assert t
+            self.emit(self.translate_declaration(name, t))
+
     def generate_includes(self):
         for include in includes:
             self.emit(f'#include "{include}"')
         self.emit(f"using namespace py;")
 
+    def generate_global_declarations(self):
+        self.generate_declarations(self.tree.names)
+
     def generate(self) -> str:
         """Generate all C++ code."""
         self.generate_includes()
+        self.generate_global_declarations()
         self.tree.accept(self)
         return "\n".join(self.output)
 

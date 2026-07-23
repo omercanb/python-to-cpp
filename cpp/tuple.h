@@ -157,6 +157,24 @@ bool operator!=(const tuple<Ts...> &a, const tuple<Us...> &b) {
     return !(a == b);
 }
 
+// Lexicographic, like Python: compares element by element, left to right.
+template <typename... Ts, typename... Us>
+bool operator<(const tuple<Ts...> &a, const tuple<Us...> &b) {
+    return a.data < b.data;
+}
+template <typename... Ts, typename... Us>
+bool operator<=(const tuple<Ts...> &a, const tuple<Us...> &b) {
+    return a.data <= b.data;
+}
+template <typename... Ts, typename... Us>
+bool operator>(const tuple<Ts...> &a, const tuple<Us...> &b) {
+    return a.data > b.data;
+}
+template <typename... Ts, typename... Us>
+bool operator>=(const tuple<Ts...> &a, const tuple<Us...> &b) {
+    return a.data >= b.data;
+}
+
 template <typename... Ts> inline size_t hash(const tuple<Ts...> &t) {
     size_t seed = sizeof...(Ts);
     std::apply([&](const Ts &...elems) { ((seed = hash_combine(seed, hash(elems))), ...); },

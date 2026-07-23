@@ -19,4 +19,7 @@ def main() -> int:
     t = (1, 2)
     t2 = t
 
+    z = t[0]
+    z = t[1]
+
     return 0

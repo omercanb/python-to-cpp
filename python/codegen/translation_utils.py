@@ -3,9 +3,9 @@ from typing import Optional
 from mypy.nodes import CallExpr, ComparisonExpr
 from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
-from mypy.nodes import FuncDef, LambdaExpr, NameExpr
-from mypy.types import CallableType, Type, get_proper_type
-from mypy.visitor import ExpressionVisitor
+from mypy.nodes import FuncDef, IndexExpr, IntExpr, LambdaExpr, NameExpr
+from mypy.types import CallableType, TupleType, Type, get_proper_type
+from mypy.visitor import ExpressionVisitor, NodeVisitor
 
 from python.codegen.builtins import (
     METHOD_RENAMES,
@@ -170,6 +170,18 @@ def translate_constructor_special_cases(callee: Expression) -> Optional[str]:
     return
 
 
+def translate_tuple_access(tuple_type: TupleType, expr: IndexExpr, base: str):
+    # A tuple's elements have different types, so the index has to be a
+    # compile-time one: t[0] becomes get<0>(), and only literals work.
+    assert isinstance(
+        expr.index, IntExpr
+    ), "a tuple can only be indexed by an integer literal"
+    i = expr.index.value
+    if i < 0:
+        i += len(tuple_type.items)
+    return f"{member_access(base, tuple_type, f'get<{i}>')}()"
+
+
 def should_wrap_call_in_pointer(callee: Expression) -> bool:
     """Call's that are constructors like list() or map() need to be wrapped in ptr(new x)"""
     if not isinstance(callee, NameExpr):
@@ -187,7 +199,9 @@ def translate_constructor(t: Type, constructor: str):
         return f"{typ}({constructor})"
 
 
-def translate_membership(op: str, item: str, container: str, container_type: Type) -> str:
+def translate_membership(
+    op: str, item: str, container: str, container_type: Type
+) -> str:
     """`x in c` / `x not in c` -> c.__contains__(x), operands swapped."""
     call = call_method(container, container_type, "__contains__", item)
     return call if op == "in" else f"!{call}"

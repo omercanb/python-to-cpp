@@ -30,6 +30,9 @@ class _DeclarationCollector(TraverserVisitor):
 
     def visit_for_stmt(self, o: ForStmt) -> None:
         self.check_names(o.index)
+        # Keep walking: a loop body can declare names too, including the
+        # index of a nested loop.
+        super().visit_for_stmt(o)
 
     def check_names(self, lvalue: Lvalue) -> None:
         """Recursively collect all names in an lvalue."""
