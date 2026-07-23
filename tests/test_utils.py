@@ -3,6 +3,7 @@
 import difflib
 import os
 import subprocess
+import sys
 import tempfile
 
 
@@ -24,8 +25,10 @@ def run_python_and_capture(path: str) -> subprocess.CompletedProcess:
     try:
         with open(temp_path, "w") as f:
             f.write(program_with_main)
+        # sys.executable, not "python": a bare "python" hits the pyenv shim,
+        # which costs 0.27s per call against 0.016s for the interpreter itself.
         result = subprocess.run(
-            ["python", temp_path], capture_output=True, text=True
+            [sys.executable, temp_path], capture_output=True, text=True
         )
     finally:
         os.remove(temp_path)
@@ -47,9 +50,7 @@ def print_output_diff(python_output: str, cpp_output: str) -> None:
     python_lines = python_output.splitlines()
     cpp_lines = cpp_output.splitlines()
     diff = list(
-        difflib.unified_diff(
-            python_lines, cpp_lines, fromfile="python", tofile="cpp"
-        )
+        difflib.unified_diff(python_lines, cpp_lines, fromfile="python", tofile="cpp")
     )
     if diff:
         print("\n--- Diff ---")
@@ -86,9 +87,7 @@ def compile_cpp_test(cpp_file: str) -> str:
     result = subprocess.run(compile_cmd, capture_output=True, text=True)
     if result.returncode != 0:
         os.unlink(exe_path)
-        raise RuntimeError(
-            f"Compilation failed:\n{result.stdout}\n{result.stderr}"
-        )
+        raise RuntimeError(f"Compilation failed:\n{result.stdout}\n{result.stderr}")
 
     return exe_path
 

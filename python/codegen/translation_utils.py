@@ -5,7 +5,7 @@ from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import FuncDef, IndexExpr, IntExpr, LambdaExpr, NameExpr
 from mypy.types import CallableType, TupleType, Type, get_proper_type
-from mypy.visitor import ExpressionVisitor, NodeVisitor
+from python.visitor import Visitor
 
 from python.codegen.builtins import (
     METHOD_RENAMES,
@@ -43,7 +43,7 @@ def generate_func_def(o: FuncDef):
 
 
 def translate_func_signature(
-    o: FuncDef, expr_translator: ExpressionVisitor[str]
+    o: FuncDef, expr_translator: Visitor[str]
 ) -> str:
     """Generate a C++ function signature"""
     func = get_function_type(o)
@@ -57,7 +57,7 @@ def translate_func_signature(
 
 
 def translate_parameters(
-    o: FuncDef, expr_translator: ExpressionVisitor[str]
+    o: FuncDef, expr_translator: Visitor[str]
 ) -> list[str]:
     func = get_function_type(o)
     arguments: list[str] = []
@@ -67,7 +67,7 @@ def translate_parameters(
         argument_name = argument.variable.name
         argument_type_cpp = cpp_type(argument_type)
         if argument.initializer:
-            default = argument.initializer.accept(expr_translator)
+            default = expr_translator.visit(argument.initializer)
             s = f"{argument_type_cpp} {argument_name} = {default}"
         else:
             s = f"{argument_type_cpp} {argument_name}"
@@ -109,7 +109,7 @@ def has_kwargs(call: CallExpr):
 
 def translate_arguments_with_kwargs(
     call: CallExpr,
-    expr_translator: ExpressionVisitor[str],
+    expr_translator: Visitor[str],
 ) -> list[str]:
     """
     Reorder arguments for builtin functions by placing keyword arguments at the front.
@@ -133,14 +133,14 @@ def translate_arguments_with_kwargs(
     # Add kwargs in the specified order with defaults
     for kwarg_name in kwarg_names:
         if kwarg_name in kwargs:
-            new_args.append(kwargs[kwarg_name].accept(expr_translator))
+            new_args.append(expr_translator.visit(kwargs[kwarg_name]))
         else:
             default = kwarg_defaults[kwarg_name]
-            new_args.append(default.accept(expr_translator))
+            new_args.append(expr_translator.visit(default))
 
     # Add positional arguments
     for positional_arg in positional_args:
-        new_args.append(positional_arg.accept(expr_translator))
+        new_args.append(expr_translator.visit(positional_arg))
 
     return new_args
 
@@ -207,13 +207,13 @@ def translate_membership(
     return call if op == "in" else f"!{call}"
 
 
-def translate_comparison(expr: ComparisonExpr, expr_translator: ExpressionVisitor[str]):
+def translate_comparison(expr: ComparisonExpr, expr_translator: Visitor[str]):
     """Translate a python comparison like a < b < c into a < b && b < c"""
     pairwise_comparisons = expr.pairwise()
     terms = []  # Individual comaprisons to be connected by 'and'
     for op, expr1, expr2 in pairwise_comparisons:
-        left = expr1.accept(expr_translator)
-        right = expr2.accept(expr_translator)
+        left = expr_translator.visit(expr1)
+        right = expr_translator.visit(expr2)
         if op in ("in", "not in"):
             terms.append(
                 translate_membership(op, left, right, expr_translator.types[expr2])

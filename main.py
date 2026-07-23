@@ -3,11 +3,10 @@ import sys
 from dataclasses import dataclass
 
 from mypy import build
-from mypy.api import run
 from mypy.build import BuildSource
+from mypy.main import define_options
 from mypy.nodes import AssignmentStmt, ClassDef, Expression, FuncDef, MypyFile, Var
 from mypy.options import Options
-from mypy.traverser import TraverserVisitor
 from mypy.types import CallableType, Type
 
 from python.codegen.mypy_codegen import StatementCodegen
@@ -16,13 +15,10 @@ from python.utils import build_and_run
 
 includes = ["print.h", "list.h", "ptr.h"]
 
-
-def validate(path: str):
-    normal_report, error_report, exit_status = run([path, "--strict"])
-    if exit_status != 0:
-        print(normal_report)
-        print(error_report)
-        sys.exit(exit_status)
+# The (option, value) pairs `mypy --strict` sets, taken from mypy itself so they
+# stay correct across upgrades. Checking during the build we already run saves a
+# second full analysis pass.
+_STRICT_ASSIGNMENTS = define_options()[2]
 
 
 @dataclass
@@ -36,32 +32,26 @@ def mypy_options():
     opts.export_types = True  # required to populate result.types
     opts.preserve_asts = True  # keep the trees alive after checking
     opts.incremental = False  # avoid stale cache surprises
-    opts.disallow_untyped_defs = True
-    opts.disallow_untyped_calls = True
-    opts.check_untyped_defs = True
+    for option, value in _STRICT_ASSIGNMENTS:
+        setattr(opts, option, value)
     opts.strict_optional = True
     return opts
 
 
+def _analyse(source: BuildSource) -> AnalysisResult:
+    result = build.build(sources=[source], options=mypy_options())
+    if result.errors:
+        print("\n".join(result.errors))
+        sys.exit(1)
+    return AnalysisResult(result.files["main"], result.types)
+
+
 def mypy_pipeline_source(source: str):
-    opts = mypy_options()
-    result = build.build(sources=[BuildSource(None, "main", source)], options=opts)
-    tree = result.files["main"]
-    types = result.types
-    return AnalysisResult(tree, types)
+    return _analyse(BuildSource(None, "main", source))
 
 
 def mypy_pipeline(path: str):
-    opts = mypy_options()
-
-    result = build.build(
-        sources=[BuildSource(path, "main", None)],
-        options=opts,
-    )
-
-    tree = result.files["main"]
-    types = result.types
-    return AnalysisResult(tree, types)
+    return _analyse(BuildSource(path, "main", None))
 
 
 def translate(path: str):
@@ -80,7 +70,6 @@ def translate_source(source: str):
 
 def full_pipeline():
     file = "input.py"
-    validate(file)
     result = mypy_pipeline(file)
     print(result.tree)
     codegen = StatementCodegen(result.tree, result.types)
@@ -90,6 +79,7 @@ def full_pipeline():
 
 
 def main():
+    # cProfile.run("full_pipeline()", sort="cumtime")
     full_pipeline()
 
 

@@ -11,11 +11,11 @@ from mypy.nodes import (
     NameExpr,
     TupleExpr,
 )
-from mypy.traverser import TraverserVisitor
+from python.visitor import Traverser
 from mypy.types import CallableType, Type, get_proper_type
 
 
-class _DeclarationCollector(TraverserVisitor):
+class _DeclarationCollector(Traverser):
     """Collect all local variable declarations in a function."""
 
     def __init__(self, types_dict: dict[Expression, Type]):
@@ -26,7 +26,7 @@ class _DeclarationCollector(TraverserVisitor):
         """Collect variables from assignment statements."""
         for lvalue in o.lvalues:
             self.check_names(lvalue)
-        o.rvalue.accept(self)
+        self.visit(o.rvalue)
 
     def visit_for_stmt(self, o: ForStmt) -> None:
         self.check_names(o.index)
@@ -62,5 +62,5 @@ def get_declarations(
     func: FuncDef, types_dict: dict[Expression, Type]
 ) -> dict[str, Type]:
     collector = _DeclarationCollector(types_dict)
-    func.accept(collector)
+    collector.visit(func)
     return collector.declarations

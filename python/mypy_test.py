@@ -5,7 +5,7 @@ from mypy.api import run
 from mypy.build import BuildSource
 from mypy.nodes import AssignmentStmt, ClassDef, FuncDef, NameExpr, Var
 from mypy.options import Options
-from mypy.traverser import TraverserVisitor
+from python.visitor import Traverser
 from mypy.types import CallableType
 
 normal_report, error_report, exit_status = run(["input.py", "--strict"])
@@ -33,7 +33,7 @@ tree = result.files["example"]  # MypyFile
 types = result.types  # dict[Expression, Type]
 
 
-class BasicVisitor(TraverserVisitor):
+class BasicVisitor(Traverser):
     """Basic AST visitor for mypy tree."""
 
     # def visit_func_def(self, o: FuncDef) -> None:
@@ -68,6 +68,6 @@ class BasicVisitor(TraverserVisitor):
 
 
 visitor = BasicVisitor()
-tree.accept(visitor)
+visitor.visit(tree)
 for name, sym in tree.names.items():
     print(name, sym)

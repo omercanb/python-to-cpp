@@ -19,7 +19,7 @@ from mypy.nodes import (
     Var,
     WhileStmt,
 )
-from mypy.traverser import TraverserVisitor
+from python.visitor import Traverser
 from mypy.types import Type
 
 from python.analysis.find_declarations import get_declarations
@@ -49,7 +49,7 @@ includes = [
 ]
 
 
-class StatementCodegen(TraverserVisitor):
+class StatementCodegen(Traverser):
     """Generate C++ code from mypy AST statements."""
 
     def __init__(
@@ -85,7 +85,7 @@ class StatementCodegen(TraverserVisitor):
 
     def get_expr(self, expr: Expression, lvalue=False):
         self.expr_codegen.lvalue = lvalue
-        return expr.accept(self.expr_codegen)
+        return self.expr_codegen.visit(expr)
 
     def translate_declaration(self, name: str, typ: Type):
         cpp = cpp_type(typ)
@@ -114,7 +114,7 @@ class StatementCodegen(TraverserVisitor):
         """Generate all C++ code."""
         self.generate_includes()
         self.generate_global_declarations()
-        self.tree.accept(self)
+        self.visit(self.tree)
         return "\n".join(self.output)
 
     def visit_func_def(self, o: FuncDef):
@@ -131,7 +131,7 @@ class StatementCodegen(TraverserVisitor):
         for declaration in declaration_lines:
             self.emit(declaration)
         for stmt in o.body.body:
-            stmt.accept(self)
+            self.visit(stmt)
         self.unindent()
         self.emit("}")
         self.emit("")

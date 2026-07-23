@@ -153,7 +153,7 @@ def translate_for_generic(codegen: StatementCodegen, for_stmt: ForStmt) -> None:
     codegen.indent()
     codegen.emit(f"{target} = next({iter_var});")
     for stmt in for_stmt.body.body:
-        stmt.accept(codegen)
+        codegen.visit(stmt)
     codegen.unindent()
     codegen.emit("}")
 
@@ -170,6 +170,6 @@ def write_for(
     if first_loop_line:
         codegen.emit(first_loop_line)
     for stmt in body.body:
-        stmt.accept(codegen)
+        codegen.visit(stmt)
     codegen.unindent()
     codegen.emit("}")

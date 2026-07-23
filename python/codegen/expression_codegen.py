@@ -17,7 +17,7 @@ from mypy.nodes import (
     UnaryExpr,
 )
 from mypy.types import TupleType, Type, get_proper_type
-from mypy.visitor import ExpressionVisitor
+from python.visitor import Visitor
 
 from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
@@ -40,7 +40,7 @@ from python.codegen.translation_utils import (
 from python.codegen.typegen import is_pointer
 
 
-class ExpressionCodegen(ExpressionVisitor[str]):
+class ExpressionCodegen(Visitor[str]):
     """Generate C++ code for expressions."""
 
     def __init__(self, types_dict: dict[MypyExpression, Type]):
@@ -59,19 +59,19 @@ class ExpressionCodegen(ExpressionVisitor[str]):
     def visit_member_expr(self, o: MemberExpr) -> str:
         """Handle attribute access considering whether the object will be a pointer or value"""
         # TODO: Handle attribute access
-        obj = o.expr.accept(self)
+        obj = self.visit(o.expr)
         name = translate_method_name(o.name)
         return member_access(obj, self.types[o.expr], name)
 
     def visit_call_expr(self, o: CallExpr) -> str:
-        callee = o.callee.accept(self)
+        callee = self.visit(o.callee)
 
         # Handle special case for builtins with kwargs (like print)
         if should_translate_kwargs(o):
             arguments = translate_arguments_with_kwargs(o, self)
             callee = translate_builtin_function_name_to_kwargs(o)
         else:
-            arguments = [arg.accept(self) for arg in o.args]
+            arguments = [self.visit(arg) for arg in o.args]
 
         argument_list = ", ".join(arguments)
         special_case = translate_constructor_special_cases(o.callee)
@@ -90,30 +90,30 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         assert isinstance(ret, ReturnStmt)
         expr = ret.expr
         assert expr is not None
-        body = expr.accept(self)
+        body = self.visit(expr)
         return f"[]({', '.join(arguments)}) {{ return {body}; }}"
 
     def visit_op_expr(self, o: OpExpr) -> str:
-        left = o.left.accept(self)
-        right = o.right.accept(self)
+        left = self.visit(o.left)
+        right = self.visit(o.right)
         return translate_binary_expr(o.op, left, right)
 
     def visit_unary_expr(self, o: UnaryExpr) -> str:
-        operand = o.expr.accept(self)
+        operand = self.visit(o.expr)
         if o.op == "not":
             return f"!{is_truthy(operand)}"
         return f"{o.op}{operand}"
 
     def visit_index_expr(self, o: IndexExpr) -> str:
-        base = o.base.accept(self)
+        base = self.visit(o.base)
         base_type = get_proper_type(self.types[o.base])
         if isinstance(base_type, TupleType):
             return translate_tuple_access(base_type, o, base)
-        index = o.index.accept(self)
+        index = self.visit(o.index)
         return call_method(base, base_type, "__getitem__", index)
 
     def visit_set_expr(self, o: SetExpr) -> str:
-        elements = [item.accept(self) for item in o.items]
+        elements = [self.visit(item) for item in o.items]
         constructor = f"{{{', '.join(elements)}}}" if elements else ""
         return translate_constructor(self.types[o], constructor)
 
@@ -121,7 +121,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         pairs = []
         for key, value in o.items:
             assert key is not None, "dict unpacking (**) is not supported"
-            pairs.append(f"{{{key.accept(self)}, {value.accept(self)}}}")
+            pairs.append(f"{{{self.visit(key)}, {self.visit(value)}}}")
         constructor = f"{{{', '.join(pairs)}}}" if pairs else ""
         return translate_constructor(self.types[o], constructor)
 
@@ -141,7 +141,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
 
     def visit_list_expr(self, o: ListExpr) -> str:
         assert is_pointer(self.types[o])
-        elements = [element.accept(self) for element in o.items]
+        elements = [self.visit(element) for element in o.items]
         if elements:
             constructor = f"{{{', '.join(elements)}}}"
         else:
@@ -149,7 +149,7 @@ class ExpressionCodegen(ExpressionVisitor[str]):
         return translate_constructor(self.types[o], constructor)
 
     def visit_tuple_expr(self, o: TupleExpr) -> str:
-        items = [item.accept(self) for item in o.items]
+        items = [self.visit(item) for item in o.items]
         if self.lvalue:
             return f"destructure({', '.join(items)})"
         else:
