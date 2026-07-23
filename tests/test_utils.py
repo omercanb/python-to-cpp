@@ -6,8 +6,6 @@ import subprocess
 import sys
 import tempfile
 
-from python.utils import compile_cpp
-
 
 def run_python_and_capture(path: str) -> subprocess.CompletedProcess:
     """Run a Python file and capture its output.
@@ -28,7 +26,7 @@ def run_python_and_capture(path: str) -> subprocess.CompletedProcess:
         with open(temp_path, "w") as f:
             f.write(program_with_main)
         # sys.executable, not "python": a bare "python" hits the pyenv shim,
-        # 0.27s a call against 0.016s.
+        # which costs 0.27s per call against 0.016s for the interpreter itself.
         result = subprocess.run(
             [sys.executable, temp_path], capture_output=True, text=True
         )
@@ -77,8 +75,16 @@ def compile_cpp_test(cpp_file: str) -> str:
     # Get project root - assumes tests/ directory structure
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    # These include the same cpp/ runtime, so they share its precompiled header.
-    result = compile_cpp(cpp_file, exe_path, includes=[project_root])
+    compile_cmd = [
+        "g++",
+        "-std=c++17",
+        f"-I{project_root}",
+        cpp_file,
+        "-o",
+        exe_path,
+    ]
+
+    result = subprocess.run(compile_cmd, capture_output=True, text=True)
     if result.returncode != 0:
         os.unlink(exe_path)
         raise RuntimeError(f"Compilation failed:\n{result.stdout}\n{result.stderr}")

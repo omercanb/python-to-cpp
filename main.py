@@ -17,7 +17,9 @@ from python.utils import build_and_run
 
 includes = ["print.h", "list.h", "ptr.h"]
 
-# Mypys strict upgrades
+# The (option, value) pairs `mypy --strict` sets, taken from mypy itself so they
+# stay correct across upgrades. Checking during the build we already run saves a
+# second full analysis pass.
 _STRICT_ASSIGNMENTS = define_options()[2]
 
 
@@ -35,7 +37,8 @@ def mypy_options():
     # Make sure to always give the source when using BuildSource
     # because with this on it will otherwise just skip the file
     opts.incremental = True
-    # A cache dir per worker; concurrent writers to one can corrupt it.
+    # Parallel test workers must not share a cache dir; concurrent writers to
+    # one .mypy_cache can corrupt it.
     worker = os.environ.get("PYTEST_XDIST_WORKER")
     opts.cache_dir = f".mypy_cache/{worker}" if worker else ".mypy_cache"
     for option, value in _STRICT_ASSIGNMENTS:
@@ -45,7 +48,8 @@ def mypy_options():
 
 
 def _analyse(path: str | None, source: str) -> AnalysisResult:
-    # The text forces a re-parse, the path keeps real filenames in errors.
+    # Passing both path and text keeps real filenames in error messages while
+    # still forcing a re-parse.
     result = build.build(
         sources=[BuildSource(path, "main", source)], options=mypy_options()
     )
@@ -92,7 +96,4 @@ def main():
     full_pipeline()
 
 
-# Guarded: the tests import from here, and unguarded this ran the whole
-# pipeline on every import.
-if __name__ == "__main__":
-    main()
+main()
