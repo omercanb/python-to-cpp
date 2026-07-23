@@ -1,12 +1,9 @@
 """Hand-rolled visitor bases for the mypy AST.
 
-mypy's own visitor classes (``NodeVisitor``, ``ExpressionVisitor``,
-``TraverserVisitor``) are mypyc traits. An interpreted subclass of a compiled
-trait raises ``TypeError: interpreted classes cannot inherit from compiled
-traits`` when instantiated (python/mypy#19456), so subclassing them forces the
-pure-Python mypy wheel, which analyses a file about 4x slower than the compiled
-one. Dispatching here instead of calling ``node.accept(visitor)`` keeps us on
-the compiled wheel.
+mypy's visitor classes are mypyc traits, and an interpreted subclass of one
+raises TypeError when instantiated (python/mypy#19456). Subclassing them would
+force the pure-Python wheel, ~4x slower to analyse a file; dispatching here
+instead of via node.accept() keeps us on the compiled one.
 """
 
 from __future__ import annotations
