@@ -5,6 +5,7 @@
 #include "exceptions.h"
 #include "iter.h"
 #include "ptr.h"
+#include "slice.h"
 #include "str.h"
 #include "types.h"
 #include <algorithm>
@@ -19,7 +20,8 @@
 
 namespace py {
 
-template <typename T> class list {
+template <typename T>
+class list {
   public:
     using value_type = T;
     using size_type = _int;
@@ -31,7 +33,8 @@ template <typename T> class list {
     // Construct from any iterable - requires explicit type: list<int>(map(...))
     // (deduction guide in iter.h handles type inference)
 
-    template <typename IterableType> list(IterableType &&iterable) {
+    template <typename IterableType>
+    list(IterableType &&iterable) {
         auto it = py::iter(iterable);
         while (!it.done()) {
             data_.push_back(it.current());
@@ -42,11 +45,7 @@ template <typename T> class list {
     size_type __len__() const noexcept {
         return static_cast<size_type>(data_.size());
     }
-    size_type len() const noexcept { return __len__(); }
     bool empty() const noexcept { return data_.empty(); }
-    explicit operator bool() const noexcept {
-        return !data_.empty();
-    } // `if a:`
 
     T &operator[](size_type i) { return data_[normIndex(i)]; }
     const T &operator[](size_type i) const { return data_[normIndex(i)]; }
@@ -55,6 +54,24 @@ template <typename T> class list {
     // dict's insert-on-write.
     T &__getitem__(size_type i) { return data_[normIndex(i)]; }
     const T &__getitem__(size_type i) const { return data_[normIndex(i)]; }
+
+    // a[i:j:k] -- a new list, like Python. Out of range bounds clamp rather
+    // than raising, which is why this does not go through normIndex.
+    ptr<list<T>> __getitem__(const slice &s) const {
+        tuple<_int, _int, _int> bounds = s.indices(__len__());
+        _int start = bounds.get<0>(), stop = bounds.get<1>(),
+             step = bounds.get<2>();
+
+        auto out = new list<T>();
+        if (step > 0) {
+            for (_int i = start; i < stop; i += step)
+                out->append(data_[static_cast<std::size_t>(i)]);
+        } else {
+            for (_int i = start; i > stop; i += step)
+                out->append(data_[static_cast<std::size_t>(i)]);
+        }
+        return ptr<list<T>>(out);
+    }
     void __setitem__(size_type i, const T &value) {
         data_[normIndex(i)] = value;
     }
@@ -217,7 +234,7 @@ template <typename T> class list {
         list_iterator(list<T> &l) : l(l), i(0) {}
         T current() { return l[i]; }
         T next() { return l[i++]; }
-        bool done() { return i >= l.len(); }
+        bool done() { return i >= l.__len__(); }
     };
     list_iterator iter() { return list_iterator(*this); }
 
@@ -235,8 +252,10 @@ template <typename T> class list {
     }
 };
 
-template <typename T> auto iter(list<T> &l) { return l.iter(); }
-template <typename It> auto next(It &it) { return it.next(); }
+template <typename T>
+auto iter(list<T> &l) { return l.iter(); }
+template <typename It>
+auto next(It &it) { return it.next(); }
 
 // n * a  (mirror of a * n)
 template <typename T>
@@ -244,13 +263,15 @@ list<T> operator*(typename list<T>::size_type n, const list<T> &a) {
     return a * n;
 }
 
-template <typename T> inline _int len(const list<T> &l) {
+template <typename T>
+inline _int len(const list<T> &l) {
     return l.__len__();
 }
 
 // sorted(iterable, *, reverse=False) - returns a new list.
 // _sorted_kwargs is emitted when the call passes reverse=, like print.
-template <typename T> ptr<list<T>> sorted(const ptr<list<T>> &l) {
+template <typename T>
+ptr<list<T>> sorted(const ptr<list<T>> &l) {
     auto out = l->copy();
     out->sort();
     return out;
@@ -263,7 +284,8 @@ ptr<list<T>> _sorted_kwargs(bool reverse, const ptr<list<T>> &l) {
 }
 
 // to_str() - [1, 2, 3]
-template <typename T> str to_str(const list<T> &l) {
+template <typename T>
+str to_str(const list<T> &l) {
     str result = "[";
     for (size_t i = 0; i < l.__len__(); ++i) {
         if (i > 0)

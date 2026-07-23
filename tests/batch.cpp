@@ -6,6 +6,7 @@
 #include "ptr.h"
 #include "scalars.h"
 #include "set.h"
+#include "slice.h"
 #include "strops.h"
 #include "truthy.h"
 #include "tuple.h"
@@ -77,9 +78,9 @@ int run() {
     d->__setitem__(1LL, 11LL);
     print(len(d), d->__getitem__(1LL));
     print(d->get(1LL));
-    print(d->get(99LL, -1LL));
+    print(d->get(99LL, (-1LL)));
     print(d->pop(4LL));
-    print(d->pop(99LL, -1LL));
+    print(d->pop(99LL, (-1LL)));
     print(len(d));
     print(d->setdefault(2LL, 999LL));
     print(d->setdefault(9LL, 90LL));
@@ -133,48 +134,49 @@ int run() {
 }
 
 namespace prog_list {
-ptr<list<_int>> get_list() {
-    return ptr(new list<_int>({1LL, 2LL, 3LL, 4LL, 5LL}));
+ptr<list<_int>> give_list(ptr<list<_int>> l) {
+    print(l);
+    l->append(2LL);
+    print(l);
+    return l;
 }
 
 int run() {
     ptr<list<_int>> l;
-    _int n;
-    ptr<list<str>> l2;
-    ptr<list<_int>> l3;
-    l = get_list();
-    for (auto __iter = iter(l); !__iter.done();) {
-        n = next(__iter);
-        print(n);
-    }
-    l2 = ptr(new list<str>({str("a"), str("b"), str("c")}));
-    l2 = ptr(new list<str>({str("a"), str("a"), str("a")}));
-    l3 = ptr(new list<_int>(ptr(new list<_int>({0LL, 1LL, 0LL, 1LL}))));
-    return 0LL;
-}
-}
-
-namespace prog_list_methods {
-int run() {
-    ptr<list<_int>> l;
+    _int a;
+    ptr<list<_int>> l2;
     _int x;
     _int y;
     _int z;
     ptr<list<_int>> l3;
-    ptr<list<_int>> l2;
     _int n;
+    print(ptr(new list<_int>(ptr(new list<_int>({1LL, 2LL, 3LL})))));
     l = ptr(new list<_int>({1LL, 2LL, 3LL}));
+    print(l);
+    l = ptr(new list<_int>({1LL, 2LL, 3LL}));
+    print(l);
     l->append(4LL);
     print(l);
+    l = give_list(l);
+    print(l);
+    print(l->__getitem__(1LL));
+    a = l->__getitem__(0LL);
+    print(l);
+    l->__setitem__(0LL, a);
+    print(l);
+    l->__setitem__(0LL, 2LL);
+    print(l);
+    l2 = l->__getitem__(slice(0LL, 1LL, std::nullopt));
+    print(l2);
     l->insert(0LL, 100LL);
     print(l);
     l->insert(2LL, 200LL);
     print(l);
-    l->insert(-1LL, 300LL);
+    l->insert((-1LL), 300LL);
     print(l);
     l->insert(100LL, 400LL);
     print(l);
-    l->insert(-100LL, 500LL);
+    l->insert((-100LL), 500LL);
     print(l);
     l->remove(200LL);
     print(l);
@@ -182,7 +184,7 @@ int run() {
     print(x, l);
     y = l->pop(0LL);
     print(y, l);
-    z = l->pop(-2LL);
+    z = l->pop((-2LL));
     print(z, l);
     l->extend(ptr(new list<_int>({7LL, 8LL})));
     print(l);
@@ -194,7 +196,7 @@ int run() {
     print(l2->index(3LL));
     print(l2->index(3LL, 3LL));
     print(l2->index(3LL, 0LL, 2LL));
-    print(l2->index(9LL, -2LL));
+    print(l2->index(9LL, (-2LL)));
     print(l2->count(3LL));
     print(l2->count(42LL));
     l2->sort();
@@ -207,7 +209,7 @@ int run() {
     print(l2);
     n = len(l2);
     print(n);
-    print(l2->__getitem__(0LL), l2->__getitem__(-1LL));
+    print(l2->__getitem__(0LL), l2->__getitem__((-1LL)));
     return 0LL;
 }
 }
@@ -233,8 +235,8 @@ int run() {
     for (_int i = x; i < (x + 10LL); i += 2) {
         print(str("third"), i);
     }
-    for (_int i = x;; i += -2LL) {
-        if ((-2LL > 0 && i >= (x - 7LL)) || (-2LL < 0 && i <= (x - 7LL))) break;
+    for (_int i = x;; i += (-2LL)) {
+        if (((-2LL) > 0 && i >= (x - 7LL)) || ((-2LL) < 0 && i <= (x - 7LL))) break;
         print(str("fourth"), i);
     }
     step = x;
@@ -242,7 +244,7 @@ int run() {
         if ((step > 0 && i >= (10LL * x)) || (step < 0 && i <= (10LL * x))) break;
         print(str("fifth"), i);
     }
-    step = -2LL;
+    step = (-2LL);
     for (_int i = (5LL * x);; i += step) {
         if ((step > 0 && i >= (10LL * x)) || (step < 0 && i <= (10LL * x))) break;
         print(str("sixth"), i);
@@ -263,12 +265,15 @@ namespace prog_math {
 int run() {
     _int a;
     print(pow(10LL, 10LL));
-    print(idiv(-10LL, 3LL));
+    print(idiv((-10LL), 3LL));
     print(idiv(10LL, 3LL));
     print(fdiv(5LL, 2LL));
     print(pow(0.5, 4LL));
     print((50.0 * 100LL));
     a = pow(10LL, 10LL);
+    print((-(-5LL)));
+    print((~5LL));
+    print((-(+5LL)));
     return a;
 }
 }
@@ -441,6 +446,69 @@ int run() {
 }
 }
 
+namespace prog_slice {
+int run() {
+    ptr<list<_int>> l;
+    ptr<list<_int>> empty;
+    ptr<list<_int>> original;
+    ptr<list<_int>> copied;
+    str s;
+    l = ptr(new list<_int>({0LL, 1LL, 2LL, 3LL, 4LL, 5LL}));
+    print(l->__getitem__(slice(0LL, 1LL, std::nullopt)));
+    print(l->__getitem__(slice(1LL, 4LL, std::nullopt)));
+    print(l->__getitem__(slice(std::nullopt, 3LL, std::nullopt)));
+    print(l->__getitem__(slice(3LL, std::nullopt, std::nullopt)));
+    print(l->__getitem__(slice(std::nullopt, std::nullopt, std::nullopt)));
+    print(l->__getitem__(slice(std::nullopt, std::nullopt, 2LL)));
+    print(l->__getitem__(slice(1LL, 5LL, 2LL)));
+    print(l->__getitem__(slice(std::nullopt, std::nullopt, 3LL)));
+    print(l->__getitem__(slice((-3LL), std::nullopt, std::nullopt)));
+    print(l->__getitem__(slice(std::nullopt, (-2LL), std::nullopt)));
+    print(l->__getitem__(slice((-4LL), (-1LL), std::nullopt)));
+    print(l->__getitem__(slice((-1LL), std::nullopt, std::nullopt)));
+    print(l->__getitem__(slice(std::nullopt, std::nullopt, (-1LL))));
+    print(l->__getitem__(slice(4LL, 1LL, (-1LL))));
+    print(l->__getitem__(slice(std::nullopt, std::nullopt, (-2LL))));
+    print(l->__getitem__(slice((-1LL), (-4LL), (-1LL))));
+    print(l->__getitem__(slice(10LL, 20LL, std::nullopt)));
+    print(l->__getitem__(slice((-100LL), 100LL, std::nullopt)));
+    print(l->__getitem__(slice(std::nullopt, 100LL, std::nullopt)));
+    print(l->__getitem__(slice((-100LL), std::nullopt, std::nullopt)));
+    print(l->__getitem__(slice(2LL, 2LL, std::nullopt)));
+    print(l->__getitem__(slice(4LL, 1LL, std::nullopt)));
+    print(l->__getitem__(slice(1LL, 4LL, (-1LL))));
+    empty = ptr(new list<_int>());
+    print(empty->__getitem__(slice(std::nullopt, std::nullopt, std::nullopt)));
+    print(empty->__getitem__(slice(0LL, 5LL, std::nullopt)));
+    print(empty->__getitem__(slice(std::nullopt, std::nullopt, (-1LL))));
+    original = ptr(new list<_int>({1LL, 2LL, 3LL}));
+    copied = original->__getitem__(slice(std::nullopt, std::nullopt, std::nullopt));
+    copied->append(4LL);
+    print(original, copied);
+    s = str("abcdef");
+    print(s.__getitem__(slice(0LL, 1LL, std::nullopt)));
+    print(s.__getitem__(slice(1LL, 4LL, std::nullopt)));
+    print(s.__getitem__(slice(std::nullopt, 3LL, std::nullopt)));
+    print(s.__getitem__(slice(3LL, std::nullopt, std::nullopt)));
+    print(s.__getitem__(slice(std::nullopt, std::nullopt, std::nullopt)));
+    print(s.__getitem__(slice(std::nullopt, std::nullopt, 2LL)));
+    print(s.__getitem__(slice(1LL, 5LL, 2LL)));
+    print(s.__getitem__(slice((-3LL), std::nullopt, std::nullopt)));
+    print(s.__getitem__(slice(std::nullopt, (-2LL), std::nullopt)));
+    print(s.__getitem__(slice((-4LL), (-1LL), std::nullopt)));
+    print(s.__getitem__(slice(std::nullopt, std::nullopt, (-1LL))));
+    print(s.__getitem__(slice(4LL, 1LL, (-1LL))));
+    print(s.__getitem__(slice(std::nullopt, std::nullopt, (-2LL))));
+    print(s.__getitem__(slice(100LL, 200LL, std::nullopt)));
+    print(s.__getitem__(slice((-100LL), 100LL, std::nullopt)));
+    print(s.__getitem__(slice(2LL, 2LL, std::nullopt)));
+    print(s.__getitem__(slice(4LL, 1LL, std::nullopt)));
+    print(str("").__getitem__(slice(std::nullopt, std::nullopt, std::nullopt)));
+    print(str("").__getitem__(slice(0LL, 5LL, std::nullopt)));
+    return 0LL;
+}
+}
+
 namespace prog_string {
 int run() {
     str s;
@@ -452,7 +520,7 @@ int run() {
     s = str("Hello World");
     print(s);
     print(len(s));
-    print(s.__getitem__(0LL), s.__getitem__(-1LL));
+    print(s.__getitem__(0LL), s.__getitem__((-1LL)));
     print(s.upper());
     print(s.lower());
     print(s.swapcase());
@@ -560,8 +628,8 @@ int run() {
     } else {
         print(str("full falsy"));
     }
-    print(!to_bool(a));
-    print(!to_bool(b));
+    print((!to_bool(a)));
+    print((!to_bool(b)));
     print(to_bool(a));
     print(to_bool(b));
     print(to_bool(0.0));
@@ -616,12 +684,12 @@ int main(int argc, char** argv) {
     if (argc > 1 && std::strcmp(argv[1], "dict.py") == 0) return prog_dict::run();
     if (argc > 1 && std::strcmp(argv[1], "iter.py") == 0) return prog_iter::run();
     if (argc > 1 && std::strcmp(argv[1], "list.py") == 0) return prog_list::run();
-    if (argc > 1 && std::strcmp(argv[1], "list_methods.py") == 0) return prog_list_methods::run();
     if (argc > 1 && std::strcmp(argv[1], "loops.py") == 0) return prog_loops::run();
     if (argc > 1 && std::strcmp(argv[1], "math.py") == 0) return prog_math::run();
     if (argc > 1 && std::strcmp(argv[1], "membership.py") == 0) return prog_membership::run();
     if (argc > 1 && std::strcmp(argv[1], "print.py") == 0) return prog_print::run();
     if (argc > 1 && std::strcmp(argv[1], "set.py") == 0) return prog_set::run();
+    if (argc > 1 && std::strcmp(argv[1], "slice.py") == 0) return prog_slice::run();
     if (argc > 1 && std::strcmp(argv[1], "string.py") == 0) return prog_string::run();
     if (argc > 1 && std::strcmp(argv[1], "truthy.py") == 0) return prog_truthy::run();
     if (argc > 1 && std::strcmp(argv[1], "tuple.py") == 0) return prog_tuple::run();

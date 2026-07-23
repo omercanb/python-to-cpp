@@ -39,6 +39,7 @@ includes = [
     "iter.h",
     "tuple.h",
     "ptr.h",
+    "slice.h",
     "list.h",
     "strops.h",
     "dict.h",

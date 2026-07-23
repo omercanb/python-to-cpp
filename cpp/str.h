@@ -21,6 +21,7 @@ namespace py {
 template <typename T> class list;
 template <typename T> class ptr;
 template <typename... Ts> class tuple;
+class slice;
 
 class str {
   public:
@@ -45,6 +46,8 @@ class str {
     str __getitem__(size_type i) const {
         return str(std::string(1, data_[normIndex(i)]));
     }
+    // s[i:j:k] -- defined in slice.h, which this header cannot include.
+    str __getitem__(const slice &s) const;
     bool __contains__(const str &sub) const {
         return data_.find(sub.data_) != std::string::npos;
     }

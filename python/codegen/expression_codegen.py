@@ -12,12 +12,12 @@ from mypy.nodes import (
     OpExpr,
     ReturnStmt,
     SetExpr,
+    SliceExpr,
     StrExpr,
     TupleExpr,
     UnaryExpr,
 )
 from mypy.types import TupleType, Type, get_proper_type
-from python.visitor import Visitor
 
 from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
@@ -38,6 +38,7 @@ from python.codegen.translation_utils import (
     translate_tuple_access,
 )
 from python.codegen.typegen import is_pointer
+from python.visitor import Visitor
 
 
 class ExpressionCodegen(Visitor[str]):
@@ -101,8 +102,8 @@ class ExpressionCodegen(Visitor[str]):
     def visit_unary_expr(self, o: UnaryExpr) -> str:
         operand = self.visit(o.expr)
         if o.op == "not":
-            return f"!{is_truthy(operand)}"
-        return f"{o.op}{operand}"
+            return f"(!{is_truthy(operand)})"
+        return f"({o.op}{operand})"
 
     def visit_index_expr(self, o: IndexExpr) -> str:
         base = self.visit(o.base)
@@ -111,6 +112,15 @@ class ExpressionCodegen(Visitor[str]):
             return translate_tuple_access(base_type, o, base)
         index = self.visit(o.index)
         return call_method(base, base_type, "__getitem__", index)
+
+    def visit_slice_expr(self, o: SliceExpr) -> str:
+        """The index of a[i:j:k]. An omitted bound is nullopt, not a default:
+        only the container knows what a missing start or stop means."""
+        bounds = [
+            self.visit(bound) if bound is not None else "std::nullopt"
+            for bound in (o.begin_index, o.end_index, o.stride)
+        ]
+        return f"slice({', '.join(bounds)})"
 
     def visit_set_expr(self, o: SetExpr) -> str:
         elements = [self.visit(item) for item in o.items]
