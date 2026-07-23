@@ -1,6 +1,8 @@
 import cProfile
+import os
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 from mypy import build
 from mypy.build import BuildSource
@@ -31,15 +33,26 @@ def mypy_options():
     opts = Options()
     opts.export_types = True  # required to populate result.types
     opts.preserve_asts = True  # keep the trees alive after checking
-    opts.incremental = False  # avoid stale cache surprises
+    # Caching typeshed takes a build from ~0.45s to ~0.015s
+    # Make sure to always give the source when using BuildSource
+    # because with this on it will otherwise just skip the file
+    opts.incremental = True
+    # Parallel test workers must not share a cache dir; concurrent writers to
+    # one .mypy_cache can corrupt it.
+    worker = os.environ.get("PYTEST_XDIST_WORKER")
+    opts.cache_dir = f".mypy_cache/{worker}" if worker else ".mypy_cache"
     for option, value in _STRICT_ASSIGNMENTS:
         setattr(opts, option, value)
     opts.strict_optional = True
     return opts
 
 
-def _analyse(source: BuildSource) -> AnalysisResult:
-    result = build.build(sources=[source], options=mypy_options())
+def _analyse(path: str | None, source: str) -> AnalysisResult:
+    # Passing both path and text keeps real filenames in error messages while
+    # still forcing a re-parse.
+    result = build.build(
+        sources=[BuildSource(path, "main", source)], options=mypy_options()
+    )
     if result.errors:
         print("\n".join(result.errors))
         sys.exit(1)
@@ -47,11 +60,11 @@ def _analyse(source: BuildSource) -> AnalysisResult:
 
 
 def mypy_pipeline_source(source: str):
-    return _analyse(BuildSource(None, "main", source))
+    return _analyse(None, source)
 
 
 def mypy_pipeline(path: str):
-    return _analyse(BuildSource(path, "main", None))
+    return _analyse(path, Path(path).read_text())
 
 
 def translate(path: str):
