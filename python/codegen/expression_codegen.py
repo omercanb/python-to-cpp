@@ -37,6 +37,7 @@ from python.codegen.translation_utils import (
     translate_lambda_parameters,
     translate_method_name,
     translate_parameters,
+    translate_qualified_builtin,
     translate_tuple_access,
 )
 from python.codegen.typegen import cpp_type_name, is_pointer
@@ -96,6 +97,9 @@ class ExpressionCodegen(Visitor[str]):
         special_case = translate_constructor_special_cases(o.callee)
         if special_case:
             callee = special_case
+        qualified = translate_qualified_builtin(o.callee)
+        if qualified:
+            callee = qualified
 
         if should_wrap_call_in_pointer(o.callee):
             # Spell out the element type: an argument-less list()/set()

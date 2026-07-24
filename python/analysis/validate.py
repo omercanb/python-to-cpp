@@ -71,10 +71,18 @@ def returns(block: Block) -> bool:
 
 def _type_hint(t: Type) -> str:
     """Holding a function in a variable is the common way to land here."""
-    if isinstance(get_proper_type(t), CallableType):
+    proper = get_proper_type(t)
+    if isinstance(proper, CallableType):
         return (
             "a function cannot be stored in a variable, call it where it is "
             "needed instead:\nprint(add(1, 2))"
+        )
+    if "object" in str(proper):
+        return (
+            "`object` is what mypy infers when the elements disagree, or when "
+            "a literal goes straight into something taking Iterable[object].\n"
+            "Name it first so the element type comes from the values:\n"
+            "flags = [False, True]\nprint(any(flags))"
         )
     return (
         "use int, float, str, bool, or a list, dict, set or tuple of those:\n"

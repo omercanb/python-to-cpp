@@ -49,6 +49,11 @@ OP_MAP = {"is": "__is", "/": "fdiv", "//": "idiv", "%": "mod", "**": "pow"}
 # Python method names that collide with C++ keywords.
 METHOD_RENAMES = {"union": "union_"}
 
+# Builtins whose bare C++ spelling collides with a C library function visible
+# at global scope. `round(2.5)` would match both ::round(double) and ours,
+# since _float is double, so the call is qualified to settle it.
+QUALIFIED_BUILTINS = {"builtins.round": "py::round"}
+
 SCALAR_CONSTRUCTORS = {
     "int": "to_int",
     "float": "to_float",

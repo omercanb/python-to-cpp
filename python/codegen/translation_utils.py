@@ -12,6 +12,7 @@ from python.codegen.builtins import (
     METHOD_RENAMES,
     OP_MAP,
     POINTER_TYPES,
+    QUALIFIED_BUILTINS,
     SCALAR_CONSTRUCTORS,
     get_kwarg_defaults,
     get_kwarg_order,
@@ -157,6 +158,13 @@ def translate_builtin_function_name_to_kwargs(o: CallExpr) -> str:
     assert isinstance(o.callee, NameExpr)
     name = o.callee.name
     return f"_{name}_kwargs"
+
+
+def translate_qualified_builtin(callee: Expression) -> Optional[str]:
+    """The C++ spelling for a builtin whose bare name would be ambiguous."""
+    if isinstance(callee, NameExpr):
+        return QUALIFIED_BUILTINS.get(callee.fullname)
+    return None
 
 
 def translate_constructor_special_cases(callee: Expression) -> Optional[str]:

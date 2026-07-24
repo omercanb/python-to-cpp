@@ -107,6 +107,12 @@ def cpp_type_name(t: Type) -> str:
         case AnyType():
             return "auto"
 
+        # `object` is what mypy settles on when a literal's elements disagree,
+        # or when it is passed straight to something taking Iterable[object].
+        # Nothing in C++ spells it, so it has to be caught rather than emitted.
+        case Instance(type=type_info) if type_info.fullname == "builtins.object":
+            raise UnsupportedType(t)
+
         case Instance(type=type_info):
             return type_info.name
 

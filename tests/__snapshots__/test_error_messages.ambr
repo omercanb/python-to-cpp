@@ -115,6 +115,20 @@
   
   '''
 # ---
+# name: test_error_message[object_element.py]
+  '''
+  object_element.py:2:15: error: no C++ equivalent for the type `object`
+  
+    2 |     print(any([False, True]))
+      |               ^^^^^^^^^^^^^
+  
+    help: `object` is what mypy infers when the elements disagree, or when a literal goes straight into something taking Iterable[object].
+            Name it first so the element type comes from the values:
+            flags = [False, True]
+            print(any(flags))
+  
+  '''
+# ---
 # name: test_error_message[raise_from.py]
   '''
   raise_from.py:5:9: error: chaining exceptions with `from` is not supported

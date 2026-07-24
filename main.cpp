@@ -13,37 +13,16 @@
 #include "print.h"
 #include "scalars.h"
 #include "mathops.h"
+#include "builtins.h"
 using namespace py;
 _int num() {
     return 0LL;
 }
 
 int main() {
-    _int step;
-    {
-        bool __thrown = false;
-        try {
-            to_int(str("no"));
-        } catch (PyException &e) {
-            __thrown = true;
-            e.raise();
-        }
-        if (!__thrown) {
-            print(str("yes"));
-        }
-    }
-    {
-        bool __thrown = false;
-        try {
-            to_int(str("no"));
-        } catch (PyException &e) {
-            __thrown = true;
-            e.raise();
-        }
-        if (!__thrown) {
-            print(str("yes"));
-        }
-    }
-    step = 2LL;
+    ptr<list<_int>> l;
+    ptr<list<_int>> a;
+    l = ptr(new list<_int>({1LL, 2LL, 3LL, 4LL}));
+    a = ptr(new list<_int>(map([](auto x) { return (2LL * x); }, l)));
     return 0LL;
 }

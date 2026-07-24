@@ -58,6 +58,7 @@ includes = [
     "print.h",
     "scalars.h",
     "mathops.h",
+    "builtins.h",
 ]
 
 
