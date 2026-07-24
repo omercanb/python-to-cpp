@@ -84,6 +84,7 @@ EXCEPTION_TYPES = {
     "builtins.KeyError": "KeyError",
     "builtins.ValueError": "ValueError",
     "builtins.TypeError": "TypeError",
+    "builtins.FileNotFoundError": "FileNotFoundError",
 }
 
 

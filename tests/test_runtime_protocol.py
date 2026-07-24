@@ -26,6 +26,7 @@ NOT_PRINTABLE = {
     "comparable": "a type trait",
     "slice": "only ever built inline for x[a:b], never bound to a name",
     "dict_iterator": "iteration state, never reachable from Python",
+    "file_iterator": "iteration state, never reachable from Python",
     "list_iterator": "iteration state, never reachable from Python",
     "set_iterator": "iteration state, never reachable from Python",
     "str_iterator": "iteration state, never reachable from Python",

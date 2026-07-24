@@ -39,5 +39,9 @@ struct TypeError : PyException {
     using PyException::PyException;
     void raise() const override { throw *this; }
 };
+struct FileNotFoundError : PyException {
+    using PyException::PyException;
+    void raise() const override { throw *this; }
+};
 
 } // namespace py

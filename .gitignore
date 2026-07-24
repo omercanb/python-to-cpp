@@ -2,3 +2,4 @@
 cpp/.pch.h
 cpp/.pch.h.pch
 .mypy_cache/
+tests/test_files/sample_out.txt

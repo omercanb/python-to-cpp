@@ -107,6 +107,10 @@ def cpp_type_name(t: Type) -> str:
         case AnyType():
             return "auto"
 
+        # open() hands back a TextIOWrapper, which the runtime calls `file`.
+        case Instance(type=type_info) if type_info.fullname == "_io.TextIOWrapper":
+            return "file"
+
         # `object` is what mypy settles on when a literal's elements disagree,
         # or when it is passed straight to something taking Iterable[object].
         # Nothing in C++ spells it, so it has to be caught rather than emitted.

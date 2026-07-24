@@ -55,6 +55,7 @@ includes = [
     "strops.h",
     "dict.h",
     "set.h",
+    "file.h",
     "print.h",
     "scalars.h",
     "mathops.h",

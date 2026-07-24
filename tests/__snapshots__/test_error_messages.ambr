@@ -193,7 +193,7 @@
     4 |     except LookupError:
       |            ^^^^^^^^^^^
   
-    help: use one of: BaseException, Exception, IndexError, KeyError, TypeError, ValueError
+    help: use one of: BaseException, Exception, FileNotFoundError, IndexError, KeyError, TypeError, ValueError
             a base class like LookupError has to be spelled as the concrete classes it covers
   
   '''
