@@ -9,6 +9,7 @@
 
 #include "exceptions.h"
 #include "types.h"
+#include <type_traits>
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -33,6 +34,10 @@ class str {
     str(std::string &&s) : data_(std::move(s)) {}
 
     const std::string &raw() const noexcept { return data_; }
+
+    str __str__() const { return *this; }
+    // Containers render elements with repr(), so they show 'a' rather than a.
+    str __repr__() const { return str("'" + data_ + "'"); }
 
     size_type __len__() const noexcept {
         return static_cast<size_type>(data_.size());
@@ -324,14 +329,39 @@ inline str to_str(_float x) {
 }
 
 inline str to_str(bool x) { return str(x ? "True" : "False"); }
-inline str to_str(const str &s) { return s; }
 inline str to_str(const char *s) { return str(s); }
 inline str to_str(const std::string &s) { return str(s); }
 
+inline str PyException::__str__() const { return str(what()); }
+
+// Everything that is not one of the primitives above is a class of ours, and
+// renders itself: to_str() is the free spelling of __str__().
+template <class T, class = void> struct has_str : std::false_type {};
+template <class T>
+struct has_str<T, std::void_t<decltype(std::declval<const T &>().__str__())>>
+    : std::true_type {};
+
+template <class T, class = void> struct has_repr : std::false_type {};
+template <class T>
+struct has_repr<T, std::void_t<decltype(std::declval<const T &>().__repr__())>>
+    : std::true_type {};
+
+template <class T, class = std::enable_if_t<has_str<T>::value>>
+str to_str(const T &x) {
+    return x.__str__();
+}
+
 // repr() - like to_str(), but quotes strings. Containers render their
-// elements with repr(), so Python shows {'a': 1} not {a: 1}.
-inline str repr(const str &s) { return str("'" + s.raw() + "'"); }
-inline str repr(const char *s) { return repr(str(s)); }
-template <typename T> str repr(const T &x) { return to_str(x); }
+// elements with repr(), so Python shows {'a': 1} not {a: 1}. Only a class
+// that has to differ from its __str__ needs its own __repr__.
+inline str repr(const char *s) { return str("'" + std::string(s) + "'"); }
+
+template <typename T> str repr(const T &x) {
+    if constexpr (has_repr<T>::value) {
+        return x.__repr__();
+    } else {
+        return to_str(x);
+    }
+}
 
 } // namespace py

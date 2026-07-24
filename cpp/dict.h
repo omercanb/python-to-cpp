@@ -173,6 +173,18 @@ template <typename K, typename V> class dict {
         return data_;
     }
 
+    str __str__() const {
+        str result = "{";
+        bool first = true;
+        for (const auto &entry : data_) {
+            if (!first)
+                result += ", ";
+            result += repr(entry.first) + ": " + repr(entry.second);
+            first = false;
+        }
+        return result + "}";
+    }
+
   private:
     std::unordered_map<K, V, hasher<K>> data_;
 };
@@ -200,16 +212,4 @@ ptr<list<K>> _sorted_kwargs(bool reverse, const ptr<dict<K, V>> &d) {
 }
 
 // str() - {k: v, ...} with elements rendered via repr(), like Python
-template <typename K, typename V> str to_str(const dict<K, V> &d) {
-    str result = "{";
-    bool first = true;
-    for (const auto &entry : d.raw()) {
-        if (!first)
-            result += ", ";
-        result += repr(entry.first) + ": " + repr(entry.second);
-        first = false;
-    }
-    return result + "}";
-}
-
 } // namespace py

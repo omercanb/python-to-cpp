@@ -69,6 +69,9 @@ template <typename T> class ptr {
     template <typename I> decltype(auto) operator[](const I &i) {
         return (*object)[i];
     }
+    // A ptr prints as whatever it points at, like a Python reference.
+    str __str__() const { return to_str(*object); }
+
     template <typename I> decltype(auto) operator[](const I &i) const {
         return (*object)[i];
     }
@@ -93,10 +96,6 @@ template <typename T> class owning_iter {
 
 template <typename T> auto iter(ptr<T> p) { return owning_iter<T>(p); }
 
-// to_str() - dereference and convert
-template <typename T> str to_str(const ptr<T> &p) {
-    return to_str(*p.object);
-}
 
 // to_bool() - dereference and forward truthiness
 template <typename T> inline bool to_bool(const ptr<T> &p) {

@@ -162,6 +162,20 @@ template <typename T> class set {
         return data_;
     }
 
+    str __str__() const {
+        if (__len__() == 0)
+            return str("set()");
+        str result = "{";
+        bool first = true;
+        for (const auto &v : data_) {
+            if (!first)
+                result += ", ";
+            result += repr(v);
+            first = false;
+        }
+        return result + "}";
+    }
+
   private:
     std::unordered_set<T, hasher<T>> data_;
 };
@@ -228,18 +242,4 @@ ptr<list<T>> _sorted_kwargs(bool reverse, const ptr<set<T>> &s) {
 }
 
 // str() - {1, 2, 3}; empty prints as set(), since {} is an empty dict.
-template <typename T> str to_str(const set<T> &s) {
-    if (s.__len__() == 0)
-        return str("set()");
-    str result = "{";
-    bool first = true;
-    for (const auto &v : s.raw()) {
-        if (!first)
-            result += ", ";
-        result += repr(v);
-        first = false;
-    }
-    return result + "}";
-}
-
 } // namespace py

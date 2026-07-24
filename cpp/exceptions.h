@@ -8,8 +8,13 @@
 
 namespace py {
 
+class str;
+
 struct PyException : std::runtime_error {
     using std::runtime_error::runtime_error;
+    // Python prints an exception as its message. Defined over in str.h, the
+    // first point where str is a complete type.
+    str __str__() const;
     // Takes a py::str, which cannot be named here: str.h throws these types.
     // Requiring raw() keeps this off const char* and std::string.
     template <class S, class = decltype(std::declval<const S &>().raw())>

@@ -38,6 +38,26 @@ template <typename... Ts> class tuple {
     // Regular constructor - takes arguments
     tuple(Ts... args) : data(args...) {}
 
+    str __str__() const {
+        str result = "(";
+        bool first = true;
+        std::apply(
+            [&](const Ts &...items) {
+                (([&] {
+                     if (!first)
+                         result += ", ";
+                     result += repr(items);
+                     first = false;
+                 }()),
+                 ...);
+            },
+            data);
+        // Python writes a one element tuple as (x,), to tell it from (x)
+        if constexpr (sizeof...(Ts) == 1)
+            result += ",";
+        return result + ")";
+    }
+
     // Get element by compile-time index
     template <size_t I> auto get() {
         return std::get<I>(data);
@@ -136,14 +156,12 @@ template <typename T1, typename T2> class tuple<T1, T2> {
         void next() { i++; }
     };
 
+    str __str__() const {
+        return str("(") + repr(first()) + ", " + repr(second()) + ")";
+    }
+
     tuple_iterator iter() { return tuple_iterator(*this); }
 };
-
-// to_str() for tuple - (a, b)
-template <typename T1, typename T2>
-str to_str(const tuple<T1, T2> &t) {
-    return str("(") + repr(t.first()) + ", " + repr(t.second()) + ")";
-}
 
 // ---- equality / hashing -----------------------------------------------------
 // Needed both for `t1 == t2` and for tuples used as dict keys / set elements.

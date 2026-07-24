@@ -26,6 +26,8 @@ class range {
         this->step = step;
     }
     range_iterator iter();
+    // range sits in the global namespace, unlike the rest of the runtime.
+    py::str __str__() const;
 };
 
 class range_iterator {
@@ -61,11 +63,11 @@ std::ostream &operator<<(std::ostream &os, const range &r) {
     return os;
 };
 
-// str() - convert range to string representation
-inline py::str to_str(const range &r) {
-    std::string result = "range(" + std::to_string(r.start) + ", " + std::to_string(r.stop);
-    if (r.step != 1) {
-        result += ", " + std::to_string(r.step);
+inline py::str range::__str__() const {
+    std::string result =
+        "range(" + std::to_string(start) + ", " + std::to_string(stop);
+    if (step != 1) {
+        result += ", " + std::to_string(step);
     }
     result += ")";
     return py::str(result);

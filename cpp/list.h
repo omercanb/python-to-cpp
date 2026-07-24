@@ -238,6 +238,16 @@ class list {
     };
     list_iterator iter() { return list_iterator(*this); }
 
+    str __str__() const {
+        str result = "[";
+        for (size_type i = 0; i < __len__(); ++i) {
+            if (i > 0)
+                result += ", ";
+            result += repr((*this)[i]);
+        }
+        return result + "]";
+    }
+
   private:
     std::vector<T> data_;
 
@@ -281,19 +291,6 @@ ptr<list<T>> _sorted_kwargs(bool reverse, const ptr<list<T>> &l) {
     auto out = l->copy();
     out->sort(reverse);
     return out;
-}
-
-// to_str() - [1, 2, 3]
-template <typename T>
-str to_str(const list<T> &l) {
-    str result = "[";
-    for (size_t i = 0; i < l.__len__(); ++i) {
-        if (i > 0)
-            result += ", ";
-        result += repr(l[i]);
-    }
-    result += "]";
-    return result;
 }
 
 // Deduction guide
