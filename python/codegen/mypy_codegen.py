@@ -14,8 +14,10 @@ from mypy.nodes import (
     IfStmt,
     IndexExpr,
     MypyFile,
+    RaiseStmt,
     ReturnStmt,
     SymbolTable,
+    TryStmt,
     Var,
     WhileStmt,
 )
@@ -30,11 +32,14 @@ from python.codegen.translation_utils import (
     is_truthy,
     translate_func_signature,
 )
+from python.codegen.exceptions import translate_raise_stmt, translate_try_stmt
 from python.codegen.typegen import cpp_type, is_pointer, ptr_type
 from python.visitor import Traverser
 
 includes = [
     "types.h",
+    "exceptions.h",
+    "finally.h",
     "truthy.h",
     "iter.h",
     "tuple.h",
@@ -188,6 +193,12 @@ class StatementCodegen(Traverser):
         self.emit(f"while ({self.get_condition(o.expr)}) {{")
         self.visit_block(o.body)
         self.emit("}")
+
+    def visit_try_stmt(self, o: TryStmt):
+        translate_try_stmt(self, o)
+
+    def visit_raise_stmt(self, o: RaiseStmt):
+        translate_raise_stmt(self, o)
 
     def visit_expression_stmt(self, o: ExpressionStmt):
         self.emit(f"{self.get_expr(o.expr)};")

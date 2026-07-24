@@ -3,8 +3,17 @@ def num() -> int:
 
 
 def main() -> int:
-    a = num()
-    b = a or ""
-    if b:
-        print(b)
+    try:
+        int("no")
+    except Exception as e:
+        print(e)
+    else:
+        print("yes")
+    try:
+        int("no")
+    except Exception as e:
+        print(e)
+    else:
+        print("yes")
+    step = 2
     return 0

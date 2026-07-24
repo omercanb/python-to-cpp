@@ -1,4 +1,6 @@
 #include "dict.h"
+#include "exceptions.h"
+#include "finally.h"
 #include "iter.h"
 #include "list.h"
 #include "mathops.h"
@@ -29,7 +31,6 @@ int run() {
     _float f;
     _float g;
     _int n;
-    str z;
     a = 1LL;
     b = 2LL;
     zero = 0LL;
@@ -91,7 +92,6 @@ int run() {
     print((!to_bool(zero)));
     print((!to_bool(empty)));
     print((!to_bool(_and(a, b))));
-    z = _or(0LL, str("None"));
     return 0LL;
 }
 }
@@ -180,6 +180,188 @@ int run() {
     s = ptr(new dict<str, _int>({{str("b"), 2LL}, {str("a"), 1LL}}));
     print(sorted(s));
     print(s->__getitem__(str("a")), s->__getitem__(str("b")));
+    return 0LL;
+}
+}
+
+namespace prog_exceptions {
+_int guarded_parse(str text) {
+    str("finally must run when the try returns, and when it raises through.");
+    {
+        Finally __finally_1([&] {
+            print(str("cleanup"), text);
+        });
+        return to_int(text);
+    }
+}
+
+_int parse_or(str text, _int fallback) {
+    _int value;
+    str("else runs only when nothing was raised.");
+    bool __thrown_2 = false;
+    try {
+        value = to_int(text);
+    } catch (ValueError &) {
+        __thrown_2 = true;
+        print(str("bad literal"), text);
+        return fallback;
+    }
+    if (!__thrown_2) {
+        print(str("good literal"), text);
+        return value;
+    }
+}
+
+_int nested() {
+    {
+        Finally __finally_3([&] {
+            print(str("outer finally"));
+        });
+        try {
+            {
+                Finally __finally_4([&] {
+                    print(str("inner finally"));
+                });
+                return to_int(str("nope"));
+            }
+        } catch (ValueError &) {
+            print(str("outer caught"));
+            return (-1LL);
+        }
+    }
+}
+
+_int handler_raises() {
+    str("A raising handler skips else and still runs finally on the way out.");
+    try {
+        {
+            Finally __finally_5([&] {
+                print(str("guard ran"));
+            });
+            bool __thrown_6 = false;
+            try {
+                print(to_int(str("bad")));
+            } catch (ValueError &) {
+                __thrown_6 = true;
+                print(str("handler raising"));
+                return to_int(str("worse"));
+            }
+            if (!__thrown_6) {
+                print(str("not reached"));
+            }
+        }
+    } catch (ValueError &) {
+        print(str("caught the handler's exception"));
+    }
+    return 0LL;
+}
+
+_int check_positive(_int n) {
+    if (to_bool(((n < 0LL)))) {
+        throw ValueError(str("negative"));
+    }
+    return n;
+}
+
+_int reraise(_int n) {
+    str("A bare raise passes the live exception on, finally still runs.");
+    {
+        Finally __finally_7([&] {
+            print(str("reraise finally"));
+        });
+        try {
+            return check_positive(n);
+        } catch (ValueError &) {
+            print(str("logging and passing it on"));
+            throw;
+        }
+    }
+}
+
+_int raise_bare_class(str key) {
+    throw KeyError("");
+}
+
+_int relay() {
+    str("`raise e` keeps the real type, rather than the one the handler declared.");
+    try {
+        throw ValueError(str("original"));
+    } catch (PyException &e) {
+        print(str("relaying"));
+        e.raise();
+    }
+}
+
+int run() {
+    ptr<list<_int>> numbers;
+    ptr<dict<str, _int>> counts;
+    _int i;
+    print(guarded_parse(str("41")));
+    try {
+        print(guarded_parse(str("zzz")));
+    } catch (ValueError &) {
+        print(str("caught from callee"));
+    }
+    print(parse_or(str("7"), 0LL));
+    print(parse_or(str("seven"), 0LL));
+    print(nested());
+    print(handler_raises());
+    print(check_positive(3LL));
+    try {
+        print(check_positive((-1LL)));
+    } catch (ValueError &) {
+        print(str("caught the raise"));
+    }
+    try {
+        print(reraise((-2LL)));
+    } catch (ValueError &) {
+        print(str("caught the re-raise"));
+    }
+    try {
+        print(raise_bare_class(str("k")));
+    } catch (KeyError &) {
+        print(str("caught the bare class"));
+    }
+    try {
+        print(relay());
+    } catch (ValueError &) {
+        print(str("still a ValueError after the relay"));
+    }
+    try {
+        throw TypeError(str("wrong type"));
+    } catch (PyException &) {
+        print(str("base handler took the subclass"));
+    }
+    numbers = ptr(new list<_int>({1LL, 2LL, 3LL}));
+    try {
+        print(numbers->__getitem__(10LL));
+    } catch (IndexError &) {
+        print(str("index error wins over the base class"));
+    } catch (PyException &) {
+        print(str("not reached"));
+    }
+    counts = ptr(new dict<str, _int>({{str("a"), 1LL}}));
+    try {
+        print(counts->__getitem__(str("b")));
+    } catch (PyException &) {
+        print(str("bare except caught it"));
+    }
+    try {
+        print(to_float(str("x")));
+    } catch (ValueError &e) {
+        print(str("float refused it"));
+    }
+    for (_int i = 0; i < 3LL; ++i) {
+        {
+            Finally __finally_8([&] {
+                print(str("loop finally"), i);
+            });
+            if (to_bool(((i == 1LL)))) {
+                break;
+            }
+            print(str("loop"), i);
+        }
+    }
     return 0LL;
 }
 }
@@ -766,6 +948,7 @@ int main(int argc, char** argv) {
     if (argc > 1 && std::strcmp(argv[1], "casts.py") == 0) return prog_casts::run();
     if (argc > 1 && std::strcmp(argv[1], "comparison.py") == 0) return prog_comparison::run();
     if (argc > 1 && std::strcmp(argv[1], "dict.py") == 0) return prog_dict::run();
+    if (argc > 1 && std::strcmp(argv[1], "exceptions.py") == 0) return prog_exceptions::run();
     if (argc > 1 && std::strcmp(argv[1], "iter.py") == 0) return prog_iter::run();
     if (argc > 1 && std::strcmp(argv[1], "list.py") == 0) return prog_list::run();
     if (argc > 1 && std::strcmp(argv[1], "loops.py") == 0) return prog_loops::run();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "exceptions.h"
 #include "str.h"
 #include "types.h"
 #include <algorithm>
@@ -17,10 +18,15 @@ inline _int to_int(const py::str &s, _int base = 10) {
     t.erase(0, t.find_first_not_of(" \t\n"));
     t.erase(t.find_last_not_of(" \t\n") + 1);
     size_t pos;
-    _int result =
-        std::stoll(t, &pos, base); // throws std::invalid_argument on failure
+    _int result;
+    try {
+        result = std::stoll(t, &pos, base);
+    } catch (const std::logic_error &) {
+        // invalid_argument when t holds no digits, out_of_range past _int
+        throw py::ValueError("invalid literal for int(): " + s.raw());
+    }
     if (pos != t.size())
-        throw std::invalid_argument("invalid literal for int(): " + s.raw());
+        throw py::ValueError("invalid literal for int(): " + s.raw());
     return result;
 }
 
@@ -43,8 +49,13 @@ inline _float to_float(const py::str &s) {
         return NAN;
 
     size_t pos;
-    _float result = std::stod(t, &pos); // handles scientific notation
+    _float result;
+    try {
+        result = std::stod(t, &pos); // handles scientific notation
+    } catch (const std::logic_error &) {
+        throw py::ValueError("could not convert string to float: " + s.raw());
+    }
     if (pos != t.size())
-        throw std::invalid_argument("could not convert string to float: " + s.raw());
+        throw py::ValueError("could not convert string to float: " + s.raw());
     return result;
 }

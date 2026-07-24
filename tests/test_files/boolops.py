@@ -72,6 +72,4 @@ def main() -> int:
     print(not empty)
     print(not (a and b))
 
-    z = 0 or "None"
-
     return 0

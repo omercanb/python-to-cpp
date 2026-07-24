@@ -40,6 +40,7 @@ from mypy.nodes import (
     SetExpr,
     SliceExpr,
     StarExpr,
+    TryStmt,
     TupleExpr,
     UnaryExpr,
     WhileStmt,
@@ -142,6 +143,23 @@ class Traverser(Visitor[None]):
         self.visit(o.body)
         if o.else_body is not None:
             self.visit(o.else_body)
+
+    def visit_try_stmt(self, o: TryStmt) -> None:
+        self.visit(o.body)
+        # types and vars are the `except <type> as <var>` parts, one per
+        # handler, either of which may be absent.
+        for type_expression in o.types:
+            if type_expression is not None:
+                self.visit(type_expression)
+        for variable in o.vars:
+            if variable is not None:
+                self.visit(variable)
+        for handler in o.handlers:
+            self.visit(handler)
+        if o.else_body is not None:
+            self.visit(o.else_body)
+        if o.finally_body is not None:
+            self.visit(o.finally_body)
 
     def visit_assert_stmt(self, o: AssertStmt) -> None:
         self.visit(o.expr)

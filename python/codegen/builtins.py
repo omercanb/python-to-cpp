@@ -69,5 +69,17 @@ NON_POINTER_TYPES = {
 
 POINTER_TYPES = {"list", "dict", "set"}
 
+# Exceptions catchable by an except clause, as defined in cpp/exceptions.h.
+# That hierarchy is flat, so an intermediate base like LookupError has no
+# equivalent: PyException would over-catch. Rejected rather than listed.
+EXCEPTION_TYPES = {
+    "builtins.BaseException": "PyException",
+    "builtins.Exception": "PyException",
+    "builtins.IndexError": "IndexError",
+    "builtins.KeyError": "KeyError",
+    "builtins.ValueError": "ValueError",
+    "builtins.TypeError": "TypeError",
+}
+
 
 BOOL_OP_MACROS = {"and": "_and", "or": "_or"}
