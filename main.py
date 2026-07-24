@@ -11,7 +11,9 @@ from mypy.nodes import AssignmentStmt, ClassDef, Expression, FuncDef, MypyFile, 
 from mypy.options import Options
 from mypy.types import CallableType, Type
 
+from python.analysis.validate import validate
 from python.codegen.mypy_codegen import StatementCodegen
+from python.errors import UnsupportedProgram, render
 from python.formatting import *
 from python.utils import build_and_run
 
@@ -25,6 +27,8 @@ _STRICT_ASSIGNMENTS = define_options()[2]
 class AnalysisResult:
     tree: MypyFile
     types: dict[Expression, Type]
+    source: str
+    path: str | None
 
 
 def mypy_options():
@@ -52,7 +56,7 @@ def _analyse(path: str | None, source: str) -> AnalysisResult:
     if result.errors:
         print("\n".join(result.errors))
         sys.exit(1)
-    return AnalysisResult(result.files["main"], result.types)
+    return AnalysisResult(result.files["main"], result.types, source, path)
 
 
 def mypy_pipeline_source(source: str):
@@ -63,26 +67,31 @@ def mypy_pipeline(path: str):
     return _analyse(path, Path(path).read_text())
 
 
+def _generate(result: AnalysisResult) -> str:
+    """Validate, then translate. Codegen only ever sees a translatable tree."""
+    diagnostics = validate(result.tree, result.types)
+    if diagnostics:
+        raise UnsupportedProgram(diagnostics)
+    return StatementCodegen(result.tree, result.types).generate()
+
+
 def translate(path: str):
-    result = mypy_pipeline(path)
-    codegen = StatementCodegen(result.tree, result.types)
-    output = codegen.generate()
-    return output
+    return _generate(mypy_pipeline(path))
 
 
 def translate_source(source: str):
-    result = mypy_pipeline_source(source)
-    codegen = StatementCodegen(result.tree, result.types)
-    output = codegen.generate()
-    return output
+    return _generate(mypy_pipeline_source(source))
 
 
 def full_pipeline():
     file = "input.py"
     result = mypy_pipeline(file)
     print(result.tree)
-    codegen = StatementCodegen(result.tree, result.types)
-    output = codegen.generate()
+    try:
+        output = _generate(result)
+    except UnsupportedProgram as unsupported:
+        print(render(unsupported.diagnostics, result.source, file))
+        sys.exit(1)
     print(output)
     build_and_run(output)
 

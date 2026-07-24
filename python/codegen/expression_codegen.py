@@ -99,10 +99,7 @@ class ExpressionCodegen(Visitor[str]):
         if o.op in ("and", "or"):
             result = get_proper_type(self.types[o])
             if isinstance(result, UnionType):
-                assert len({cpp_type_name(i) for i in result.items}) == 1, (
-                    f"`{o.op}` on unrelated types has no single C++ type: "
-                    f"{self.types[o]}. It is only supported in a condition."
-                )
+                assert len({cpp_type_name(i) for i in result.items}) == 1
             return translate_bool_op(o.op, self.visit(o.left), self.visit(o.right))
         left = self.visit(o.left)
         right = self.visit(o.right)
@@ -151,7 +148,7 @@ class ExpressionCodegen(Visitor[str]):
     def visit_dict_expr(self, o: DictExpr) -> str:
         pairs = []
         for key, value in o.items:
-            assert key is not None, "dict unpacking (**) is not supported"
+            assert key is not None
             pairs.append(f"{{{self.visit(key)}, {self.visit(value)}}}")
         constructor = f"{{{', '.join(pairs)}}}" if pairs else ""
         return translate_constructor(self.types[o], constructor)

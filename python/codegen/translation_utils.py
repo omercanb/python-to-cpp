@@ -170,9 +170,7 @@ def translate_constructor_special_cases(callee: Expression) -> Optional[str]:
 def translate_tuple_access(tuple_type: TupleType, expr: IndexExpr, base: str):
     # A tuple's elements have different types, so the index has to be a
     # compile-time one: t[0] becomes get<0>(), and only literals work.
-    assert isinstance(
-        expr.index, IntExpr
-    ), "a tuple can only be indexed by an integer literal"
+    assert isinstance(expr.index, IntExpr)
     i = expr.index.value
     if i < 0:
         i += len(tuple_type.items)

@@ -1,0 +1,161 @@
+# serializer version: 1
+# name: test_error_message[class_def.py]
+  '''
+  class_def.py:1:1: error: classes are not supported
+  
+    1 | class Point:
+      | ^^^^^^^^^^^^
+  
+    help: use a function returning a tuple or a dict:
+            def make_point(x: int, y: int) -> tuple[int, int]:
+                return (x, y)
+  
+  '''
+# ---
+# name: test_error_message[dict_unpacking.py]
+  '''
+  dict_unpacking.py:3:14: error: `**` unpacking in a dict literal is not supported
+  
+    3 |     merged = {**base, "b": 2}
+      |              ^^^^^^^^^^^^^^^^
+  
+    help: copy the entries across in a loop:
+            merged = {"a": 1}
+            for key in other:
+                merged[key] = other[key]
+  
+  '''
+# ---
+# name: test_error_message[except_star.py]
+  '''
+  except_star.py:4:13: error: `except*` groups are not supported
+  
+    4 |     except* ValueError as error:
+      |             ^^^^^^^^^^
+  
+    help: use a plain except clause:
+            except ValueError as error:
+  
+  '''
+# ---
+# name: test_error_message[except_tuple.py]
+  '''
+  except_tuple.py:4:12: error: an except clause takes a single exception class
+  
+    4 |     except (ValueError, KeyError):
+      |            ^^^^^^^^^^^^^^^^^^^^^^
+  
+    help: write one clause per class:
+            except ValueError:
+                ...
+            except KeyError:
+                ...
+  
+  '''
+# ---
+# name: test_error_message[exception_arguments.py]
+  '''
+  exception_arguments.py:2:11: error: an exception takes a single message
+  
+    2 |     raise ValueError("first", "second")
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  
+    help: join the parts into one string:
+            raise ValueError("a: " + b)
+  
+  '''
+# ---
+# name: test_error_message[mixed_bool_op.py]
+  '''
+  mixed_bool_op.py:6:13: error: `or` on unrelated types has no single C++ type
+  
+    6 |     label = count() or "none"
+      |             ^^^^^^^^^^^^^^^^^
+  
+    help: `or` returns one of its operands, so both sides need the same type.
+            Use it directly in a condition instead:
+            if count or fallback:
+  
+  '''
+# ---
+# name: test_error_message[raise_from.py]
+  '''
+  raise_from.py:5:9: error: chaining exceptions with `from` is not supported
+  
+    5 |         raise KeyError("missing") from error
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  
+    help: raise the new exception on its own:
+            raise KeyError("missing")
+  
+  '''
+# ---
+# name: test_error_message[return_in_finally.py]
+  '''
+  return_in_finally.py:5:9: error: `return` inside `finally` is not supported
+  
+    5 |         return 2
+      |         ^^^^^^^^
+  
+    help: return after the try statement instead:
+            try:
+                ...
+            finally:
+                cleanup()
+            return result
+  
+  '''
+# ---
+# name: test_error_message[starred_assignment.py]
+  '''
+  starred_assignment.py:3:12: error: a starred assignment target is not supported
+  
+    3 |     first, *rest = values
+      |            ^^^^^
+  
+    help: take the parts by slicing instead:
+            first = values[0]
+            rest = values[1:]
+  
+  '''
+# ---
+# name: test_error_message[tuple_index.py]
+  '''
+  tuple_index.py:4:16: error: a tuple can only be indexed by an integer literal
+  
+    4 |     print(pair[i])
+      |                ^
+  
+    help: a tuple holds a different type at each position, so the position has to be known at compile time.
+            Index it with a literal:
+            pair[0]
+            or hold the values in a list, where every element has one type:
+            pair = [1, 2]
+            print(pair[i])
+  
+  '''
+# ---
+# name: test_error_message[unsupported_exception.py]
+  '''
+  unsupported_exception.py:4:12: error: `LookupError` has no C++ equivalent
+  
+    4 |     except LookupError:
+      |            ^^^^^^^^^^^
+  
+    help: use one of: BaseException, Exception, IndexError, KeyError, TypeError, ValueError
+            a base class like LookupError has to be spelled as the concrete classes it covers
+  
+  '''
+# ---
+# name: test_error_message[unsupported_type.py]
+  '''
+  unsupported_type.py:6:5: error: no C++ equivalent for the type `def (a: int, b: int) -> int`
+  
+    6 |     operation = add
+      |     ^^^^^^^^^
+  
+    help: a function cannot be stored in a variable, call it where it is needed instead:
+            print(add(1, 2))
+  
+  '''
+# ---

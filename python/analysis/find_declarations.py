@@ -49,7 +49,7 @@ class _DeclarationCollector(Traverser):
             # d[k] = ... / obj.attr = ... write into something that exists.
             pass
         else:
-            assert False, "Other assigns not yet supported"
+            assert False, "rejected by validation"
 
     def check_add_declaration(self, name: NameExpr):
         """Check if name is a declaration and add it to declarations"""

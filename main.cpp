@@ -20,25 +20,29 @@ _int num() {
 
 int main() {
     _int step;
-    bool __thrown_1 = false;
-    try {
-        to_int(str("no"));
-    } catch (PyException &e) {
-        __thrown_1 = true;
-        print(e);
+    {
+        bool __thrown = false;
+        try {
+            to_int(str("no"));
+        } catch (PyException &e) {
+            __thrown = true;
+            e.raise();
+        }
+        if (!__thrown) {
+            print(str("yes"));
+        }
     }
-    if (!__thrown_1) {
-        print(str("yes"));
-    }
-    bool __thrown_2 = false;
-    try {
-        to_int(str("no"));
-    } catch (PyException &e) {
-        __thrown_2 = true;
-        print(e);
-    }
-    if (!__thrown_2) {
-        print(str("yes"));
+    {
+        bool __thrown = false;
+        try {
+            to_int(str("no"));
+        } catch (PyException &e) {
+            __thrown = true;
+            e.raise();
+        }
+        if (!__thrown) {
+            print(str("yes"));
+        }
     }
     step = 2LL;
     return 0LL;

@@ -188,7 +188,7 @@ namespace prog_exceptions {
 _int guarded_parse(str text) {
     str("finally must run when the try returns, and when it raises through.");
     {
-        Finally __finally_1([&] {
+        Finally __finally([&] {
             print(str("cleanup"), text);
         });
         return to_int(text);
@@ -198,28 +198,30 @@ _int guarded_parse(str text) {
 _int parse_or(str text, _int fallback) {
     _int value;
     str("else runs only when nothing was raised.");
-    bool __thrown_2 = false;
-    try {
-        value = to_int(text);
-    } catch (ValueError &) {
-        __thrown_2 = true;
-        print(str("bad literal"), text);
-        return fallback;
-    }
-    if (!__thrown_2) {
-        print(str("good literal"), text);
-        return value;
+    {
+        bool __thrown = false;
+        try {
+            value = to_int(text);
+        } catch (ValueError &) {
+            __thrown = true;
+            print(str("bad literal"), text);
+            return fallback;
+        }
+        if (!__thrown) {
+            print(str("good literal"), text);
+            return value;
+        }
     }
 }
 
 _int nested() {
     {
-        Finally __finally_3([&] {
+        Finally __finally([&] {
             print(str("outer finally"));
         });
         try {
             {
-                Finally __finally_4([&] {
+                Finally __finally([&] {
                     print(str("inner finally"));
                 });
                 return to_int(str("nope"));
@@ -235,18 +237,18 @@ _int handler_raises() {
     str("A raising handler skips else and still runs finally on the way out.");
     try {
         {
-            Finally __finally_5([&] {
+            Finally __finally([&] {
                 print(str("guard ran"));
             });
-            bool __thrown_6 = false;
+            bool __thrown = false;
             try {
                 print(to_int(str("bad")));
             } catch (ValueError &) {
-                __thrown_6 = true;
+                __thrown = true;
                 print(str("handler raising"));
                 return to_int(str("worse"));
             }
-            if (!__thrown_6) {
+            if (!__thrown) {
                 print(str("not reached"));
             }
         }
@@ -266,7 +268,7 @@ _int check_positive(_int n) {
 _int reraise(_int n) {
     str("A bare raise passes the live exception on, finally still runs.");
     {
-        Finally __finally_7([&] {
+        Finally __finally([&] {
             print(str("reraise finally"));
         });
         try {
@@ -280,6 +282,35 @@ _int reraise(_int n) {
 
 _int raise_bare_class(str key) {
     throw KeyError("");
+}
+
+_int siblings(str first, str second) {
+    str("Two try statements in one scope must not collide over their flags.");
+    {
+        bool __thrown = false;
+        try {
+            print(to_int(first));
+        } catch (ValueError &) {
+            __thrown = true;
+            print(str("first was bad"));
+        }
+        if (!__thrown) {
+            print(str("first was fine"));
+        }
+    }
+    {
+        bool __thrown = false;
+        try {
+            print(to_int(second));
+        } catch (ValueError &) {
+            __thrown = true;
+            print(str("second was bad"));
+        }
+        if (!__thrown) {
+            print(str("second was fine"));
+        }
+    }
+    return 0LL;
 }
 
 _int relay() {
@@ -322,6 +353,7 @@ int run() {
     } catch (KeyError &) {
         print(str("caught the bare class"));
     }
+    print(siblings(str("8"), str("eight")));
     try {
         print(relay());
     } catch (ValueError &) {
@@ -353,7 +385,7 @@ int run() {
     }
     for (_int i = 0; i < 3LL; ++i) {
         {
-            Finally __finally_8([&] {
+            Finally __finally([&] {
                 print(str("loop finally"), i);
             });
             if (to_bool(((i == 1LL)))) {

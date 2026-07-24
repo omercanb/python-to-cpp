@@ -12,6 +12,18 @@ from mypy.types import (
 from python.codegen.builtins import NON_POINTER_TYPES, POINTER_TYPES
 
 
+class UnsupportedType(Exception):
+    """A mypy type with no C++ equivalent.
+
+    Raised rather than asserted so validation can catch it and report the node
+    it came from, keeping the list of convertible types in one place.
+    """
+
+    def __init__(self, t: Type):
+        self.type = t
+        super().__init__(f"no C++ equivalent for the type {t}")
+
+
 def ptr_type(t: str) -> str:
     return f"ptr<{t}>"
 
@@ -107,7 +119,7 @@ def cpp_type_name(t: Type) -> str:
 
         # Default fallback
         case _:
-            assert False, f"Conversion not implemented for type {t}"
+            raise UnsupportedType(t)
 
 
 def is_pointer(t: Type) -> bool:
@@ -140,4 +152,4 @@ def is_pointer(t: Type) -> bool:
 
         # Default fallback
         case _:
-            assert False, f"Conversion not implemented for type {t}"
+            raise UnsupportedType(t)

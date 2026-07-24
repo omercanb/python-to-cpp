@@ -148,7 +148,7 @@ class StatementCodegen(Traverser):
         self.emit("")
 
     def visit_class_def(self, o: ClassDef):
-        assert False, "Classdef not yet implemented"
+        assert False, "rejected by validation"
 
     def visit_assignment_stmt(self, o: AssignmentStmt):
         target = o.lvalues[0]

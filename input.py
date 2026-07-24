@@ -6,13 +6,13 @@ def main() -> int:
     try:
         int("no")
     except Exception as e:
-        print(e)
+        raise e
     else:
         print("yes")
     try:
         int("no")
     except Exception as e:
-        print(e)
+        raise e
     else:
         print("yes")
     step = 2
