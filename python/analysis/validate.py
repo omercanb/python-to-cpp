@@ -15,6 +15,7 @@ from mypy.nodes import (
     DictExpr,
     DictionaryComprehension,
     Expression,
+    ExpressionStmt,
     FuncDef,
     GeneratorExpr,
     IfStmt,
@@ -27,11 +28,14 @@ from mypy.nodes import (
     MypyFile,
     NameExpr,
     OpExpr,
+    PassStmt,
     RaiseStmt,
     ReturnStmt,
     SetComprehension,
     SetExpr,
     StarExpr,
+    StrExpr,
+    TempNode,
     TryStmt,
     TupleExpr,
     UnaryExpr,
@@ -123,15 +127,48 @@ class _Validator(Traverser):
             self.check_type(node, t)
 
     def visit_class_def(self, o: ClassDef) -> None:
+        if o.base_type_exprs:
+            self.report(
+                o,
+                "class-inheritance",
+                "a base class is not supported",
+                "give the class its own copy of what it needs:\n"
+                "class Square:\n"
+                "    def __init__(self, side: int) -> None:\n"
+                "        self.side = side",
+            )
+        for statement in o.defs.body:
+            self.check_class_member(statement)
+        super().visit_class_def(o)
+
+    def check_class_member(self, statement) -> None:
+        """A class body holds annotations and methods, and nothing else."""
+        if isinstance(statement, (FuncDef, PassStmt)):
+            return
+        # A docstring is an expression statement; it is simply dropped.
+        if isinstance(statement, ExpressionStmt) and isinstance(
+            statement.expr, StrExpr
+        ):
+            return
+        if isinstance(statement, AssignmentStmt):
+            # `x: int` parses as an assignment whose value is a placeholder.
+            if isinstance(statement.rvalue, TempNode):
+                return
+            self.report(
+                statement,
+                "class-variable",
+                "a class level value is not supported",
+                "every attribute is per instance, so set it in __init__:\n"
+                "def __init__(self) -> None:\n"
+                "    self.kind = \"point\"",
+            )
+            return
         self.report(
-            o,
-            "class-def",
-            "classes are not supported",
-            "use a function returning a tuple or a dict:\n"
-            "def make_point(x: int, y: int) -> tuple[int, int]:\n"
-            "    return (x, y)",
+            statement,
+            "class-body",
+            "only attributes and methods are supported in a class body",
+            "move anything else outside the class",
         )
-        # Nothing inside the class can translate either, so do not recurse.
 
     def visit_func_def(self, o: FuncDef) -> None:
         signature = get_proper_type(o.type)

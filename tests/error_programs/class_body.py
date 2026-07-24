@@ -1,6 +1,7 @@
 class Point:
     x: int
-    y: int
+
+    print("building the class")
 
 
 def main() -> int:

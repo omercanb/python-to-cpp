@@ -24,6 +24,7 @@ from mypy.nodes import (
 from mypy.types import Type
 
 from python.analysis.find_declarations import get_declarations
+from python.codegen.class_def import translate_class_def
 from python.codegen.codegen_utils import pointer_to
 from python.codegen.comprehension import (
     captured_names,
@@ -99,7 +100,8 @@ class StatementCodegen(Traverser):
 
     def emit(self, code: str):
         """Emit a line of code."""
-        self.output.append(f"{self.indented()}{code}")
+        # A blank separator stays blank rather than carrying the indent.
+        self.output.append(f"{self.indented()}{code}" if code else "")
 
     def visit_block(self, o: Block):
         """Generate code for a block of statements."""
@@ -194,7 +196,7 @@ class StatementCodegen(Traverser):
         self.emit("")
 
     def visit_class_def(self, o: ClassDef):
-        assert False, "rejected by validation"
+        translate_class_def(self, o)
 
     def visit_assignment_stmt(self, o: AssignmentStmt):
         target = o.lvalues[0]

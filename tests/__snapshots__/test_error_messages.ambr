@@ -1,14 +1,39 @@
 # serializer version: 1
-# name: test_error_message[class_def.py]
+# name: test_error_message[class_body.py]
   '''
-  class_def.py:1:1: error: classes are not supported
+  class_body.py:4:5: error: only attributes and methods are supported in a class body
   
-    1 | class Point:
-      | ^^^^^^^^^^^^
+    4 |     print("building the class")
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
   
-    help: use a function returning a tuple or a dict:
-            def make_point(x: int, y: int) -> tuple[int, int]:
-                return (x, y)
+    help: move anything else outside the class
+  
+  '''
+# ---
+# name: test_error_message[class_inheritance.py]
+  '''
+  class_inheritance.py:6:1: error: a base class is not supported
+  
+    6 | class Square(Shape):
+      | ^^^^^^^^^^^^^^^^^^^^
+  
+    help: give the class its own copy of what it needs:
+            class Square:
+                def __init__(self, side: int) -> None:
+                    self.side = side
+  
+  '''
+# ---
+# name: test_error_message[class_variable.py]
+  '''
+  class_variable.py:2:5: error: a class level value is not supported
+  
+    2 |     kind: str = "point"
+      |     ^^^^^^^^^^^^^^^^^^^
+  
+    help: every attribute is per instance, so set it in __init__:
+            def __init__(self) -> None:
+                self.kind = "point"
   
   '''
 # ---

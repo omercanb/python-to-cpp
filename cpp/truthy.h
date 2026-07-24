@@ -24,39 +24,43 @@ inline bool to_bool(const std::optional<T> &x) {
     return x.has_value() && to_bool(*x);
 }
 
+// The traits detect through a mutable reference: a transpiled class writes its
+// methods without const, the way Python does, and requiring it here would make
+// every user class look like it had no __bool__ or __len__ at all.
 namespace detail {
 
 template <typename T, typename = void>
 struct has_bool_conversion : std::false_type {};
 template <typename T>
 struct has_bool_conversion<
-    T, std::void_t<decltype(static_cast<bool>(std::declval<const T &>()))>>
+    T, std::void_t<decltype(static_cast<bool>(std::declval<T &>()))>>
     : std::true_type {};
 
 template <typename T, typename = void>
 struct has_bool_method : std::false_type {};
 template <typename T>
 struct has_bool_method<
-    T, std::void_t<decltype(std::declval<const T &>().__bool__())>>
+    T, std::void_t<decltype(std::declval<T &>().__bool__())>>
     : std::true_type {};
 
 template <typename T, typename = void>
 struct has_len_method : std::false_type {};
 template <typename T>
 struct has_len_method<
-    T, std::void_t<decltype(std::declval<const T &>().__len__())>>
+    T, std::void_t<decltype(std::declval<T &>().__len__())>>
     : std::true_type {};
 
 } // namespace detail
 
 template <typename T>
 inline bool to_bool(const T &x) {
+    T &value = const_cast<T &>(x);
     if constexpr (detail::has_bool_conversion<T>::value) {
-        return static_cast<bool>(x);
+        return static_cast<bool>(value);
     } else if constexpr (detail::has_bool_method<T>::value) {
-        return x.__bool__();
+        return value.__bool__();
     } else if constexpr (detail::has_len_method<T>::value) {
-        return x.__len__() != 0;
+        return value.__len__() != 0;
     } else {
         return true;
     }

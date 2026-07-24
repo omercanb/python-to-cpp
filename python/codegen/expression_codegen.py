@@ -16,6 +16,7 @@ from mypy.nodes import (
     StrExpr,
     TupleExpr,
     UnaryExpr,
+    Var,
 )
 from mypy.types import TupleType, Type, UnionType, get_proper_type
 
@@ -68,6 +69,10 @@ class ExpressionCodegen(Visitor[str]):
             return "true"
         if o.fullname == "builtins.False":
             return "false"
+        # A method's self is C++'s this. Classes are pointer backed, so
+        # member_access already reaches through it with ->.
+        if isinstance(o.node, Var) and o.node.is_self:
+            return "this"
         return o.name
 
     def visit_member_expr(self, o: MemberExpr) -> str:

@@ -8,6 +8,7 @@
 // here and defined in strops.h, since list.h includes this header.
 
 #include "exceptions.h"
+#include "truthy.h"
 #include "types.h"
 #include <type_traits>
 #include <algorithm>
@@ -307,6 +308,14 @@ class str {
 
 inline str operator*(_int n, const str &s) { return s * n; }
 inline _int len(const str &s) { return s.__len__(); }
+
+// Anything else that defines __len__, so a user's class gets len() the same
+// way the containers do. The per container overloads are more specialised and
+// still win for those.
+template <class T, class = std::enable_if_t<detail::has_len_method<T>::value>>
+inline _int len(const T &x) {
+    return const_cast<T &>(x).__len__();
+}
 inline auto iter(const str &s) { return s.iter(); }
 inline str operator+(const char *a, const str &b) { return str(a) + b; }
 inline std::ostream &operator<<(std::ostream &os, const str &s) {
@@ -336,19 +345,25 @@ inline str PyException::__str__() const { return str(what()); }
 
 // Everything that is not one of the primitives above is a class of ours, and
 // renders itself: to_str() is the free spelling of __str__().
+//
+// The detection and the call both go through a mutable reference. A transpiled
+// class writes its methods the way Python does, without const, so requiring it
+// here would leave every user class unprintable. Python's __str__ does not
+// mutate, so casting the const away is safe; the runtime's own const __str__
+// bind to it just as well.
 template <class T, class = void> struct has_str : std::false_type {};
 template <class T>
-struct has_str<T, std::void_t<decltype(std::declval<const T &>().__str__())>>
+struct has_str<T, std::void_t<decltype(std::declval<T &>().__str__())>>
     : std::true_type {};
 
 template <class T, class = void> struct has_repr : std::false_type {};
 template <class T>
-struct has_repr<T, std::void_t<decltype(std::declval<const T &>().__repr__())>>
+struct has_repr<T, std::void_t<decltype(std::declval<T &>().__repr__())>>
     : std::true_type {};
 
 template <class T, class = std::enable_if_t<has_str<T>::value>>
 str to_str(const T &x) {
-    return x.__str__();
+    return const_cast<T &>(x).__str__();
 }
 
 // repr() - like to_str(), but quotes strings. Containers render their
@@ -358,7 +373,7 @@ inline str repr(const char *s) { return str("'" + std::string(s) + "'"); }
 
 template <typename T> str repr(const T &x) {
     if constexpr (has_repr<T>::value) {
-        return x.__repr__();
+        return const_cast<T &>(x).__repr__();
     } else {
         return to_str(x);
     }

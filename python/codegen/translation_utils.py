@@ -3,11 +3,12 @@ from typing import Optional
 from mypy.nodes import CallExpr, ComparisonExpr
 from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
-from mypy.nodes import FuncDef, IndexExpr, IntExpr, LambdaExpr, NameExpr
+from mypy.nodes import FuncDef, IndexExpr, IntExpr, LambdaExpr, NameExpr, TypeInfo
 from mypy.types import CallableType, TupleType, Type, get_proper_type
 
 from python.codegen.builtins import (
     BOOL_OP_MACROS,
+    EXCEPTION_TYPES,
     METHOD_RENAMES,
     OP_MAP,
     POINTER_TYPES,
@@ -183,7 +184,12 @@ def should_wrap_call_in_pointer(callee: Expression) -> bool:
         return False
     if callee.name in POINTER_TYPES:
         return True
-    return False
+    # A user's class is held behind ptr too, so constructing one allocates.
+    # The builtin classes are spelled by hand above and in SCALAR_CONSTRUCTORS,
+    # and str(x) has to stay to_str(x) rather than become a str constructor.
+    return isinstance(callee.node, TypeInfo) and not callee.fullname.startswith(
+        "builtins."
+    )
 
 
 def translate_constructor(t: Type, constructor: str):
