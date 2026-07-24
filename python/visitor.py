@@ -23,12 +23,15 @@ from mypy.nodes import (
     ConditionalExpr,
     DelStmt,
     DictExpr,
+    DictionaryComprehension,
     Expression,
     ForStmt,
     FuncDef,
+    GeneratorExpr,
     IfStmt,
     IndexExpr,
     LambdaExpr,
+    ListComprehension,
     ListExpr,
     MemberExpr,
     MypyFile,
@@ -37,6 +40,7 @@ from mypy.nodes import (
     OpExpr,
     RaiseStmt,
     ReturnStmt,
+    SetComprehension,
     SetExpr,
     SliceExpr,
     StarExpr,
@@ -283,3 +287,28 @@ class Traverser(Visitor[None]):
 
     def visit_cast_expr(self, o: CastExpr) -> None:
         self.visit(o.expr)
+
+    def visit_generator_expr(self, o: GeneratorExpr) -> None:
+        self.visit_comprehension_parts(o)
+        self.visit(o.left_expr)
+
+    def visit_list_comprehension(self, o: ListComprehension) -> None:
+        self.visit(o.generator)
+
+    def visit_set_comprehension(self, o: SetComprehension) -> None:
+        self.visit(o.generator)
+
+    def visit_dictionary_comprehension(self, o: DictionaryComprehension) -> None:
+        self.visit_comprehension_parts(o)
+        self.visit(o.key)
+        self.visit(o.value)
+
+    def visit_comprehension_parts(self, o) -> None:
+        """The `for index in sequence if condition` clauses every kind shares."""
+        for index in o.indices:
+            self.visit(index)
+        for sequence in o.sequences:
+            self.visit(sequence)
+        for conditions in o.condlists:
+            for condition in conditions:
+                self.visit(condition)

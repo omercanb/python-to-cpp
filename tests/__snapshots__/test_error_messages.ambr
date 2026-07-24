@@ -65,6 +65,18 @@
   
   '''
 # ---
+# name: test_error_message[generator_expression.py]
+  '''
+  generator_expression.py:3:16: error: generator expressions are not supported
+  
+    3 |     total = sum(v * 2 for v in values)
+      |                ^^^^^^^^^^^^^^^^^^^^^^^
+  
+    help: wrap it in a list, which is built in one go rather than lazily:
+            total = sum([v * 2 for v in values])
+  
+  '''
+# ---
 # name: test_error_message[mixed_bool_op.py]
   '''
   mixed_bool_op.py:6:13: error: `or` on unrelated types has no single C++ type

@@ -13,11 +13,14 @@ from mypy.nodes import (
     CallExpr,
     ClassDef,
     DictExpr,
+    DictionaryComprehension,
     Expression,
     FuncDef,
+    GeneratorExpr,
     IfStmt,
     IndexExpr,
     IntExpr,
+    ListComprehension,
     ListExpr,
     Lvalue,
     MemberExpr,
@@ -26,6 +29,7 @@ from mypy.nodes import (
     OpExpr,
     RaiseStmt,
     ReturnStmt,
+    SetComprehension,
     SetExpr,
     StarExpr,
     TryStmt,
@@ -251,6 +255,32 @@ class _Validator(Traverser):
                 break
         self.check_inferred_type(o)
         super().visit_dict_expr(o)
+
+    # A list or set comprehension holds a GeneratorExpr, so its parts are
+    # walked directly; anything that still reaches visit_generator_expr is a
+    # bare generator.
+    def visit_list_comprehension(self, o: ListComprehension) -> None:
+        self.check_inferred_type(o)
+        self.visit_comprehension_parts(o.generator)
+        self.visit(o.generator.left_expr)
+
+    def visit_set_comprehension(self, o: SetComprehension) -> None:
+        self.check_inferred_type(o)
+        self.visit_comprehension_parts(o.generator)
+        self.visit(o.generator.left_expr)
+
+    def visit_dictionary_comprehension(self, o: DictionaryComprehension) -> None:
+        self.check_inferred_type(o)
+        super().visit_dictionary_comprehension(o)
+
+    def visit_generator_expr(self, o: GeneratorExpr) -> None:
+        self.report(
+            o,
+            "generator-expression",
+            "generator expressions are not supported",
+            "wrap it in a list, which is built in one go rather than lazily:\n"
+            "total = sum([v * 2 for v in values])",
+        )
 
     def visit_list_expr(self, o: ListExpr) -> None:
         self.check_inferred_type(o)

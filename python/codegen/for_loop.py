@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Callable
 
 from mypy.nodes import CallExpr
 from mypy.nodes import Expression as MypyExpression
@@ -12,46 +13,75 @@ if TYPE_CHECKING:
     from python.codegen.mypy_codegen import StatementCodegen
 
 
+@dataclass
+class LoopHeader:
+    """A C++ for statement, plus any lines that have to open its body.
+
+    A for statement and a comprehension generator walk their iterable the same
+    way and differ only in what goes inside, so the translators below build one
+    of these instead of writing a body themselves.
+    """
+
+    line: str
+    opening: list[str] = field(default_factory=list)
+
+
 def translate_for_stmt(codegen: StatementCodegen, for_stmt: ForStmt) -> None:
     """Translate a MyPy ForStmt to C++ code."""
+    header = loop_header(codegen, for_stmt.index, for_stmt.expr)
+    write_loop(codegen, header, lambda: codegen.visit_statements(for_stmt.body.body))
+
+
+def write_loop(
+    codegen: StatementCodegen, header: LoopHeader, write_body: Callable[[], None]
+) -> None:
+    """Open a loop, let write_body fill it in, and close it."""
+    codegen.emit(f"{header.line} {{")
+    codegen.indent()
+    for line in header.opening:
+        codegen.emit(line)
+    write_body()
+    codegen.unindent()
+    codegen.emit("}")
+
+
+def loop_header(
+    codegen: StatementCodegen, index: MypyExpression, iterable: MypyExpression
+) -> LoopHeader:
+    """The C++ loop that walks `iterable`, binding each item to `index`."""
     # Match on the iterator expression type
-    if isinstance(for_stmt.expr, CallExpr) and isinstance(
-        for_stmt.expr.callee, NameExpr
-    ):
-        func_name = for_stmt.expr.callee.name
+    if isinstance(iterable, CallExpr) and isinstance(iterable.callee, NameExpr):
+        func_name = iterable.callee.name
+        args = iterable.args
 
         # for i in range(len(list))
         if (
             func_name == "range"
-            and len(for_stmt.expr.args) == 1
-            and isinstance(for_stmt.expr.args[0], CallExpr)
-            and isinstance(for_stmt.expr.args[0].callee, NameExpr)
-            and for_stmt.expr.args[0].callee.name == "len"
+            and len(args) == 1
+            and isinstance(args[0], CallExpr)
+            and isinstance(args[0].callee, NameExpr)
+            and args[0].callee.name == "len"
         ):
-            inner_iterable = for_stmt.expr.args[0].args[0]
-            translate_for_range_len(codegen, for_stmt, inner_iterable)
-            return
+            return for_range_len(codegen, index, args[0].args[0])
 
         # for i in range(...)
         if func_name == "range":
-            translate_for_range(codegen, for_stmt)
-            return
+            return for_range(codegen, index, args)
 
     # for i in iterable (generic)
-    translate_for_generic(codegen, for_stmt)
+    return for_generic(codegen, index, iterable)
 
 
-def translate_for_range_len(
-    codegen: StatementCodegen, for_stmt: ForStmt, inner_iterable: MypyExpression
-) -> None:
+def for_range_len(
+    codegen: StatementCodegen, index: MypyExpression, inner_iterable: MypyExpression
+) -> LoopHeader:
     """Translate: for i in range(len(list))"""
-    assert isinstance(for_stmt.index, NameExpr)
-    target = for_stmt.index.name
+    assert isinstance(index, NameExpr)
+    target = index.name
     inner_iter_expr = codegen.get_expr(inner_iterable)
-    for_line = (
+    return LoopHeader(
         f"for (size_t {target} = 0; {target} < len({inner_iter_expr}); ++{target})"
     )
-    write_for(codegen, for_line, for_stmt.body)
 
 
 def _extract_int_constant(expr: MypyExpression) -> int | None:
@@ -67,109 +97,81 @@ def _extract_int_constant(expr: MypyExpression) -> int | None:
     return None
 
 
-def translate_for_range(codegen: StatementCodegen, for_stmt: ForStmt) -> None:
+def for_range(
+    codegen: StatementCodegen, index: MypyExpression, args: list[MypyExpression]
+) -> LoopHeader:
     """Translate: for i in range(stop) or range(start, stop) or range(start, stop, step)"""
-    assert isinstance(for_stmt.expr, CallExpr)
-    call = for_stmt.expr
-    args = call.args
-
     if len(args) in (1, 2):
-        translate_for_range_no_step(codegen, for_stmt, args)
-        return
+        return for_range_no_step(codegen, index, args)
 
-    if len(args) == 3:
-        step = _extract_int_constant(args[2])
-        if step is not None:
-            translate_for_range_constant_step(codegen, for_stmt, args, step)
-        else:
-            translate_for_range_unknown_step(codegen, for_stmt, args)
-        return
-
-    # Fallback to generic
-    translate_for_generic(codegen, for_stmt)
+    step = _extract_int_constant(args[2])
+    if step is not None:
+        return for_range_constant_step(codegen, index, args, step)
+    return for_range_unknown_step(codegen, index, args)
 
 
-def translate_for_range_no_step(
-    codegen: StatementCodegen, for_stmt: ForStmt, args: list[MypyExpression]
-) -> None:
+def for_range_no_step(
+    codegen: StatementCodegen, index: MypyExpression, args: list[MypyExpression]
+) -> LoopHeader:
     """Translate: for i in range(stop) or range(start, stop)"""
-    assert isinstance(for_stmt.index, NameExpr)
-    target = for_stmt.index.name
+    assert isinstance(index, NameExpr)
+    target = index.name
 
     if len(args) == 1:
         stop = codegen.get_expr(args[0])
-        for_line = f"for (_int {target} = 0; {target} < {stop}; ++{target})"
-    else:  # len(args) == 2
-        start = codegen.get_expr(args[0])
-        stop = codegen.get_expr(args[1])
-        for_line = f"for (_int {target} = {start}; {target} < {stop}; ++{target})"
+        return LoopHeader(f"for (_int {target} = 0; {target} < {stop}; ++{target})")
 
-    write_for(codegen, for_line, for_stmt.body)
-
-
-def translate_for_range_constant_step(
-    codegen: StatementCodegen, for_stmt: ForStmt, args: list[MypyExpression], step: int
-) -> None:
-    """Translate: for i in range(start, stop, constant_step)"""
-    assert isinstance(for_stmt.index, NameExpr)
-    target = for_stmt.index.name
     start = codegen.get_expr(args[0])
     stop = codegen.get_expr(args[1])
-
-    if step > 0:
-        for_line = (
-            f"for (_int {target} = {start}; {target} < {stop}; {target} += {step})"
-        )
-    else:
-        for_line = (
-            f"for (_int {target} = {start}; {target} > {stop}; {target} += {step})"
-        )
-
-    write_for(codegen, for_line, for_stmt.body)
+    return LoopHeader(f"for (_int {target} = {start}; {target} < {stop}; ++{target})")
 
 
-def translate_for_range_unknown_step(
-    codegen: StatementCodegen, for_stmt: ForStmt, args: list[MypyExpression]
-) -> None:
+def for_range_constant_step(
+    codegen: StatementCodegen,
+    index: MypyExpression,
+    args: list[MypyExpression],
+    step: int,
+) -> LoopHeader:
+    """Translate: for i in range(start, stop, constant_step)"""
+    assert isinstance(index, NameExpr)
+    target = index.name
+    start = codegen.get_expr(args[0])
+    stop = codegen.get_expr(args[1])
+    comparison = "<" if step > 0 else ">"
+    return LoopHeader(
+        f"for (_int {target} = {start}; {target} {comparison} {stop}; "
+        f"{target} += {step})"
+    )
+
+
+def for_range_unknown_step(
+    codegen: StatementCodegen, index: MypyExpression, args: list[MypyExpression]
+) -> LoopHeader:
     """Translate: for i in range(start, stop, dynamic_step)"""
-    assert isinstance(for_stmt.index, NameExpr)
-    target = for_stmt.index.name
+    assert isinstance(index, NameExpr)
+    target = index.name
     start = codegen.get_expr(args[0])
     stop = codegen.get_expr(args[1])
     step = codegen.get_expr(args[2])
 
-    for_line = f"for (_int {target} = {start};; {target} += {step})"
-    first_line = f"if (({step} > 0 && {target} >= {stop}) || ({step} < 0 && {target} <= {stop})) break;"
-    write_for(codegen, for_line, for_stmt.body, first_line)
+    return LoopHeader(
+        f"for (_int {target} = {start};; {target} += {step})",
+        [
+            f"if (({step} > 0 && {target} >= {stop}) || "
+            f"({step} < 0 && {target} <= {stop})) break;"
+        ],
+    )
 
 
-def translate_for_generic(codegen: StatementCodegen, for_stmt: ForStmt) -> None:
+def for_generic(
+    codegen: StatementCodegen, index: MypyExpression, iterable: MypyExpression
+) -> LoopHeader:
     """Translate: for var in iterable (generic iterator protocol)"""
-    target = codegen.get_expr(for_stmt.index, lvalue=True)
-    iterable = codegen.get_expr(for_stmt.expr)
-    iter_var = f"__iter"
+    target = codegen.get_expr(index, lvalue=True)
+    iterable_expr = codegen.get_expr(iterable)
+    iter_var = codegen.temp_name("iter")
 
-    codegen.emit(f"for (auto {iter_var} = iter({iterable}); !{iter_var}.done();) {{")
-    codegen.indent()
-    codegen.emit(f"{target} = next({iter_var});")
-    for stmt in for_stmt.body.body:
-        codegen.visit(stmt)
-    codegen.unindent()
-    codegen.emit("}")
-
-
-def write_for(
-    codegen: StatementCodegen,
-    for_init: str,
-    body,
-    first_loop_line: str | None = None,
-) -> None:
-    """Write a C++ for loop with optional first line inside the loop."""
-    codegen.emit(f"{for_init} {{")
-    codegen.indent()
-    if first_loop_line:
-        codegen.emit(first_loop_line)
-    for stmt in body.body:
-        codegen.visit(stmt)
-    codegen.unindent()
-    codegen.emit("}")
+    return LoopHeader(
+        f"for (auto {iter_var} = iter({iterable_expr}); !{iter_var}.done();)",
+        [f"{target} = next({iter_var});"],
+    )
