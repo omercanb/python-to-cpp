@@ -1,4 +1,10 @@
+def num() -> int:
+    return 0
+
+
 def main() -> int:
-    a: int = 3
-    b = a / 2
+    a = num()
+    b = a or ""
+    if b:
+        print(b)
     return 0

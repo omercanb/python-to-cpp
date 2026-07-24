@@ -66,6 +66,7 @@ def _method_name(node_type: type) -> str:
         class_name = node_type.__name__
         name = _IRREGULAR_NAMES.get(
             class_name,
+            # Convert camel case to snake case
             "visit_" + re.sub(r"(?<!^)(?=[A-Z])", "_", class_name).lower(),
         )
         _method_names[node_type] = name

@@ -19,7 +19,6 @@ from mypy.nodes import (
     Var,
     WhileStmt,
 )
-from python.visitor import Traverser
 from mypy.types import Type
 
 from python.analysis.find_declarations import get_declarations
@@ -32,6 +31,7 @@ from python.codegen.translation_utils import (
     translate_func_signature,
 )
 from python.codegen.typegen import cpp_type, is_pointer, ptr_type
+from python.visitor import Traverser
 
 includes = [
     "types.h",
@@ -87,6 +87,11 @@ class StatementCodegen(Traverser):
     def get_expr(self, expr: Expression, lvalue=False):
         self.expr_codegen.lvalue = lvalue
         return self.expr_codegen.visit(expr)
+
+    def get_condition(self, expr: Expression) -> str:
+        """Generate an expression to be used as a conditon"""
+        self.expr_codegen.lvalue = False
+        return self.expr_codegen.condition(expr)
 
     def translate_declaration(self, name: str, typ: Type):
         cpp = cpp_type(typ)
@@ -164,11 +169,11 @@ class StatementCodegen(Traverser):
         conditions = o.expr
         bodies = o.body
         for i, (condition, body) in enumerate(zip(conditions, bodies)):
-            condition_cpp = self.get_expr(condition)
+            condition_cpp = self.get_condition(condition)
             if i == 0:
-                self.emit(f"if ({is_truthy(condition_cpp)}) {{")
+                self.emit(f"if ({condition_cpp}) {{")
             else:
-                self.emit(f"}} else if ({is_truthy(condition_cpp)}) {{")
+                self.emit(f"}} else if ({condition_cpp}) {{")
             self.visit_block(body)
         if o.else_body:
             self.emit("} else {")
@@ -180,7 +185,7 @@ class StatementCodegen(Traverser):
 
     def visit_while_stmt(self, o: WhileStmt):
         self.emit("// While loop")
-        self.emit(f"while ({is_truthy(self.get_expr(o.expr))}) {{")
+        self.emit(f"while ({self.get_condition(o.expr)}) {{")
         self.visit_block(o.body)
         self.emit("}")
 

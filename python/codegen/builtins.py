@@ -68,3 +68,6 @@ NON_POINTER_TYPES = {
 }
 
 POINTER_TYPES = {"list", "dict", "set"}
+
+
+BOOL_OP_MACROS = {"and": "_and", "or": "_or"}

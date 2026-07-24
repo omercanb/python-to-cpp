@@ -17,7 +17,7 @@ from mypy.nodes import (
     TupleExpr,
     UnaryExpr,
 )
-from mypy.types import TupleType, Type, get_proper_type
+from mypy.types import TupleType, Type, UnionType, get_proper_type
 
 from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
@@ -28,6 +28,7 @@ from python.codegen.translation_utils import (
     should_wrap_call_in_pointer,
     translate_arguments_with_kwargs,
     translate_binary_expr,
+    translate_bool_op,
     translate_builtin_function_name_to_kwargs,
     translate_comparison,
     translate_constructor,
@@ -37,7 +38,7 @@ from python.codegen.translation_utils import (
     translate_parameters,
     translate_tuple_access,
 )
-from python.codegen.typegen import is_pointer
+from python.codegen.typegen import cpp_type_name, is_pointer
 from python.visitor import Visitor
 
 
@@ -95,9 +96,29 @@ class ExpressionCodegen(Visitor[str]):
         return f"[]({', '.join(arguments)}) {{ return {body}; }}"
 
     def visit_op_expr(self, o: OpExpr) -> str:
+        if o.op in ("and", "or"):
+            result = get_proper_type(self.types[o])
+            if isinstance(result, UnionType):
+                assert len({cpp_type_name(i) for i in result.items}) == 1, (
+                    f"`{o.op}` on unrelated types has no single C++ type: "
+                    f"{self.types[o]}. It is only supported in a condition."
+                )
+            return translate_bool_op(o.op, self.visit(o.left), self.visit(o.right))
         left = self.visit(o.left)
         right = self.visit(o.right)
         return translate_binary_expr(o.op, left, right)
+
+    def condition(self, o: MypyExpression) -> str:
+        """
+        Generate a C++ bool for an expression used as a condition.
+        We explicitly convert 'and' and 'or' into && and ||
+        """
+        if isinstance(o, OpExpr) and o.op in ("and", "or"):
+            cpp_op = "&&" if o.op == "and" else "||"
+            return f"({self.condition(o.left)} {cpp_op} {self.condition(o.right)})"
+        if isinstance(o, UnaryExpr) and o.op == "not":
+            return f"(!{self.condition(o.expr)})"
+        return is_truthy(self.visit(o))
 
     def visit_unary_expr(self, o: UnaryExpr) -> str:
         operand = self.visit(o.expr)

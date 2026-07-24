@@ -13,6 +13,89 @@
 #include "types.h"
 using namespace py;
 
+namespace prog_boolops {
+_int side(_int v) {
+    print(str("SIDE"));
+    return v;
+}
+
+int run() {
+    _int a;
+    _int b;
+    _int zero;
+    str empty;
+    str text;
+    ptr<list<_int>> no_items;
+    _float f;
+    _float g;
+    _int n;
+    str z;
+    a = 1LL;
+    b = 2LL;
+    zero = 0LL;
+    print(_and(a, b));
+    print(_or(a, b));
+    print(_and(zero, b));
+    print(_or(zero, b));
+    print(_and(zero, zero));
+    print(_or(zero, zero));
+    empty = str("");
+    text = str("hi");
+    print(_or(empty, text));
+    print(_and(text, empty));
+    print(_or(text, empty));
+    print(_and(empty, text));
+    no_items = ptr(new list<_int>());
+    print(_or(no_items, ptr(new list<_int>({1LL, 2LL}))));
+    print(_and(ptr(new list<_int>({3LL})), no_items));
+    print(_or(ptr(new list<_int>({3LL})), ptr(new list<_int>({4LL}))));
+    print(_and(no_items, ptr(new list<_int>({4LL}))));
+    f = 0.0;
+    g = 2.5;
+    print(_or(f, g));
+    print(_and(g, f));
+    print(_and(zero, side(9LL)));
+    print(_or(a, side(9LL)));
+    print(_and(a, side(9LL)));
+    print(_or(zero, side(9LL)));
+    print(_and(a, _and(b, 3LL)));
+    print(_or(zero, _or(zero, 3LL)));
+    print(_or(_and(a, b), 3LL));
+    print(_or(zero, _and(b, 3LL)));
+    print((_and(a, b) + 1LL));
+    if ((to_bool(a) && to_bool(text))) {
+        print(str("cond and"));
+    }
+    if ((to_bool(empty) || to_bool(a))) {
+        print(str("cond or"));
+    }
+    if ((!(to_bool(empty) || to_bool(zero)))) {
+        print(str("cond not"));
+    }
+    if ((to_bool(a) && (to_bool(text) && to_bool(b)))) {
+        print(str("cond chained"));
+    }
+    if ((to_bool(no_items) || to_bool(text))) {
+        print(str("cond mixed"));
+    }
+    if ((to_bool(zero) && to_bool(side(9LL)))) {
+        print(str("unreachable"));
+    }
+    n = 0LL;
+    // While loop
+    while ((to_bool(((n < 2LL))) && to_bool(text))) {
+        n = (n + 1LL);
+    }
+    print(n);
+    print((!to_bool(a)));
+    print((!to_bool(zero)));
+    print((!to_bool(empty)));
+    print((!to_bool(_and(a, b))));
+    z = _or(0LL, str("None"));
+    return 0LL;
+}
+}
+
 namespace prog_casts {
 int run() {
     _float a;
@@ -679,6 +762,7 @@ int run() {
 #include <cstring>
 
 int main(int argc, char** argv) {
+    if (argc > 1 && std::strcmp(argv[1], "boolops.py") == 0) return prog_boolops::run();
     if (argc > 1 && std::strcmp(argv[1], "casts.py") == 0) return prog_casts::run();
     if (argc > 1 && std::strcmp(argv[1], "comparison.py") == 0) return prog_comparison::run();
     if (argc > 1 && std::strcmp(argv[1], "dict.py") == 0) return prog_dict::run();

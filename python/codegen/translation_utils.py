@@ -5,9 +5,9 @@ from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import FuncDef, IndexExpr, IntExpr, LambdaExpr, NameExpr
 from mypy.types import CallableType, TupleType, Type, get_proper_type
-from python.visitor import Visitor
 
 from python.codegen.builtins import (
+    BOOL_OP_MACROS,
     METHOD_RENAMES,
     OP_MAP,
     POINTER_TYPES,
@@ -17,6 +17,7 @@ from python.codegen.builtins import (
     is_builtin_with_kwargs,
 )
 from python.codegen.typegen import cpp_type, cpp_type_name, is_pointer
+from python.visitor import Visitor
 
 
 def get_function_type(func: FuncDef) -> CallableType:
@@ -42,9 +43,7 @@ def generate_func_def(o: FuncDef):
     pass
 
 
-def translate_func_signature(
-    o: FuncDef, expr_translator: Visitor[str]
-) -> str:
+def translate_func_signature(o: FuncDef, expr_translator: Visitor[str]) -> str:
     """Generate a C++ function signature"""
     func = get_function_type(o)
     return_type = cpp_type(func.ret_type)
@@ -56,9 +55,7 @@ def translate_func_signature(
     return signature
 
 
-def translate_parameters(
-    o: FuncDef, expr_translator: Visitor[str]
-) -> list[str]:
+def translate_parameters(o: FuncDef, expr_translator: Visitor[str]) -> list[str]:
     func = get_function_type(o)
     arguments: list[str] = []
     for argument, argument_type in zip(o.arguments, func.arg_types):
@@ -222,6 +219,11 @@ def translate_comparison(expr: ComparisonExpr, expr_translator: Visitor[str]):
             terms.append(translate_binary_expr(op, left, right))
     full_comparison = " && ".join(terms)
     return f"({full_comparison})"
+
+
+def translate_bool_op(op: str, left: str, right: str) -> str:
+    """`a and b` / `a or b` where the resulting value is wanted, not a bool."""
+    return f"{BOOL_OP_MACROS[op]}({left}, {right})"
 
 
 def translate_binary_expr(op: str, expr1: str, expr2: str):

@@ -19,7 +19,8 @@ inline bool to_bool(bool x) { return x; }
 inline bool to_bool(const std::string &s) { return !s.empty(); }
 
 // None is falsy; otherwise defer to the held value's own truthiness
-template <typename T> inline bool to_bool(const std::optional<T> &x) {
+template <typename T>
+inline bool to_bool(const std::optional<T> &x) {
     return x.has_value() && to_bool(*x);
 }
 
@@ -48,7 +49,8 @@ struct has_len_method<
 
 } // namespace detail
 
-template <typename T> inline bool to_bool(const T &x) {
+template <typename T>
+inline bool to_bool(const T &x) {
     if constexpr (detail::has_bool_conversion<T>::value) {
         return static_cast<bool>(x);
     } else if constexpr (detail::has_bool_method<T>::value) {
@@ -61,3 +63,9 @@ template <typename T> inline bool to_bool(const T &x) {
 }
 
 } // namespace py
+
+// 'and' and 'or' as a value
+// inside if statements we directly use && and ||
+// We use macros rather than functions here as an exception because evaluation must be short circuited
+#define _and(a, b) ([&] { auto lhs = (a); return py::to_bool(lhs) ? (b) : lhs; }())
+#define _or(a, b) ([&] { auto lhs = (a); return py::to_bool(lhs) ? lhs : (b); }())

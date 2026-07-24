@@ -1,6 +1,7 @@
 from mypy.types import (
     AnyType,
     Instance,
+    LiteralType,
     NoneType,
     TupleType,
     Type,
@@ -73,10 +74,18 @@ def cpp_type_name(t: Type) -> str:
             inner = cpp_type_name(non_none)
             return f"std::optional<{inner}>"
 
+        # A literal is just its underlying type: `x = 3` infers Literal[3].
+        case LiteralType(fallback=fallback):
+            return cpp_type_name(fallback)
+
         # Generic union
         case UnionType(items=items):
-            types = ", ".join(cpp_type_name(item) for item in items)
-            return f"std::variant<{types}>"
+            types = [cpp_type_name(item) for item in items]
+            # Members can differ in mypy yet agree in C++, as Literal[0] and
+            # Literal[3] both do. Only a real disagreement needs a variant.
+            if len(set(types)) == 1:
+                return types[0]
+            return f"std::variant<{', '.join(types)}>"
 
         # None/void
         case NoneType():
@@ -116,6 +125,8 @@ def is_pointer(t: Type) -> bool:
             return True
         case TupleType():
             return False
+        case LiteralType(fallback=fallback):
+            return is_pointer(fallback)
 
         # Optional[T] = T | None
         case UnionType():
