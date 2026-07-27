@@ -6,8 +6,10 @@
 #include "truthy.h"
 #include <iostream>
 #include <utility>
+constexpr bool debug_ptr = false;
 namespace py {
-template <typename T> class ptr {
+template <typename T>
+class ptr {
     // Hold a pointer to an object
     // Hold a reference to a 'refcount' int
   public:
@@ -21,18 +23,24 @@ template <typename T> class ptr {
         object = nullptr;
         refcount = new int;
         *refcount = 1;
-        std::cerr << "empty constructor\n";
+        if constexpr (debug_ptr) {
+            std::cerr << "empty constructor\n";
+        }
     }
 
     ptr(value_type *obj) {
         object = obj;
         refcount = new int;
         *refcount = 1;
-        std::cerr << "pointer constructor: " << *refcount << "\n";
+        if constexpr (debug_ptr) {
+            std::cerr << "pointer constructor: " << *refcount << "\n";
+        }
     }
 
     ptr(const ptr &o) {
-        std::cerr << "copy constructor\n";
+        if constexpr (debug_ptr) {
+            std::cerr << "copy constructor\n";
+        }
         o.reference();
         object = o.object;
         refcount = o.refcount;
@@ -45,7 +53,9 @@ template <typename T> class ptr {
         dereference();
         object = o.object;
         refcount = o.refcount;
-        std::cerr << "copy assign" << *refcount << "\n";
+        if constexpr (debug_ptr) {
+            std::cerr << "copy assign" << *refcount << "\n";
+        }
         return *this;
     }
 
@@ -58,7 +68,9 @@ template <typename T> class ptr {
     void dereference() const {
         (*refcount)--;
         if ((*refcount) <= 0) {
-            std::cerr << "deletion\n";
+            if constexpr (debug_ptr) {
+                std::cerr << "deletion\n";
+            }
             if (object != nullptr) {
                 delete object;
             }
@@ -66,23 +78,27 @@ template <typename T> class ptr {
         }
     }
     // Templated on the index type so non-integer keys (dict) work too.
-    template <typename I> decltype(auto) operator[](const I &i) {
+    template <typename I>
+    decltype(auto) operator[](const I &i) {
         return (*object)[i];
     }
     // A ptr prints as whatever it points at, like a Python reference.
     str __str__() const { return to_str(*object); }
 
-    template <typename I> decltype(auto) operator[](const I &i) const {
+    template <typename I>
+    decltype(auto) operator[](const I &i) const {
         return (*object)[i];
     }
 };
 
-template <typename T> _int len(const ptr<T> &p) { return len(*(p.object)); }
+template <typename T>
+_int len(const ptr<T> &p) { return len(*(p.object)); }
 
 // Keeps the ptr alive alongside the container's own iterator: the inner
 // iterators hold a bare reference, which would dangle while iterating a
 // temporary (`for x in [1, 2, 3]`).
-template <typename T> class owning_iter {
+template <typename T>
+class owning_iter {
   public:
     ptr<T> owner; // declared first: must outlive inner
     decltype(std::declval<T &>().iter()) inner;
@@ -94,11 +110,12 @@ template <typename T> class owning_iter {
     bool done() { return inner.done(); }
 };
 
-template <typename T> auto iter(ptr<T> p) { return owning_iter<T>(p); }
-
+template <typename T>
+auto iter(ptr<T> p) { return owning_iter<T>(p); }
 
 // to_bool() - dereference and forward truthiness
-template <typename T> inline bool to_bool(const ptr<T> &p) {
+template <typename T>
+inline bool to_bool(const ptr<T> &p) {
     return to_bool(*p.object);
 }
 

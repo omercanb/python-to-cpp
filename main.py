@@ -17,8 +17,6 @@ from python.errors import UnsupportedProgram, render
 from python.formatting import *
 from python.utils import build_and_run
 
-includes = ["print.h", "list.h", "ptr.h"]
-
 # Mypys strict upgrades
 _STRICT_ASSIGNMENTS = define_options()[2]
 
@@ -81,6 +79,16 @@ def translate(path: str):
 
 def translate_source(source: str):
     return _generate(mypy_pipeline_source(source))
+
+
+def pipeline(path: str, source: str) -> str:
+    result = _analyse(path, source)
+    try:
+        output = _generate(result)
+    except UnsupportedProgram as unsupported:
+        print(render(unsupported.diagnostics, result.source, path))
+        sys.exit(1)
+    return output
 
 
 def full_pipeline():

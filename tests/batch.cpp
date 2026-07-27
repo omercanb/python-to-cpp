@@ -1,5 +1,7 @@
+#include "builtins.h"
 #include "dict.h"
 #include "exceptions.h"
+#include "file.h"
 #include "finally.h"
 #include "iter.h"
 #include "list.h"
@@ -96,6 +98,45 @@ int run() {
 }
 }
 
+namespace prog_builtin_functions {
+ptr<list<_int>> comprehension_1(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __result_2 = ptr(new list<_int>());
+    _int v;
+    for (auto __iter_3 = iter(numbers); !__iter_3.done();) {
+        v = next(__iter_3);
+        __result_2->append((v * 2LL));
+    }
+    return __result_2;
+}
+
+int run() {
+    ptr<list<_int>> numbers;
+    ptr<list<_int>> empty;
+    ptr<list<_int>> zeros;
+    ptr<list<_int>> with_zero;
+    numbers = ptr(new list<_int>({4LL, 1LL, 7LL, 3LL}));
+    empty = ptr(new list<_int>());
+    print(sum(numbers), sum(empty));
+    print(min(numbers), max(numbers));
+    print(min(3LL, 8LL), max(3LL, 8LL), min(2.5, 1.5));
+    zeros = ptr(new list<_int>({0LL, 0LL}));
+    with_zero = ptr(new list<_int>({1LL, 0LL, 2LL}));
+    print(any(numbers), any(zeros), any(empty));
+    print(all(numbers), all(with_zero), all(empty));
+    print(sum(range(5LL)), max(range(5LL)));
+    print(sum(ptr(new set<_int>({1LL, 2LL, 3LL}))));
+    print(min(str("hello")), max(str("hello")));
+    print(divmod(7LL, 2LL), divmod((-7LL), 2LL));
+    print(py::round(2.5), py::round(3.5), py::round((-2.5)));
+    print(py::round(2.567, 1LL), py::round(2.567, 2LL));
+    print(py::round(5LL));
+    print(chr(65LL), ord(str("A")));
+    print(chr((ord(str("a")) + 1LL)));
+    print(sum(comprehension_1(numbers)));
+    return 0LL;
+}
+}
+
 namespace prog_casts {
 int run() {
     _float a;
@@ -115,6 +156,96 @@ int run() {
     i1 = to_int(int_str);
     i2 = to_int(int_str, 2LL);
     print(a, b, c, f1, i1, i2);
+    return 0LL;
+}
+}
+
+namespace prog_classes {
+class Counter {
+  public:
+    _int count;
+
+    Counter(_int start) { __init__(start); }
+
+    void __init__(_int start) {
+        this->count = start;
+    }
+
+    void bump(_int by) {
+        this->count = (this->count + by);
+    }
+
+    _int doubled() {
+        return (this->count * 2LL);
+    }
+
+};
+
+class Point {
+  public:
+    _int x;
+    _int y;
+
+    Point(_int x, _int y) { __init__(x, y); }
+
+    void __init__(_int x, _int y) {
+        this->x = x;
+        this->y = y;
+    }
+
+    _int norm() {
+        return ((this->x * this->x) + (this->y * this->y));
+    }
+
+    ptr<Point> moved(_int dx, _int dy) {
+        return ptr(new Point((this->x + dx), (this->y + dy)));
+    }
+
+    str __str__() {
+        return ((((str("Point(") + to_str(this->x)) + str(", ")) + to_str(this->y)) + str(")"));
+    }
+
+    _int __len__() {
+        return 2LL;
+    }
+
+    bool __bool__() {
+        return _or(((this->x != 0LL)), ((this->y != 0LL)));
+    }
+
+};
+
+class Empty {
+  public:
+};
+
+int run() {
+    ptr<Counter> counter;
+    ptr<Point> p;
+    ptr<Point> q;
+    ptr<list<ptr<Point>>> points;
+    ptr<Point> point;
+    ptr<Empty> e;
+    counter = ptr(new Counter(5LL));
+    counter->bump(3LL);
+    print(counter->count, counter->doubled());
+    p = ptr(new Point(3LL, 4LL));
+    print(p->x, p->y, p->norm());
+    print(p);
+    print(len(p));
+    print(to_bool(p), to_bool(ptr(new Point(0LL, 0LL))));
+    q = p->moved(1LL, 1LL);
+    print(q, q->norm());
+    p->x = 10LL;
+    print(p->x, p->norm());
+    points = ptr(new list<ptr<Point>>({ptr(new Point(1LL, 1LL)), ptr(new Point(2LL, 2LL))}));
+    for (auto __iter_1 = iter(points); !__iter_1.done();) {
+        point = next(__iter_1);
+        print(point, point->norm());
+    }
+    print(len(points));
+    e = ptr(new Empty());
+    print((__is(e, e)));
     return 0LL;
 }
 }
@@ -141,6 +272,175 @@ int run() {
     l2 = ptr(new list<_int>({1LL, 2LL, 3LL}));
     print((__is(l1, l1)));
     print((__is(l1, l2)));
+    return 0LL;
+}
+}
+
+namespace prog_comprehensions {
+ptr<list<_int>> comprehension_1(ptr<list<_int>> values, _int factor, _int offset) {
+    ptr<list<_int>> __result_2 = ptr(new list<_int>());
+    _int v;
+    for (auto __iter_3 = iter(values); !__iter_3.done();) {
+        v = next(__iter_3);
+        __result_2->append(((v * factor) + offset));
+    }
+    return __result_2;
+}
+
+ptr<list<_int>> scaled(ptr<list<_int>> values, _int factor) {
+    _int offset;
+    str("A comprehension reads the enclosing function's locals and parameters.");
+    offset = 1LL;
+    return comprehension_1(values, factor, offset);
+}
+
+ptr<list<_int>> comprehension_4(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __result_5 = ptr(new list<_int>());
+    _int v;
+    for (auto __iter_6 = iter(numbers); !__iter_6.done();) {
+        v = next(__iter_6);
+        __result_5->append(v);
+    }
+    return __result_5;
+}
+
+ptr<list<_int>> comprehension_7(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __result_8 = ptr(new list<_int>());
+    _int v;
+    for (auto __iter_9 = iter(numbers); !__iter_9.done();) {
+        v = next(__iter_9);
+        if (to_bool(((v > 2LL)))) {
+            __result_8->append(v);
+        }
+    }
+    return __result_8;
+}
+
+ptr<list<_int>> comprehension_10() {
+    ptr<list<_int>> __result_11 = ptr(new list<_int>());
+    _int i;
+    for (_int i = 0; i < 4LL; ++i) {
+        __result_11->append(i);
+    }
+    return __result_11;
+}
+
+ptr<list<_int>> comprehension_12() {
+    ptr<list<_int>> __result_13 = ptr(new list<_int>());
+    _int i;
+    for (_int i = 1LL; i < 8LL; i += 2) {
+        __result_13->append(i);
+    }
+    return __result_13;
+}
+
+ptr<list<_int>> comprehension_14(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __result_15 = ptr(new list<_int>());
+    _int i;
+    for (size_t i = 0; i < len(numbers); ++i) {
+        __result_15->append(numbers->__getitem__(i));
+    }
+    return __result_15;
+}
+
+ptr<set<_int>> comprehension_16(ptr<list<_int>> numbers) {
+    ptr<set<_int>> __result_17 = ptr(new set<_int>());
+    _int v;
+    for (auto __iter_18 = iter(numbers); !__iter_18.done();) {
+        v = next(__iter_18);
+        __result_17->add((v * v));
+    }
+    return __result_17;
+}
+
+ptr<dict<_int, _int>> comprehension_19(ptr<list<_int>> numbers) {
+    ptr<dict<_int, _int>> __result_20 = ptr(new dict<_int, _int>());
+    _int v;
+    for (auto __iter_21 = iter(numbers); !__iter_21.done();) {
+        v = next(__iter_21);
+        if (to_bool(((v > 1LL)))) {
+            __result_20->__setitem__(v, (v * v));
+        }
+    }
+    return __result_20;
+}
+
+ptr<list<_int>> comprehension_22(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __result_23 = ptr(new list<_int>());
+    _int x;
+    _int y;
+    for (auto __iter_24 = iter(numbers); !__iter_24.done();) {
+        x = next(__iter_24);
+        for (auto __iter_25 = iter(numbers); !__iter_25.done();) {
+            y = next(__iter_25);
+            if (to_bool(((x < y)))) {
+                __result_23->append((x * y));
+            }
+        }
+    }
+    return __result_23;
+}
+
+ptr<list<_int>> comprehension_26(_int v) {
+    ptr<list<_int>> __result_27 = ptr(new list<_int>());
+    _int w;
+    for (_int w = 0; w < v; ++w) {
+        __result_27->append(w);
+    }
+    return __result_27;
+}
+
+ptr<list<_int>> comprehension_28(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __result_29 = ptr(new list<_int>());
+    _int v;
+    for (auto __iter_30 = iter(numbers); !__iter_30.done();) {
+        v = next(__iter_30);
+        __result_29->append(len(comprehension_26(v)));
+    }
+    return __result_29;
+}
+
+ptr<list<_int>> comprehension_31(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __result_32 = ptr(new list<_int>());
+    _int v;
+    for (auto __iter_33 = iter(numbers); !__iter_33.done();) {
+        v = next(__iter_33);
+        __result_32->append((v * 2LL));
+    }
+    return __result_32;
+}
+
+ptr<list<_int>> comprehension_34(ptr<list<_int>> doubled) {
+    ptr<list<_int>> __result_35 = ptr(new list<_int>());
+    _int v;
+    for (auto __iter_36 = iter(doubled); !__iter_36.done();) {
+        v = next(__iter_36);
+        __result_35->append((v + 1LL));
+    }
+    return __result_35;
+}
+
+int run() {
+    ptr<list<_int>> numbers;
+    ptr<set<_int>> squares;
+    ptr<dict<_int, _int>> lookup;
+    ptr<list<_int>> doubled;
+    numbers = ptr(new list<_int>({1LL, 2LL, 3LL, 4LL}));
+    print(comprehension_4(numbers));
+    print(comprehension_7(numbers));
+    print(comprehension_10());
+    print(comprehension_12());
+    print(comprehension_14(numbers));
+    print(scaled(numbers, 10LL));
+    squares = comprehension_16(numbers);
+    print(sorted(squares));
+    lookup = comprehension_19(numbers);
+    print(len(lookup), lookup->__getitem__(2LL), lookup->__getitem__(4LL));
+    print(sorted(lookup));
+    print(comprehension_22(numbers));
+    print(comprehension_28(numbers));
+    doubled = comprehension_31(numbers);
+    print(comprehension_34(doubled));
     return 0LL;
 }
 }
@@ -398,6 +698,50 @@ int run() {
 }
 }
 
+namespace prog_files {
+int run() {
+    str SAMPLE;
+    ptr<file> handle;
+    str text;
+    ptr<file> stepped;
+    ptr<list<str>> rest;
+    ptr<file> lines;
+    str line;
+    ptr<file> out;
+    str written;
+    SAMPLE = str("tests/test_files/sample.txt");
+    handle = open(SAMPLE);
+    text = handle->read();
+    print(len(text));
+    print(text.splitlines());
+    print(len(handle->read()));
+    handle->close();
+    stepped = open(SAMPLE);
+    print(stepped->readline().strip());
+    print(stepped->readline().strip());
+    rest = stepped->readlines();
+    print(len(rest), rest->__getitem__(0LL).strip());
+    print(len(stepped->readlines()));
+    lines = open(SAMPLE);
+    for (auto __iter_1 = iter(lines); !__iter_1.done();) {
+        line = next(__iter_1);
+        print(len(line), line.strip());
+    }
+    out = open(str("tests/test_files/sample_out.txt"), str("w"));
+    print(out->write(str("alpha\n")));
+    print(out->write(str("beta\n")));
+    out->close();
+    written = open(str("tests/test_files/sample_out.txt"))->read();
+    print(written.splitlines(), len(written));
+    try {
+        open(str("tests/test_files/no_such_file.txt"));
+    } catch (FileNotFoundError &) {
+        print(str("missing file raised"));
+    }
+    return 0LL;
+}
+}
+
 namespace prog_iter {
 int run() {
     ptr<list<_int>> nums;
@@ -411,19 +755,19 @@ int run() {
     nums = ptr(new list<_int>({1LL, 2LL, 3LL, 4LL, 5LL}));
     a = ptr(new list<_int>(map([](auto x) { return (x * 2LL); }, nums)));
     print(a);
-    for (auto __iter = iter(map([](auto x) { return to_str(x); }, nums)); !__iter.done();) {
-        s = next(__iter);
+    for (auto __iter_1 = iter(map([](auto x) { return to_str(x); }, nums)); !__iter_1.done();) {
+        s = next(__iter_1);
         print(s);
     }
     filtered = ptr(new list<_int>(filter([](auto x) { return ((mod(x, 2LL) == 0LL)); }, nums)));
     print(filtered);
-    for (auto __iter = iter(zip(nums, a)); !__iter.done();) {
-        destructure(x, y) = next(__iter);
+    for (auto __iter_2 = iter(zip(nums, a)); !__iter_2.done();) {
+        destructure(x, y) = next(__iter_2);
         print(x, y);
     }
     nums = a;
-    for (auto __iter = iter(enumerate(nums)); !__iter.done();) {
-        destructure(i, n) = next(__iter);
+    for (auto __iter_3 = iter(enumerate(nums)); !__iter_3.done();) {
+        destructure(i, n) = next(__iter_3);
         print(i, n);
     }
     return 0LL;
@@ -546,12 +890,12 @@ int run() {
         if ((step > 0 && i >= (10LL * x)) || (step < 0 && i <= (10LL * x))) break;
         print(str("sixth"), i);
     }
-    for (auto __iter = iter(l); !__iter.done();) {
-        n = next(__iter);
+    for (auto __iter_1 = iter(l); !__iter_1.done();) {
+        n = next(__iter_1);
         print(str("seventh"), n);
     }
-    for (auto __iter = iter(l); !__iter.done();) {
-        n = next(__iter);
+    for (auto __iter_2 = iter(l); !__iter_2.done();) {
+        n = next(__iter_2);
         print(str("eight"), n);
     }
     return 0LL;
@@ -627,8 +971,8 @@ int run() {
         print(str("missing"));
     }
     count = 0LL;
-    for (auto __iter = iter(ptr(new list<_int>({1LL, 2LL, 3LL, 4LL}))); !__iter.done();) {
-        x = next(__iter);
+    for (auto __iter_1 = iter(ptr(new list<_int>({1LL, 2LL, 3LL, 4LL}))); !__iter_1.done();) {
+        x = next(__iter_1);
         if (to_bool((s->__contains__(x)))) {
             count = (count + 1LL);
         }
@@ -728,8 +1072,8 @@ int run() {
     d->clear();
     print(len(d));
     total = 0LL;
-    for (auto __iter = iter(ptr(new set<_int>({1LL, 2LL, 3LL}))); !__iter.done();) {
-        x = next(__iter);
+    for (auto __iter_1 = iter(ptr(new set<_int>({1LL, 2LL, 3LL}))); !__iter_1.done();) {
+        x = next(__iter_1);
         total = (total + x);
     }
     print(total);
@@ -871,8 +1215,8 @@ int run() {
     print(to_int(str("100")));
     print(to_float(str("0.5")));
     joined = str("");
-    for (auto __iter = iter(str("abc")); !__iter.done();) {
-        c = next(__iter);
+    for (auto __iter_1 = iter(str("abc")); !__iter_1.done();) {
+        c = next(__iter_1);
         joined = ((joined + c) + str("."));
     }
     print(joined);
@@ -977,10 +1321,14 @@ int run() {
 
 int main(int argc, char** argv) {
     if (argc > 1 && std::strcmp(argv[1], "boolops.py") == 0) return prog_boolops::run();
+    if (argc > 1 && std::strcmp(argv[1], "builtin_functions.py") == 0) return prog_builtin_functions::run();
     if (argc > 1 && std::strcmp(argv[1], "casts.py") == 0) return prog_casts::run();
+    if (argc > 1 && std::strcmp(argv[1], "classes.py") == 0) return prog_classes::run();
     if (argc > 1 && std::strcmp(argv[1], "comparison.py") == 0) return prog_comparison::run();
+    if (argc > 1 && std::strcmp(argv[1], "comprehensions.py") == 0) return prog_comprehensions::run();
     if (argc > 1 && std::strcmp(argv[1], "dict.py") == 0) return prog_dict::run();
     if (argc > 1 && std::strcmp(argv[1], "exceptions.py") == 0) return prog_exceptions::run();
+    if (argc > 1 && std::strcmp(argv[1], "files.py") == 0) return prog_files::run();
     if (argc > 1 && std::strcmp(argv[1], "iter.py") == 0) return prog_iter::run();
     if (argc > 1 && std::strcmp(argv[1], "list.py") == 0) return prog_list::run();
     if (argc > 1 && std::strcmp(argv[1], "loops.py") == 0) return prog_loops::run();

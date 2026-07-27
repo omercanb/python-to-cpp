@@ -1,0 +1,116 @@
+from __future__ import annotations
+
+import time
+from typing import Callable, List, NamedTuple, Sequence, TypeVar
+
+
+class BenchmarkContext:
+    def __init__(self) -> None:
+        self.start()
+
+    def start(self) -> None:
+        self.start_time = time.time()
+
+    def elapsed_time(self) -> float:
+        return time.time() - self.start_time
+
+
+class BenchmarkInfo(NamedTuple):
+    name: str
+    module: str
+    perform: Callable[[BenchmarkContext], object]
+    compiled_only: bool
+    min_iterations: int | None
+    strip_outlier_runs: bool
+    stable_hash_seed: bool
+    compiled_variant: bool
+
+
+benchmarks: List[BenchmarkInfo] = []
+
+
+T = TypeVar("T")
+
+
+PrepareArg = (
+    Callable[[str | None], None] | Sequence[Callable[[str | None], None]] | None
+)
+
+
+def benchmark(
+    *,
+    prepare: PrepareArg = None,
+    compiled_only: bool = False,
+    min_iterations: int | None = None,
+    strip_outlier_runs: bool = True,
+    stable_hash_seed: bool = False,
+    compiled_variant: bool = False,
+) -> Callable[[Callable[[], T]], Callable[[], T]]:
+    """Define a benchmark.
+
+    Args:
+        prepare: If given, called once before running the benchmark to set up external state.
+            Can be a single callable or a list of callables (called in order).
+            This does not run in the same process as the actual benchmark so it's mostly useful
+            for setting up file system state, data files, etc.
+        compiled_only: This benchmark only runs in compiled mode (no interpreted mode).
+        strip_outlier_runs: If True (default), aggressively try to strip outlier runs.
+            Otherwise, no (or few) outlier runs will be removed.
+        stable_hash_seed: If True, use predictable hash seed in CPython (it still varies
+            between runs, but it's not random)
+        compiled_variant: If True, this is the compiled variant of another, interpreted
+            variant of the same benchmark (same def name)
+    """
+
+    def outer_wrapper(func: Callable[[], T]) -> Callable[[], T]:
+        name = func_name(func)
+
+        def wrapper(ctx: BenchmarkContext) -> T:
+            return func()
+
+        benchmark = BenchmarkInfo(
+            name,
+            func.__module__,
+            wrapper,
+            compiled_only,
+            min_iterations,
+            strip_outlier_runs,
+            stable_hash_seed,
+            compiled_variant,
+        )
+        benchmarks.append(benchmark)
+        return func
+
+    return outer_wrapper
+
+
+# TODO: Merge with "benchmark"
+def benchmark_with_context(
+    func: Callable[[BenchmarkContext], T],
+) -> Callable[[BenchmarkContext], T]:
+    name = func.__name__
+    if name.startswith("__mypyc_"):
+        name = name.replace("__mypyc_", "")
+        name = name.replace("_decorator_helper__", "")
+    benchmark = BenchmarkInfo(
+        name, func.__module__, func, False, None, True, False, False
+    )
+    benchmarks.append(benchmark)
+    return func
+
+
+def run_once(benchmark_name: str) -> float:
+    for benchmark in benchmarks:
+        if benchmark.name == benchmark_name:
+            context = BenchmarkContext()
+            benchmark.perform(context)
+            return context.elapsed_time()
+    assert False, "unknown benchmark: %r" % benchmark_name
+
+
+def func_name(func: Callable[..., object]) -> str:
+    name = func.__name__
+    if name.startswith("__mypyc_"):
+        name = name.replace("__mypyc_", "")
+        name = name.replace("_decorator_helper__", "")
+    return name
