@@ -1,9 +1,6 @@
-# mypyc benchmarks
+# benchmarks
 
-This is a collection of mypyc benchmarks. They are intended to track
-performance of mypyc against interpreted CPython. They are also useful
-for validating that a mypyc enhancement results in a measurable
-performance improvement.
+These are a collection of benchmarks that were mostly adapted from the mypyc benchmarks at [https://github.com/mypyc/mypyc-benchmarks](https://github.com/mypyc/mypyc-benchmarks). Both the benchmarks and the scripts that are used to benchmark are taken from there. The benchmarks are used to measure performance between python programs, their translations using python-to-cpp, and a handwritten C++ program. These results are tracked to see how close we can come to native C++ performance. 
 
 *Some benchmarks are microbenchmarks that are only useful for finding
 big performance differences related to specific operations or language
@@ -11,59 +8,21 @@ features. They don't reflect real-world performance.*
 
 ## Benchmark results
 
-We have a service that automatically collects benchmark results for
-all mypyc and mypy commits:
+The benchmarks are collected into `benchmarks.csv`.
 
-* [Benchmark results](https://github.com/mypyc/mypyc-benchmark-results/blob/master/reports/summary-main.md)
-* [Microbenchmark results](https://github.com/mypyc/mypyc-benchmark-results/blob/master/reports/summary-microbenchmarks.md)
+The benchmark results are collected along with the commit hash to see what commit has made a difference in performance.
+
+Currently there is no ready way to tabulate or graph the benchmark results.
+
 
 ## Running benchmarks
 
-Prerequisites:
+Run the benchmarks from the root dir using `python -m tests.benchmarks.run_bench <benchmark name>`  
 
-* Python 3.10 or later on Linux, macOS, or Windows
-* `venv` installed (`python3-venv` on Ubuntu)
-* A working Python C development environment
-* Cloned mypy git repository (in addition to mypyc-benchmarks repository)
-* A Python environment with mypy `test-requirements.txt` installed
+To list all the different benchmarks run `python -m tests.benchmarks.run_bench --list`
 
-Display the names of available benchmarks using `runbench.py --list`:
-
-```
-$ python3 runbench.py --list
-binary_trees
-bytes_call (micro)
-bytes_concat (micro)
-bytes_format (micro)
-bytes_indexing (micro)
-...
-```
-
-Microbenchmarks are distinguished by `(micro)`.
-
-Run a benchmark using `runbench.py --mypy-repo <dir> <name>`:
-
-```
-$ python3 runbench.py --mypy-repo ~/src/mypy richards
-...
-running richards
-......
-interpreted: 0.190326s (avg of 6 iterations; stdev 1%)
-compiled:    0.019284s (avg of 6 iterations; stdev 1.6%)
-
-compiled is 9.870x faster
-```
-
-This runs the benchmark in both compiled and interpreted modes using
-the mypyc from the given mypy repository, and reports the relative
-performance.
-
-Use `runbench.py -c ...` to only run the compiled benchmark.
-
-Run a benchmark first using the mypy master branch and then your local
-branch to see how well your branch does relative to master.
+For each benchmark, the translated versions will be created automatically. But you should also provide a handwritten C++ version to compare against. This file should be named `hw_benchfile.cpp` where `benchfile` is the name of the corresponding Python benchmark module.
 
 ## Documentation
 
-There is more information in the
-[documentation](https://github.com/mypyc/mypyc-benchmarks/blob/master/doc/benchmarks.rst).
+Documentation for specific benchmarks is provided in [./doc/benchmarks.rst](./doc/benchmarks.rst)
