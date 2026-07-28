@@ -10,8 +10,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from main import TypeTable
+    from python.analysis.mypy_pass import TypeTable
 
+import mypy
 from mypy.nodes import (
     AssignmentStmt,
     Block,
@@ -89,13 +90,6 @@ def _type_hint(t: Type) -> str:
             "a function cannot be stored in a variable, call it where it is "
             "needed instead:\nprint(add(1, 2))"
         )
-    if "object" in str(proper):
-        return (
-            "`object` is what mypy infers when the elements disagree, or when "
-            "a literal goes straight into something taking Iterable[object].\n"
-            "Name it first so the element type comes from the values:\n"
-            "flags = [False, True]\nprint(any(flags))"
-        )
     return (
         "use int, float, str, bool, or a list, dict, set or tuple of those:\n"
         "values: list[int] = []"
@@ -134,12 +128,20 @@ class _Validator(Traverser):
         try:
             cpp_type(t)
         except UnsupportedType as unsupported:
-            self.report(
-                node,
-                "unsupported-type",
-                f"no C++ equivalent for the type `{unsupported.type}`",
-                _type_hint(unsupported.type),
-            )
+            if str(unsupported.problematic_member_type) == "object":
+                self.report(
+                    node,
+                    "object type",
+                    f"Type of expression is inferred as `{unsupported.type}` which contains `object`. This cannot be translated to C++.",
+                    "Everything must have strictly one type only. There may be multiple different types being assigned to the field with type `object`. You can give this expression a type annotation to help you catch the error.",
+                )
+            else:
+                self.report(
+                    node,
+                    "unsupported-type",
+                    f"no C++ equivalent for the type `{unsupported.type}`",
+                    _type_hint(unsupported.type),
+                )
 
     def check_inferred_type(self, node: Expression) -> None:
         t = self.types.get(node)

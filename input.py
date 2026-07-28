@@ -1,26 +1,7 @@
-def main() -> int:
-    a = 1
-    b = 2
-    c = 3
-    l = []
-    l.append(1)
-    print(l)
-    print(a < b < c)
-    print(a > b)
-    print(a > b > c)
-    d = 3
-    print(c <= d)
-    print(a == d)
-    print(c == d)
-    l1 = [1, 2, 3]
-    l2 = [1, 2, 3]
-    print(l1 is l1)
-    print(l1 is l2)
-    return 0
+from typing import Dict, List
 
+from tests.benchmarks.benchmarking import benchmark
 
-# from typing import Dict, List
-#
 #
 # def dict_iteration() -> None:
 #     a = []
@@ -48,7 +29,7 @@ def main() -> int:
 #                     n += 1
 #     assert n == 202000, n
 #
-
+#
 # def dict_to_list() -> None:
 #     a = []
 #     for j in range(1000):
@@ -106,31 +87,26 @@ def main() -> int:
 #             d4 = d3.copy()
 #             assert len(d4) == len(d)
 #
-#
-# def dict_call_keywords() -> None:
-#     n = 0
-#     for i in range(1000 * 1000):
-#         d = dict(id=5, name="dummy", things=[])
-#         n += len(d)
-#     assert n == 3000000, n
-#
-#
-# def dict_call_generator() -> None:
-#     a = []
-#     for j in range(1000):
-#         items = [
-#             ("Foobar-%d" % j, j),
-#             ("%d str" % j, "x"),
-#         ]
-#         if j % 2 == 0:
-#             items.append(("blah", "bar"))
-#         a.append(items)
-#
-#     n = 0
-#     for i in range(1000):
-#         for s in a:
-#             d = dict((key, value) for key, value in s)
-#             assert len(d) == len(s)
+
+
+def dict_call_generator() -> None:
+    a = []
+    for j in range(1000):
+        items = [
+            ("Foobar-%d" % j, j),
+            ("%d str" % j, "x"),
+        ]
+        if j % 2 == 0:
+            items.append(("blah", "bar"))
+        a.append(items)
+
+    n = 0
+    for i in range(1000):
+        for s in a:
+            d = dict((key, value) for key, value in s)
+            assert len(d) == len(s)
+
+
 #
 #
 # def dict_del_item() -> None:

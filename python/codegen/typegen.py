@@ -1,3 +1,5 @@
+from typing import Optional
+
 from mypy.types import (
     AnyType,
     Instance,
@@ -19,8 +21,9 @@ class UnsupportedType(Exception):
     it came from, keeping the list of convertible types in one place.
     """
 
-    def __init__(self, t: Type):
+    def __init__(self, t: Type, problematic_member_type: Optional[Type] = None):
         self.type = t
+        self.problematic_member_type = problematic_member_type
         super().__init__(f"no C++ equivalent for the type {t}")
 
 
@@ -41,95 +44,107 @@ def cpp_type_name(t: Type) -> str:
     Uses pattern matching to handle different type kinds.
     """
     t = get_proper_type(t)
+    current_error: Optional[Exception] = None
 
-    match t:
-        # Builtin types
-        case Instance(type=type_info) if type_info.fullname == "builtins.int":
-            return "_int"
-        case Instance(type=type_info) if type_info.fullname == "builtins.float":
-            return "_float"
-        case Instance(type=type_info) if type_info.fullname == "builtins.str":
-            return "str"
-        case Instance(type=type_info) if type_info.fullname == "builtins.bool":
-            return "bool"
+    try:
+        match t:
+            # Builtin types
+            case Instance(type=type_info) if type_info.fullname == "builtins.int":
+                return "_int"
+            case Instance(type=type_info) if type_info.fullname == "builtins.float":
+                return "_float"
+            case Instance(type=type_info) if type_info.fullname == "builtins.str":
+                return "str"
+            case Instance(type=type_info) if type_info.fullname == "builtins.bool":
+                return "bool"
 
-        # Container types
-        case Instance(type=type_info, args=args) if (
-            type_info.fullname == "builtins.list" and args
-        ):
-            elem_type = cpp_type(args[0])
-            return f"list<{elem_type}>"
+            # Container types
+            case Instance(type=type_info, args=args) if (
+                type_info.fullname == "builtins.list" and args
+            ):
+                elem_type = cpp_type(args[0])
+                return f"list<{elem_type}>"
 
-        case Instance(type=type_info, args=args) if (
-            type_info.fullname == "builtins.dict" and len(args) >= 2
-        ):
-            key_type = cpp_type(args[0])
-            val_type = cpp_type(args[1])
-            return f"dict<{key_type}, {val_type}>"
+            case Instance(type=type_info, args=args) if (
+                type_info.fullname == "builtins.dict" and len(args) >= 2
+            ):
+                key_type = cpp_type(args[0])
+                val_type = cpp_type(args[1])
+                return f"dict<{key_type}, {val_type}>"
 
-        case Instance(type=type_info, args=args) if (
-            type_info.fullname == "builtins.set" and args
-        ):
-            elem_type = cpp_type(args[0])
-            return f"set<{elem_type}>"
+            case Instance(type=type_info, args=args) if (
+                type_info.fullname == "builtins.set" and args
+            ):
+                elem_type = cpp_type(args[0])
+                return f"set<{elem_type}>"
 
-        # Tuple with fixed elements
-        case TupleType(items=items):
-            elem_types = ", ".join(cpp_type(item) for item in items)
-            return f"tuple<{elem_types}>"
+            # Tuple with fixed elements
+            case TupleType(items=items):
+                elem_types = ", ".join(cpp_type(item) for item in items)
+                return f"tuple<{elem_types}>"
 
-        # Optional[T] = T | None
-        case UnionType(items=items) if len(items) == 2 and any(
-            isinstance(item, NoneType) for item in items
-        ):
-            non_none = next(item for item in items if not isinstance(item, NoneType))
-            inner = cpp_type_name(non_none)
-            return f"std::optional<{inner}>"
+            # Optional[T] = T | None
+            case UnionType(items=items) if len(items) == 2 and any(
+                isinstance(item, NoneType) for item in items
+            ):
+                non_none = next(
+                    item for item in items if not isinstance(item, NoneType)
+                )
+                inner = cpp_type_name(non_none)
+                return f"std::optional<{inner}>"
 
-        # A literal is just its underlying type: `x = 3` infers Literal[3].
-        case LiteralType(fallback=fallback):
-            return cpp_type_name(fallback)
+            # A literal is just its underlying type: `x = 3` infers Literal[3].
+            case LiteralType(fallback=fallback):
+                return cpp_type_name(fallback)
 
-        # Generic union
-        case UnionType(items=items):
-            types = [cpp_type_name(item) for item in items]
-            # Members can differ in mypy yet agree in C++, as Literal[0] and
-            # Literal[3] both do. Only a real disagreement needs a variant.
-            if len(set(types)) == 1:
-                return types[0]
-            return f"std::variant<{', '.join(types)}>"
+            # Generic union
+            case UnionType(items=items):
+                types = [cpp_type_name(item) for item in items]
+                # Members can differ in mypy yet agree in C++, as Literal[0] and
+                # Literal[3] both do. Only a real disagreement needs a variant.
+                if len(set(types)) == 1:
+                    return types[0]
+                return f"std::variant<{', '.join(types)}>"
 
-        # None/void
-        case NoneType():
-            return "void"
+            # None/void
+            case NoneType():
+                return "void"
 
-        # Any type
-        case AnyType():
-            return "auto"
+            # Any type
+            case AnyType():
+                return "auto"
 
-        # open() hands back a TextIOWrapper, which the runtime calls `file`.
-        case Instance(type=type_info) if type_info.fullname == "_io.TextIOWrapper":
-            return "file"
+            # open() hands back a TextIOWrapper, which the runtime calls `file`.
+            case Instance(type=type_info) if type_info.fullname == "_io.TextIOWrapper":
+                return "file"
 
-        # `object` is what mypy settles on when a literal's elements disagree,
-        # or when it is passed straight to something taking Iterable[object].
-        # Nothing in C++ spells it, so it has to be caught rather than emitted.
-        case Instance(type=type_info) if type_info.fullname == "builtins.object":
-            raise UnsupportedType(t)
+            case Instance(type=type_info) if type_info.fullname == "builtins.object":
+                current_error = UnsupportedType(t)
+                raise current_error
 
-        case Instance(type=type_info):
-            return type_info.name
+            case Instance(type=type_info):
+                return type_info.name
 
-        # Iterator/Iterable
-        case Instance(type=type_info, args=args) if (
-            "Iterator" in type_info.fullname and args
-        ):
-            elem_type = cpp_type_name(args[0])
-            return f"Iterator<{elem_type}>"
+            # Iterator/Iterable
+            case Instance(type=type_info, args=args) if (
+                "Iterator" in type_info.fullname and args
+            ):
+                elem_type = cpp_type_name(args[0])
+                return f"Iterator<{elem_type}>"
 
-        # Default fallback
-        case _:
-            raise UnsupportedType(t)
+            # Default fallback
+            case _:
+                current_error = UnsupportedType(t)
+                raise current_error
+    except UnsupportedType as e:
+        # We need to propogate the unsupported type error up while keeping the underlying member type that caused the issue
+        # For this we need to skip doing anything special if the exception was raised in the current call, then set the member type in the call one further up the stack, then just propogate the error after
+        if e.problematic_member_type:
+            raise
+        elif e is current_error:
+            raise
+        else:
+            raise UnsupportedType(t, problematic_member_type=e.type)
 
 
 def is_pointer(t: Type) -> bool:

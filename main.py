@@ -1,30 +1,29 @@
 import sys
 
-from mypy.nodes import (
-    Expression,
-    TypeInfo,
-)
+from mypy.nodes import Expression, TypeInfo
 from mypy.types import ProperType
 
 from python.analysis.mypy_pass import _analyse, _generate
+from python.analysis.validate import validate
 from python.errors import UnsupportedProgram, render
 from python.utils import build_and_run
 
 # Mypys strict upgrades
 
 
-
-
 def full_pipeline():
+
     file = "input.py"
     result = _analyse(file, open(file).read())
+    for k, v in result.types.items():
+        print(f"{k} : {v}")
     # print(result.tree)
     # print_types(result.types)
-    try:
-        output = _generate(result)
-    except UnsupportedProgram as unsupported:
-        print(render(unsupported.diagnostics, result.source, file))
+    diagnostics = validate(result.tree, result.types)
+    if diagnostics:
+        print(render(diagnostics, result.source, file))
         sys.exit(1)
+    output = _generate(result)
     print(output)
     build_and_run(output)
 
