@@ -30,7 +30,11 @@ from tests.benchmarks.mypyc_benchmarks.runbench import (
 )
 
 
-def main() -> None:
+def main():
+    pass
+
+
+def record_python_baselines():
     benchmarks = get_all_benchmarks()
     benchmark_map = {benchmark.name: benchmark for benchmark in benchmarks}
     for benchmark in tqdm(benchmark_map):

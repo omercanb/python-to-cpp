@@ -17,7 +17,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from tests.benchmarks.mypyc_benchmarks.runbench import BenchmarkMode
 
-default_csv = "benchmarks.csv"
+default_csv = Path(__file__).resolve().parent / "benchmarks.csv"
 
 headers = [
     "benchmark",
