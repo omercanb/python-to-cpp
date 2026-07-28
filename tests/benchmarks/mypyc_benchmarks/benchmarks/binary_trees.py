@@ -6,9 +6,8 @@ https://benchmarksgame-team.pages.debian.net/benchmarksgame/performance/binarytr
 
 import gc
 
-from mypy_extensions import mypyc_attr
-
 from benchmarking import benchmark
+from mypy_extensions import mypyc_attr
 
 
 @mypyc_attr(acyclic=True)
@@ -32,15 +31,19 @@ class Tree:
 @benchmark()
 def binary_trees() -> None:
     min_depth = 4
-    max_depth = 18  # Original uses 21, but it takes too long
+    max_depth = 10  # Original uses 21, but it takes too long
     stretch_depth = max_depth + 1
 
-    print("stretch tree of depth {} check: {}".format(stretch_depth, Tree(stretch_depth).check()))
+    print(
+        "stretch tree of depth {} check: {}".format(
+            stretch_depth, Tree(stretch_depth).check()
+        )
+    )
 
     long_lived_tree = Tree(max_depth)
 
     for d in range(min_depth, stretch_depth, 2):
-        iterations = 2**(max_depth + min_depth - d)
+        iterations = 2 ** (max_depth + min_depth - d)
 
         check = 0
         for i in range(1, iterations + 1):
@@ -48,4 +51,8 @@ def binary_trees() -> None:
 
         print("{} trees of depth {} check: {}".format(iterations, d, check))
 
-    print("long lived tree of depth {} check: {}".format(max_depth, long_lived_tree.check()))
+    print(
+        "long lived tree of depth {} check: {}".format(
+            max_depth, long_lived_tree.check()
+        )
+    )

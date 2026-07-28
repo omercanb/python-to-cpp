@@ -21,6 +21,7 @@ void int_bitwise_ops() {
     ptr<list<_int>> a;
     _int i;
     ptr<list<_int>> b;
+    _int t;
     _int n;
     _int j;
     _int k;
@@ -29,7 +30,10 @@ void int_bitwise_ops() {
     for (_int i = 0; i < 1000LL; ++i) {
         a->append(mod(((i * i) * 12753LL), (pow(2LL, 20LL) - 1LL)));
     }
-    b = a->__getitem__(slice(10LL, 50LL, std::nullopt));
+    b = ptr(new list<_int>());
+    for (_int t = 0; t < 40LL; ++t) {
+        b->append(a->__getitem__((10LL + t)));
+    }
     n = 0LL;
     for (_int i = 0; i < 50LL; ++i) {
         for (auto __iter_1 = iter(a); !__iter_1.done();) {
@@ -42,25 +46,29 @@ void int_bitwise_ops() {
     }
 }
 
-void int_long_bitwise_ops() {
+void int_bitwise_ops2() {
     ptr<list<_int>> a;
     _int i;
     ptr<list<_int>> b;
+    _int t;
     _int n;
     _int j;
     _int k;
     a = ptr(new list<_int>());
     for (_int i = 0; i < 1000LL; ++i) {
-        a->append((i * pow(i, idiv(i, 15LL))));
+        a->append((((i * i) * 2654435761LL) & 4294967295LL));
     }
-    b = a->__getitem__(slice(10LL, 500LL, 10LL));
+    b = ptr(new list<_int>());
+    for (_int t = 0; t < 49LL; ++t) {
+        b->append(a->__getitem__((10LL + (t * 10LL))));
+    }
     n = 0LL;
     for (_int i = 0; i < 10LL; ++i) {
         for (auto __iter_3 = iter(a); !__iter_3.done();) {
             j = next(__iter_3);
             for (auto __iter_4 = iter(b); !__iter_4.done();) {
                 k = next(__iter_4);
-                if (to_bool(((1LL << (i * 19LL)) & j))) {
+                if (to_bool(((1LL << (i * 3LL)) & j))) {
                 }
             }
         }

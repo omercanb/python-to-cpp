@@ -21,14 +21,13 @@ the layout & logic from the original. (Ugh.)
 """
 
 from __future__ import annotations
+
 from abc import abstractmethod
 from typing import Iterable
 
-from typing_extensions import Final
-from mypy_extensions import i64
-
 from benchmarking import benchmark
-
+from mypy_extensions import i64
+from typing_extensions import Final
 
 # The JS variant implements "OrderedCollection", which basically completely
 # overlaps with ``list``. So we'll cheat. :D
@@ -109,7 +108,7 @@ class Constraint(object):
 
         if not self.is_satisfied():
             if self.strength == REQUIRED:
-                print('Could not satisfy a required constraint!')
+                print("Could not satisfy a required constraint!")
 
             return None
 
@@ -124,7 +123,7 @@ class Constraint(object):
 
         assert planner is not None
         if not planner.add_propagate(self, mark):
-            print('Cycle encountered')
+            print("Cycle encountered")
 
         out.mark = mark
         return overridden
@@ -194,8 +193,9 @@ class UrnaryConstraint(Constraint):
         self.satisfied = False
 
     def choose_method(self, mark: i64) -> None:
-        if self.my_output.mark != mark and \
-           Strength.stronger(self.strength, self.my_output.walk_strength):
+        if self.my_output.mark != mark and Strength.stronger(
+            self.strength, self.my_output.walk_strength
+        ):
             self.satisfied = True
         else:
             self.satisfied = False
@@ -272,13 +272,17 @@ class BinaryConstraint(Constraint):
 
     def choose_method(self, mark: i64) -> None:
         if self.v1.mark == mark:
-            if self.v2.mark != mark and Strength.stronger(self.strength, self.v2.walk_strength):
+            if self.v2.mark != mark and Strength.stronger(
+                self.strength, self.v2.walk_strength
+            ):
                 self.direction = Direction.FORWARD
             else:
                 self.direction = Direction.BACKWARD
 
         if self.v2.mark == mark:
-            if self.v1.mark != mark and Strength.stronger(self.strength, self.v1.walk_strength):
+            if self.v1.mark != mark and Strength.stronger(
+                self.strength, self.v1.walk_strength
+            ):
                 self.direction = Direction.BACKWARD
             else:
                 self.direction = Direction.NONE
@@ -320,8 +324,7 @@ class BinaryConstraint(Constraint):
     def recalculate(self) -> None:
         ihn = self.input()
         out = self.output()
-        out.walk_strength = Strength.weakest_of(
-            self.strength, ihn.walk_strength)
+        out.walk_strength = Strength.weakest_of(self.strength, ihn.walk_strength)
         out.stay = ihn.stay
 
         if out.stay:
@@ -346,8 +349,14 @@ class BinaryConstraint(Constraint):
 
 class ScaleConstraint(BinaryConstraint):
 
-    def __init__(self, src: Variable, scale: Variable, offset: Variable, dest: Variable,
-                 strength: Strength) -> None:
+    def __init__(
+        self,
+        src: Variable,
+        scale: Variable,
+        offset: Variable,
+        dest: Variable,
+        strength: Strength,
+    ) -> None:
         self.direction = Direction.NONE
         self.scale = scale
         self.offset = offset
@@ -376,14 +385,12 @@ class ScaleConstraint(BinaryConstraint):
         if self.direction == Direction.FORWARD:
             self.v2.value = self.v1.value * self.scale.value + self.offset.value
         else:
-            self.v1.value = (
-                self.v2.value - self.offset.value) / self.scale.value
+            self.v1.value = (self.v2.value - self.offset.value) / self.scale.value
 
     def recalculate(self) -> None:
         ihn = self.input()
         out = self.output()
-        out.walk_strength = Strength.weakest_of(
-            self.strength, ihn.walk_strength)
+        out.walk_strength = Strength.weakest_of(self.strength, ihn.walk_strength)
         out.stay = ihn.stay and self.scale.stay and self.offset.stay
 
         if out.stay:
@@ -410,10 +417,7 @@ class Variable(object):
 
     def __repr__(self) -> str:
         # To make debugging this beast from pdb easier...
-        return '<Variable: %s - %s>' % (
-            self.name,
-            self.value
-        )
+        return "<Variable: %s - %s>" % (self.name, self.value)
 
     def add_constraint(self, constraint: Constraint) -> None:
         self.constraints.append(constraint)
@@ -557,6 +561,7 @@ class Plan(object):
 
 
 # Main
+
 
 def chain_test(n: i64) -> None:
     """

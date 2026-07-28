@@ -19,6 +19,8 @@ from typing_extensions import Final
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
+from tabulate import tabulate
+
 from main import pipeline
 from python import utils
 from python.utils import compile_cpp, compile_proc
@@ -38,6 +40,12 @@ utils.set_cpp_dir(Path("../../../cpp"))
 translated_executable_paths: dict[str, str] = {}
 # A cache of the compiled handwritten files
 handwritten_executable_paths: dict[str, str] = {}
+
+
+class BenchmarkMode(Enum):
+    interpreted = auto()  # Running the benchamrk with python
+    translated = auto()  # Running the benchmark after translating
+    handwritten = auto()  # Running the custom written C++ version of the benchmark
 
 
 def run_once(benchmark: BenchmarkInfo, mode: BenchmarkMode) -> float:
@@ -80,7 +88,7 @@ def run_handwritten(benchmark: BenchmarkInfo) -> float:
         handwritten_executable_paths[benchmark.name] = compile_handwritten_benchmark(
             benchmark
         )
-    binary = translated_executable_paths[benchmark.name]
+    binary = handwritten_executable_paths[benchmark.name]
     cmd = [f"./{binary}"]
     result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE)
     return parse_elapsed_time(result.stdout)
@@ -95,12 +103,6 @@ def parse_elapsed_time(output: bytes) -> float:
 def smoothen(a: list[float]) -> list[float]:
     # Remove (at most) one third of the slowest runs (these are likely outliers).
     return sorted(a)[: 2 * (len(a) + 1) // 3]
-
-
-class BenchmarkMode(Enum):
-    interpreted = auto()  # Running the benchamrk with python
-    translated = auto()  # Running the benchmark after translating
-    handwritten = auto()  # Running the custom written C++ version of the benchmark
 
 
 def run_benchmark(
@@ -142,46 +144,6 @@ def run_benchmark(
         print()
     return times
 
-    # if benchmark.compiled_only:
-    #     # TODO: Remove this once it's no longer needed for debugging
-    #     print(f"runtimes: {sorted(times_compiled)}")
-    # if benchmark.strip_outlier_runs:
-    #     times_interpreted = smoothen(times_interpreted)
-    #     times_compiled = smoothen(times_compiled)
-    # n = max(len(times_interpreted), len(times_compiled))
-    # if interpreted:
-    #     stdev1 = statistics.stdev(times_interpreted)
-    #     mean1 = sum(times_interpreted) / n
-    # else:
-    #     stdev1 = 0.0
-    #     mean1 = 0.0
-    # if compiled:
-    #     stdev2 = statistics.stdev(times_compiled)
-    #     mean2 = sum(times_compiled) / n
-    # else:
-    #     stdev2 = 0.0
-    #     mean2 = 0.0
-    # if not raw_output:
-    #     if interpreted:
-    #         print(
-    #             "interpreted: %.6fs (avg of %d iterations; stdev %.2g%%)"
-    #             % (mean1, n, 100.0 * stdev1 / mean1)
-    #         )
-    #     if compiled:
-    #         print(
-    #             "compiled:    %.6fs (avg of %d iterations; stdev %.2g%%)"
-    #             % (mean2, n, 100.0 * stdev2 / mean2)
-    #         )
-    #     if compiled and interpreted:
-    #         print()
-    #         relative = sum(times_interpreted) / sum(times_compiled)
-    #         print("compiled is %.3fx faster" % relative)
-    # else:
-    #     print(
-    #         "%d %.6f %.6f %.6f %.6f"
-    #         % (n, sum(times_interpreted) / n, stdev1, sum(times_compiled) / n, stdev2)
-    #     )
-
 
 def get_statistics(times: list[float]):
     return (statistics.mean(times), statistics.stdev(times))
@@ -198,8 +160,10 @@ def get_translated_filepath(benchmark: BenchmarkInfo) -> str:
 
 
 def get_handwritten_filepath(benchmark: BenchmarkInfo) -> str:
-    fname = "handwritten_" + benchmark.module.replace(".", "/") + ".cpp"
-    return fname
+    module_path = benchmark.module.replace(".", "/")
+    separator = module_path.rfind("/")
+    path = f"{module_path[:separator]}/{module_path[separator + 1:]}_hw.cpp"
+    return path
 
 
 def translate_and_compile_benchmark(benchmark: BenchmarkInfo) -> str:
@@ -228,8 +192,16 @@ def translate_module_for_benchmarking(module: str, benchmark: str) -> str:
 
 def compile_handwritten_benchmark(benchmark: BenchmarkInfo) -> str:
     filepath = get_handwritten_filepath(benchmark)
+    file = open(filepath).read()
+    # If there is a previous main function, erase it
+    if "int main()" in file:
+        file = file[: file.index("int main()")]
+    file += "\n" + main_function_template(benchmark.name)
+    if "#include <chrono>" not in file:
+        file = "#include <chrono>\n" + file
+    open(filepath, "w").write(file)
     executable_path = filepath.rstrip(".cpp")
-    exe = compile_cpp(get_handwritten_filepath(benchmark), executable_path)
+    compile_cpp(filepath, executable_path)
     return executable_path
 
 
@@ -340,11 +312,37 @@ def main() -> None:
     benchmark = get_benchmark(args.benchmark)
 
     interpreted_times = run_benchmark(benchmark, BenchmarkMode.interpreted)
+    # handwritten_times = run_benchmark(benchmark, BenchmarkMode.handwritten)
     compiled_times = run_benchmark(benchmark, BenchmarkMode.translated)
 
     print_stats("interpreted", interpreted_times)
+    # print_stats("handwritten", handwritten_times)
     print_stats("compiled", compiled_times)
+
+    stats = []
+    stats.append(get_stats("interpreted", interpreted_times))
+    stats.append(get_stats("compiled", compiled_times))
+    # stats.append(get_stats("handwritten", handwritten_times))
+    print(tabulate(stats, get_stats_headers()))
     delete_binaries()
+
+
+def get_stats(label: str, times: list[float]):
+    return {
+        "label": label,
+        "mean": f"{statistics.mean(times):.5f}",
+        "cv": f"{100*statistics.stdev(times)/statistics.mean(times):.4f}%",
+        "iterations": len(times),
+    }
+
+
+def get_stats_headers():
+    return {
+        "label": "label",
+        "mean": "mean",
+        "cv": "cv",
+        "iterations": "iterations",
+    }
 
 
 def print_stats(label: str, times: list[float]):
