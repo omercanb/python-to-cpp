@@ -7,6 +7,11 @@ walk so a program reports all of its problems at once.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from main import TypeTable
+
 from mypy.nodes import (
     AssignmentStmt,
     Block,
@@ -42,7 +47,14 @@ from mypy.nodes import (
     Var,
     WhileStmt,
 )
-from mypy.types import CallableType, TupleType, Type, UnionType, get_proper_type
+from mypy.types import (
+    CallableType,
+    ProperType,
+    TupleType,
+    Type,
+    UnionType,
+    get_proper_type,
+)
 
 from python.codegen.builtins import EXCEPTION_TYPES
 from python.codegen.exceptions import names_a_class
@@ -110,7 +122,7 @@ def _tuple_index_hint(o: IndexExpr) -> str:
 
 
 class _Validator(Traverser):
-    def __init__(self, types: dict[Expression, Type]):
+    def __init__(self, types: dict[Expression, ProperType]):
         self.types = types
         self.diagnostics: list[Diagnostic] = []
 
@@ -131,7 +143,7 @@ class _Validator(Traverser):
 
     def check_inferred_type(self, node: Expression) -> None:
         t = self.types.get(node)
-        if t is not None:
+        if t is not None and isinstance(t, ProperType):
             self.check_type(node, t)
 
     def visit_class_def(self, o: ClassDef) -> None:
@@ -168,7 +180,7 @@ class _Validator(Traverser):
                 "a class level value is not supported",
                 "every attribute is per instance, so set it in __init__:\n"
                 "def __init__(self) -> None:\n"
-                "    self.kind = \"point\"",
+                '    self.kind = "point"',
             )
             return
         self.report(
@@ -399,9 +411,13 @@ class _Validator(Traverser):
             )
 
 
-def validate(tree: MypyFile, types: dict[Expression, Type]) -> list[Diagnostic]:
+def validate(tree: MypyFile, types: TypeTable) -> list[Diagnostic]:
     """Every construct in the file that cannot be translated, in source order."""
-    validator = _Validator(types)
+    type_table: dict[Expression, ProperType] = {}
+    for k, v in types.items():
+        if isinstance(v, ProperType):
+            type_table[k] = v
+    validator = _Validator(type_table)
     validator.visit(tree)
     for symbol in tree.names.values():
         if isinstance(symbol.node, Var) and symbol.type is not None:

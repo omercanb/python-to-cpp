@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from main import translate_source
+from python.analysis.mypy_pass import pipeline
 from python.utils import compile_cpp
 from tests.test_utils import print_output_diff, run_python_and_capture
 
@@ -84,7 +84,7 @@ def _compile_one(path: str) -> subprocess.CompletedProcess:
     tmp_directory = tempfile.mkdtemp()
     source = os.path.join(tmp_directory, "main.cpp")
     exe = os.path.join(tmp_directory, "main")
-    Path(source).write_text(translate_source(open(path).read()))
+    Path(source).write_text(pipeline(path, open(path).read()))
 
     compiled = compile_cpp(source, exe)
     assert compiled.returncode == 0, f"{path} failed to compile:\n{compiled.stderr}"
@@ -97,9 +97,7 @@ def _compile_batched() -> str:
     Both the compile and macOS's ~0.175s first-run check on a new executable
     are then paid once instead of once per program.
     """
-    translations = [
-        (os.path.basename(p), translate_source(open(p).read())) for p in paths
-    ]
+    translations = [(os.path.basename(p), pipeline(p, open(p).read())) for p in paths]
     current_directory = Path(os.path.abspath(__file__)).parent.resolve()
     source = os.path.join(current_directory, "batch.cpp")
 

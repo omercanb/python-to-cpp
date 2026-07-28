@@ -28,7 +28,18 @@ from tests.benchmarks.run_bench import (
 
 
 def main():
+    find_failing_translations()
     pass
+
+
+def find_failing_translations():
+    benchmarks = get_all_benchmarks()
+    benchmark_map = {benchmark.name: benchmark for benchmark in benchmarks}
+    for benchmark in tqdm(benchmark_map):
+        try:
+            run_benchmark(benchmark_map[benchmark], BenchmarkMode.translated)
+        except Exception as e:
+            print(e)
 
 
 def record_python_baselines():
@@ -38,7 +49,7 @@ def record_python_baselines():
         times = run_benchmark(
             benchmark_map[benchmark], BenchmarkMode.interpreted, min_iter=20
         )
-        record.write_to_csv(
+        record_bench.write_to_csv(
             benchmark, BenchmarkMode.interpreted, times, override_save=True
         )
 

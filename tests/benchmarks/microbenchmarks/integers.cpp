@@ -78,7 +78,7 @@ void int_bitwise_ops2() {
 
     int main() {
         auto t0 = std::chrono::steady_clock::now();
-        int_bitwise_ops(); // Call the benchmarked function
+        int_bitwise_ops2(); // Call the benchmarked function
         auto t1 = std::chrono::steady_clock::now();
         auto s = std::chrono::duration<double>(t1 - t0).count() ;
         std::cout << "elapsed: " << s << '\n';

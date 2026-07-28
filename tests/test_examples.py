@@ -4,7 +4,7 @@ import glob
 
 import pytest
 
-from main import translate_source
+from python.analysis.mypy_pass import pipeline
 from python.utils import build_and_run_capture
 from tests.test_utils import print_output_diff, run_python_and_capture
 
@@ -18,7 +18,7 @@ class TestExamples:
     def test_example(self, filename: str):
         """An example must produce identical output in Python and C++."""
         program = open(filename).read()
-        cpp_program = translate_source(program)
+        cpp_program = pipeline(filename, program)
         cpp_output = build_and_run_capture(cpp_program)
         python_output = run_python_and_capture(filename)
         print_output_diff(python_output.stdout, cpp_output.stdout)

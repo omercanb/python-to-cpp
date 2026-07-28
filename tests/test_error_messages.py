@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from main import translate_source
+from python.analysis.mypy_pass import pipeline
 from python.errors import UnsupportedProgram, render
 
 error_programs_path = "tests/error_programs"
@@ -22,7 +22,7 @@ validator_path = "python/analysis/validate.py"
 def _diagnostics_for(path: str):
     source = Path(path).read_text()
     with pytest.raises(UnsupportedProgram) as raised:
-        translate_source(source)
+        pipeline(path, source)
     return source, raised.value.diagnostics
 
 

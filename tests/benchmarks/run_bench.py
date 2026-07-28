@@ -15,7 +15,7 @@ from typing import NamedTuple, Optional
 
 from tabulate import tabulate
 
-from main import pipeline
+from python.analysis.mypy_pass import pipeline
 from python.utils import compile_cpp, compile_proc
 from tests.benchmarks.benchmarking import BenchmarkInfo, benchmarks
 
@@ -35,7 +35,6 @@ translated_executable_paths: dict[str, str] = {}
 handwritten_executable_paths: dict[str, str] = {}
 
 benchmarks_root_dir = Path(__file__).parent
-print(benchmarks_root_dir)
 benchmarks_dir = benchmarks_root_dir / "benchmarks"
 microbenchmarks_dir = benchmarks_root_dir / "microbenchmarks"
 

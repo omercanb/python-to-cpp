@@ -3,9 +3,9 @@
 import pytest
 from mypy.nodes import ClassDef, FuncDef, TypeInfo
 
-from main import mypy_pipeline_source
-from python.codegen.translation_utils import translate_func_signature
+from python.analysis.mypy_pass import _analyse
 from python.codegen.expression_codegen import ExpressionCodegen
+from python.codegen.translation_utils import translate_func_signature
 
 # Test Python functions with various signatures
 test_code = """
@@ -65,7 +65,7 @@ class TestFunctionSignatures:
 
     @classmethod
     def setup_class(cls):
-        result = mypy_pipeline_source(test_code)
+        result = _analyse(None, test_code)
         cls.tree = result.tree
         cls.types = result.types
         cls.expr_translator = ExpressionCodegen(result.types)
