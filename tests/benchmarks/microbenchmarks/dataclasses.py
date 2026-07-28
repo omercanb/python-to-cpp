@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 @dataclass
 class C:

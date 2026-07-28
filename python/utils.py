@@ -18,13 +18,6 @@ PCH_FILE = CPP_DIR / ".pch.h.pch"
 STD = "c++17"
 
 
-def set_cpp_dir(path: Path):
-    global CPP_DIR, PCH_HEADER, PCH_FILE
-    CPP_DIR = path
-    PCH_HEADER = CPP_DIR / ".pch.h"
-    PCH_FILE = CPP_DIR / ".pch.h.pch"
-
-
 def ensure_pch() -> Path | None:
     """Build a precompiled header of cpp/*.h, refreshing it when one changes."""
     # Skip our own generated header, or it ends up including itself.
@@ -57,8 +50,6 @@ def ensure_pch() -> Path | None:
     )
     if built.returncode != 0:
         temporary.unlink(missing_ok=True)
-        # Warn, don't print: pytest swallows prints on a passing run, which is
-        # how a broken pch stayed unnoticed once already.
         warnings.warn(
             f"precompiled header failed to build, compiling without it "
             f"(expect a ~4x slower compile):\n{built.stderr}",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 
 @benchmark()

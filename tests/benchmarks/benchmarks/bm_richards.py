@@ -19,7 +19,7 @@ from typing import cast
 from typing_extensions import Final
 from mypy_extensions import i64
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 
 # Task IDs

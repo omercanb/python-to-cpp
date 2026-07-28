@@ -20,7 +20,7 @@ import math
 from typing import overload
 from typing_extensions import Final
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 
 DEFAULT_WIDTH: Final = 100

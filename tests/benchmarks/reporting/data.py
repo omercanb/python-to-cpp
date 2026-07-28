@@ -155,7 +155,7 @@ def get_benchmark_names() -> Dict[str, bool]:
     baseline to compare to).
     """
     result = {}
-    data = subprocess.check_output(['python', 'runbench.py', '--list']).decode('ascii')
+    data = subprocess.check_output(['python', 'run_bench.py', '--list']).decode('ascii')
     for line in data.splitlines():
         compiled_only = 'compiled only' in line
         result[line.split()[0]] = compiled_only
@@ -164,7 +164,7 @@ def get_benchmark_names() -> Dict[str, bool]:
 
 def get_microbenchmark_names() -> Set[str]:
     result = set()
-    data = subprocess.check_output(['python', 'runbench.py', '--list']).decode('ascii')
+    data = subprocess.check_output(['python', 'run_bench.py', '--list']).decode('ascii')
     for line in data.splitlines():
         if '(micro)' in line:
             result.add(line.split()[0])

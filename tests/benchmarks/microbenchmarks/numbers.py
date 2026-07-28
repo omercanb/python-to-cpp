@@ -5,7 +5,7 @@ import random
 
 from typing_extensions import Final
 
-from benchmarking import benchmark, benchmark_with_context, BenchmarkContext
+from tests.benchmarks.benchmarking import benchmark, benchmark_with_context, BenchmarkContext
 
 
 Matrix = List[List[float]]

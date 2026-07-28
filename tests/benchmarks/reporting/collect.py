@@ -43,7 +43,7 @@ def run_bench(benchmark: str,
     env = os.environ.copy()
     if compiled:
         env['CC'] = CC
-    cmd = ['python', 'runbench.py', '--raw']
+    cmd = ['python', 'run_bench.py', '--raw']
     if mypy_repo:
         cmd.extend(["--mypy-repo", mypy_repo])
     if compiled:
@@ -90,7 +90,7 @@ def parse_args() -> Tuple[str, str, str, str, str, bool]:
                        will also install mypy dependencies in the current virtualenv!""")
     parser.add_argument(
         "benchmark",
-        help="""benchmark name, such as 'richards' (use 'runbench.py --list' to show valid
+        help="""benchmark name, such as 'richards' (use 'run_bench.py --list' to show valid
                 values)""")
     parser.add_argument("mypy_repo", help="target mypy repository (this will be modified!)")
     parser.add_argument(

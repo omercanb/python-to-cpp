@@ -15,7 +15,7 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-from tests.benchmarks.mypyc_benchmarks.runbench import BenchmarkMode
+from tests.benchmarks.run_bench import BenchmarkMode
 
 default_csv = Path(__file__).resolve().parent / "benchmarks.csv"
 

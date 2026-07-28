@@ -1,6 +1,6 @@
 """Benchmarks for built-in functions (that don't fit elsewhere)."""
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 
 @benchmark()

@@ -15,7 +15,7 @@ Concurrency by Jason Stitt
 from typing import Callable
 import time
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 DEFAULT_N = 130
 

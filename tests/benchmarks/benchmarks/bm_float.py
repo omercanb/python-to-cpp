@@ -6,7 +6,7 @@ Adapted to mypyc by Jukka Lehtosalo
 from __future__ import annotations
 from math import sin, cos, sqrt, isclose
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 
 POINTS = 100000

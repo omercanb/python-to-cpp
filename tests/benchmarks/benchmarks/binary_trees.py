@@ -6,7 +6,7 @@ https://benchmarksgame-team.pages.debian.net/benchmarksgame/performance/binarytr
 
 import gc
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 from mypy_extensions import mypyc_attr
 
 

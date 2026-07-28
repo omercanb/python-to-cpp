@@ -13,17 +13,11 @@ from importlib import import_module
 from pathlib import Path
 from typing import NamedTuple, Optional
 
-from benchmarking import BenchmarkInfo, benchmarks
-from typing_extensions import Final
-
-REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT))
-
 from tabulate import tabulate
 
 from main import pipeline
-from python import utils
 from python.utils import compile_cpp, compile_proc
+from tests.benchmarks.benchmarking import BenchmarkInfo, benchmarks
 
 raw_output = False
 
@@ -33,13 +27,17 @@ MIN_TIME = 2.0
 MIN_ITER = 10
 
 
-BINARY_EXTENSION: Final = "pyd" if sys.platform == "win32" else "so"
-utils.set_cpp_dir(Path("../../../cpp"))
+# utils.set_cpp_dir(Path("../../../cpp"))
 
 # A cache of the translated executables that gets populated when first translated
 translated_executable_paths: dict[str, str] = {}
 # A cache of the compiled handwritten files
 handwritten_executable_paths: dict[str, str] = {}
+
+benchmarks_root_dir = Path(__file__).parent
+print(benchmarks_root_dir)
+benchmarks_dir = benchmarks_root_dir / "benchmarks"
+microbenchmarks_dir = benchmarks_root_dir / "microbenchmarks"
 
 
 class BenchmarkMode(Enum):
@@ -61,7 +59,7 @@ def run_once(benchmark: BenchmarkInfo, mode: BenchmarkMode) -> float:
 def run_interpreted(benchmark: BenchmarkInfo) -> float:
     module = benchmark.module
     program = (
-        'import %s; import benchmarking as bm; print("\\nelapsed:", bm.run_once("%s"))'
+        'import %s; import tests.benchmarks.benchmarking as bm; print("\\nelapsed:", bm.run_once("%s"))'
         % (
             module,
             benchmark.name,
@@ -221,25 +219,23 @@ def main_function_template(benchmark: str) -> str:
 
 
 def import_all() -> None:
-    files = glob.glob(f"microbenchmarks/*.py")
-    files += glob.glob(f"benchmarks/*.py")
+    files = glob.glob("microbenchmarks/*.py", root_dir=microbenchmarks_dir.parent)
+    files += glob.glob("benchmarks/*.py", root_dir=benchmarks_dir.parent)
     for fnam in files:
-        filepath = Path(fnam).resolve()
+        filepath = Path(benchmarks_root_dir / fnam).resolve()
         if filepath.name == "__init__.py" or filepath.suffix != ".py":
             continue
-        benchmarks_root_dir = Path(__file__).parent.resolve()
         module_parts = filepath.with_suffix("").relative_to(benchmarks_root_dir).parts
         module = ".".join(module_parts)
+        module = "tests.benchmarks." + module
         import_module(module)
 
 
 def delete_binaries() -> None:
     binaries = [
-        p for p in Path("microbenchmarks/").iterdir() if p.is_file() and not p.suffix
+        p for p in microbenchmarks_dir.iterdir() if p.is_file() and not p.suffix
     ]
-    binaries += [
-        p for p in Path("benchmarks/").iterdir() if p.is_file() and not p.suffix
-    ]
+    binaries += [p for p in benchmarks_dir.iterdir() if p.is_file() and not p.suffix]
     for fnam in binaries:
         os.remove(fnam)
 
@@ -311,17 +307,14 @@ def main() -> None:
 
     benchmark = get_benchmark(args.benchmark)
 
-    interpreted_times = run_benchmark(benchmark, BenchmarkMode.interpreted)
-    # handwritten_times = run_benchmark(benchmark, BenchmarkMode.handwritten)
     compiled_times = run_benchmark(benchmark, BenchmarkMode.translated)
 
-    print_stats("interpreted", interpreted_times)
-    # print_stats("handwritten", handwritten_times)
-    print_stats("compiled", compiled_times)
+    interpreted_times = run_benchmark(benchmark, BenchmarkMode.interpreted)
+    # handwritten_times = run_benchmark(benchmark, BenchmarkMode.handwritten)
 
     stats = []
     stats.append(get_stats("interpreted", interpreted_times))
-    stats.append(get_stats("compiled", compiled_times))
+    stats.append(get_stats("translated", compiled_times))
     # stats.append(get_stats("handwritten", handwritten_times))
     print(tabulate(stats, get_stats_headers()))
     delete_binaries()

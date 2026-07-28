@@ -18,7 +18,7 @@ from io import StringIO
 from typing_extensions import Final
 from mypy_extensions import i64
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 # 2016-07-07: CPython 3.6 takes ~25 ms to solve the board level 25
 DEFAULT_LEVEL = 25

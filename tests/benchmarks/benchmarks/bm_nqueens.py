@@ -1,7 +1,7 @@
 # mypy: disallow-untyped-defs
 """Simple, brute-force N-Queens solver."""
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 
 def generate_permutations(values: list[int], start: int, result: list[list[int]]) -> None:

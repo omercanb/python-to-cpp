@@ -7,7 +7,7 @@ import argparse
 import subprocess
 import sys
 
-from benchmarking import benchmarks
+from tests.benchmarks.benchmarking import benchmarks
 from runbench import import_all
 
 

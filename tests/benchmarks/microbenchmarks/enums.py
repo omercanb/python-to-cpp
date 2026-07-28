@@ -1,6 +1,6 @@
 from enum import Enum
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 class MyEnum(Enum):
     A = 1

@@ -25,7 +25,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Iterable
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 from mypy_extensions import i64
 from typing_extensions import Final
 

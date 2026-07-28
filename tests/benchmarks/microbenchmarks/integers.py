@@ -1,4 +1,4 @@
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 
 @benchmark()

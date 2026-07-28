@@ -3,7 +3,7 @@
 import array
 from typing import List, Tuple
 
-from benchmarking import benchmark
+from tests.benchmarks.benchmarking import benchmark
 
 
 @benchmark()
@@ -358,7 +358,7 @@ def sieve_packed() -> None:
 
 def num_primes_array(n: int) -> int:
     # This benchmarks should use an efficient packed memory representation
-    is_prime = array.array('b', [1]) * (n + 1)
+    is_prime = array.array("b", [1]) * (n + 1)
     is_prime[0] = is_prime[1] = 0
     for i in range(2, n + 1):
         if is_prime[i] and i * i <= n:

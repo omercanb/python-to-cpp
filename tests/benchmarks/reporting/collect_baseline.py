@@ -18,7 +18,7 @@ def parse_args() -> Tuple[str, str]:
                        file <data_repo>/data/<benchmark>-cpython.csv.""")
     parser.add_argument(
         "benchmark",
-        help="""benchmark name, such as 'richards' (use 'runbench.py --list' to show valid
+        help="""benchmark name, such as 'richards' (use 'run_bench.py --list' to show valid
                 values)""")
     parser.add_argument(
         "data_repo",
