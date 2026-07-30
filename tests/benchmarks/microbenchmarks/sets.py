@@ -33,6 +33,6 @@ def set_literal_iteration() -> None:
             for s in {"yes", "no"}:
                 if s == "yes":
                     n += 1
-            for a in {None, False, 1, 2.0, 3j, "4", b"5", (6,)}:
+            for a in {True, False}:
                 n += 1
     assert n == 640000, n

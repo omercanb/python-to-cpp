@@ -98,7 +98,7 @@ def dict_call_generator() -> None:
     a = []
     for j in range(1000):
         items = [
-            ("Foobar-%d" % j, j),
+            ("Foobar-%d" % j, str(j)),
             ("%d str" % j, "x"),
         ]
         if j % 2 == 0:
@@ -108,7 +108,7 @@ def dict_call_generator() -> None:
     n = 0
     for i in range(1000):
         for s in a:
-            d = dict((key, value) for key, value in s)
+            d = dict([(key, value) for key, value in s])
             assert len(d) == len(s)
 
 

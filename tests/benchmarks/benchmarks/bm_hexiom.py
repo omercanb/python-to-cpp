@@ -116,7 +116,7 @@ class Done(object):
         maxi: i64 = -1
         for i in range(self.count):
             if (not self.already_done(i)):
-                maxvali: i64 = max(k for k in self.cells[i] if k != EMPTY)
+                maxvali: i64 = max([k for k in self.cells[i] if k != EMPTY])
                 if maxval < maxvali:
                     maxval = maxvali
                     maxi = i
@@ -134,8 +134,8 @@ class Done(object):
         for i in range(self.count):
             if not self.already_done(i):
                 cells_around = pos.hex.get_by_id(i).links
-                n = sum(1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
-                        for nid in cells_around)
+                n = sum([1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
+                        for nid in cells_around])
                 if n > maxn:
                     maxn = n
                     maxi = i
@@ -147,8 +147,8 @@ class Done(object):
         for i in range(self.count):
             if not self.already_done(i):
                 cells_around = pos.hex.get_by_id(i).links
-                n = sum(1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
-                        for nid in cells_around)
+                n = sum([1 if (self.already_done(nid) and (self[nid][0] != EMPTY)) else 0
+                        for nid in cells_around])
                 if n < minn:
                     minn = n
                     mini = i
@@ -280,7 +280,7 @@ def constraint_pass(pos: Pos, last_move: i64 | None = None) -> bool:
             if done.remove_unfixed(v):
                 changed = True
         else:
-            possible = sum((1 if v in cell else 0) for cell in done.cells)
+            possible = sum([(1 if v in cell else 0) for cell in done.cells])
             # If the number of possible cells for a value is exactly the number of available tiles
             # put a tile in each cell
             if pos.tiles[v] == possible:
@@ -647,7 +647,7 @@ def main(loops: i64, level: i64) -> None:
         output = stream.getvalue()
         stream = None
 
-    output = '\n'.join(line.rstrip() for line in output.splitlines())
+    output = '\n'.join([line.rstrip() for line in output.splitlines()])
     if output != expected:
         raise AssertionError("got a wrong answer:\n%s\nexpected:\n%s"
                              % (output, expected))

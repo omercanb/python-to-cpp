@@ -1,12 +1,11 @@
 """Numeric microbenchmarks."""
 
-from typing import List, Tuple
 import random
+from typing import List, Tuple
 
 from typing_extensions import Final
 
-from tests.benchmarks.benchmarking import benchmark, benchmark_with_context, BenchmarkContext
-
+from tests.benchmarks.benchmarking import benchmark
 
 Matrix = List[List[float]]
 
@@ -14,11 +13,10 @@ SIZE: Final = 30
 SEED: Final = 535
 
 
-@benchmark_with_context
-def matrix_multiply(bm: BenchmarkContext) -> None:
+@benchmark()
+def matrix_multiply() -> None:
     """Naive matrix multiplication benchmark."""
     m, m2 = setup_matrix_mult()
-    bm.start()
     for i in range(50):
         m = multiply(m, m2)
     assert is_close(m[0][0], 1.758765499e58), m[0][0]
@@ -64,7 +62,7 @@ def int_to_float() -> None:
 
 @benchmark()
 def str_to_float() -> None:
-    a = ['1', '1.234567', '44324', '23.4', '-43.44e-4']
+    a = ["1", "1.234567", "44324", "23.4", "-43.44e-4"]
     x = 0.0
     for i in range(1000 * 1000):
         for n in a:

@@ -117,15 +117,12 @@
 # ---
 # name: test_error_message[object_element.py]
   '''
-  object_element.py:2:15: error: no C++ equivalent for the type `object`
+  object_element.py:2:15: error: Type of expression is inferred as `list[object]` which contains `object`. This cannot be translated to C++.
   
     2 |     print(any([False, True]))
       |               ^^^^^^^^^^^^^
   
-    help: `object` is what mypy infers when the elements disagree, or when a literal goes straight into something taking Iterable[object].
-            Name it first so the element type comes from the values:
-            flags = [False, True]
-            print(any(flags))
+    help: Everything must have strictly one type only. There may be multiple different types being assigned to the field with type `object`. You can give this expression a type annotation to help you catch the error.
   
   '''
 # ---

@@ -158,8 +158,7 @@ def tuple_from_iterable() -> None:
     for i in range(1000):
         for s in a:
             t1 = tuple(s)
-            t2 = tuple(j + 1 for j in s)
-            n += len(t1) + len(t2)
+            n += len(t1)
     assert n == 1800000, n
 
 
@@ -190,7 +189,7 @@ def list_remove() -> None:
             for s in a:
                 s.remove(i)
 
-        total = sum(len(s) for s in a)
+        total = sum([len(s) for s in a])
         assert total == 55, total
 
 

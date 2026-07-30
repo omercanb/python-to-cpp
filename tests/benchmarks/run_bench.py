@@ -165,7 +165,7 @@ def get_handwritten_filepath(benchmark: BenchmarkInfo) -> str:
 
 def translate_and_compile_benchmark(benchmark: BenchmarkInfo) -> str:
     if not raw_output:
-        print("compiling %s..." % benchmark.module)
+        print(f"compiling {benchmark.name} {benchmark.module}...")
     cpp = translate_module_for_benchmarking(benchmark.module, benchmark.name)
     exe = compile_proc(
         cpp,
@@ -241,7 +241,6 @@ def delete_binaries() -> None:
 
 class Args(NamedTuple):
     benchmark: str
-    is_list: bool
 
 
 def parse_args() -> Args:
@@ -254,9 +253,6 @@ def parse_args() -> Args:
         help="name of benchmark to run (use --list to show options)",
     )
     parser.add_argument(
-        "--list", action="store_true", help="show names of all benchmarks"
-    )
-    parser.add_argument(
         "--raw", action="store_true", help="use machine-readable raw output"
     )
     parsed = parser.parse_args()
@@ -264,30 +260,16 @@ def parse_args() -> Args:
         global raw_output
         raw_output = True
 
-    if not parsed.list and not parsed.benchmark:
+    if not parsed.benchmark:
         parser.print_help()
         sys.exit(2)
-    args = Args(parsed.benchmark, parsed.list)
+    args = Args(parsed.benchmark)
     return args
 
 
 def get_all_benchmarks():
     import_all()
     return benchmarks
-
-
-def list_benchmarks():
-    for benchmark in sorted(benchmarks):
-        if benchmark.compiled_variant:
-            # Don't show benchmarks with compiled_variants twice
-            continue
-        suffix = ""
-        if not raw_output:
-            if benchmark.module.startswith("microbenchmarks."):
-                suffix += " (micro)"
-            if benchmark.compiled_only:
-                suffix += " (compiled only)"
-        print(benchmark.name + suffix)
 
 
 def get_benchmark(name: str) -> BenchmarkInfo:
@@ -300,9 +282,6 @@ def get_benchmark(name: str) -> BenchmarkInfo:
 def main() -> None:
 
     args = parse_args()
-    if args.is_list:
-        list_benchmarks()
-        sys.exit(0)
 
     benchmark = get_benchmark(args.benchmark)
 

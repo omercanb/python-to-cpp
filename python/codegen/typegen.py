@@ -140,7 +140,7 @@ def cpp_type_name(t: Type) -> str:
         # We need to propogate the unsupported type error up while keeping the underlying member type that caused the issue
         # For this we need to skip doing anything special if the exception was raised in the current call, then set the member type in the call one further up the stack, then just propogate the error after
         if e.problematic_member_type:
-            raise
+            raise UnsupportedType(t, problematic_member_type=e.problematic_member_type)
         elif e is current_error:
             raise
         else:

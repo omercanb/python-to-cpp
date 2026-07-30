@@ -8,17 +8,17 @@ def str_methods() -> None:
     """Use a mix of popular str methods (but not split/join)."""
     a = []
     for i in range(1000):
-        a.append('Foobar-%d' % i)
-        a.append('  %d str' % i)
+        a.append("Foobar-%d" % i)
+        a.append("  %d str" % i)
 
     n = 0
     for i in range(100):
         for s in a:
-            if s.startswith('foo'):
+            if s.startswith("foo"):
                 n += 1
-            if s.endswith('r'):
+            if s.endswith("r"):
                 n += 1
-            if s.replace('-', '/') != s:
+            if s.replace("-", "/") != s:
                 n += 1
             if s.strip() != s:
                 n += 1
@@ -34,28 +34,28 @@ def str_methods_2() -> None:
     """Use a mix of popular str methods."""
     a = []
     for i in range(1000):
-        a.append('FOOBAR-%d' % i)
-        a.append('  %d str' % i)
+        a.append("FOOBAR-%d" % i)
+        a.append("  %d str" % i)
 
     n = 0
     for i in range(100):
         for s in a:
-            if s.startswith(('  1', '  2', '  3')):
+            if s.startswith(("  1", "  2", "  3")):
                 n += 1
-            if s.endswith(('4', '5', '6')):
+            if s.endswith(("4", "5", "6")):
                 n += 1
             if s.lstrip() != s:
                 n += 1
-            if s.lstrip(' ') != s:
+            if s.lstrip(" ") != s:
                 n += 1
-            if s.rstrip('123') != s:
+            if s.rstrip("123") != s:
                 n += 1
             if s.upper() == s:
                 n += 1
-            x, y, z = s.partition('-')
+            x, y, z = s.partition("-")
             if y:
                 n += 1
-            x, y, z = s.rpartition('-')
+            x, y, z = s.rpartition("-")
             if y:
                 n += 1
     assert n == 593300, n
@@ -65,8 +65,8 @@ def str_methods_2() -> None:
 def str_format() -> None:
     a = []
     for i in range(1000):
-        a.append('Foobar-%d' % i)
-        a.append('%d str' % i)
+        a.append("Foobar-%d" % i)
+        a.append("%d str" % i)
 
     n = 0
     for i in range(100):
@@ -81,16 +81,16 @@ def str_format() -> None:
 def str_slicing() -> None:
     a = []
     for i in range(1000):
-        a.append('Foobar-%d' % i)
-        a.append('%d str' % i)
+        a.append("Foobar-%d" % i)
+        a.append("%d str" % i)
 
     n = 0
     for i in range(1000):
         for s in a:
             n += len(s[2:-2])
-            if s[:3] == 'Foo':
+            if s[:3] == "Foo":
                 n += 1
-            if s[-2:] == '00':
+            if s[-2:] == "00":
                 n += 1
     assert n == 9789000, n
 
@@ -99,14 +99,14 @@ def str_slicing() -> None:
 def split_and_join() -> None:
     a = []
     for i in range(1000):
-        a.append('Foobar-%d' % i)
-        a.append('%d-ab-asdfsdf-asdf' % i)
-        a.append('yeah')
+        a.append("Foobar-%d" % i)
+        a.append("%d-ab-asdfsdf-asdf" % i)
+        a.append("yeah")
     n = 0
     for i in range(100):
         for s in a:
-            items = s.split('-')
-            if '-'.join(items) == s:
+            items = s.split("-")
+            if "-".join(items) == s:
                 n += 1
     assert n == 300000, n
 
@@ -115,9 +115,9 @@ def split_and_join() -> None:
 def encode_decode() -> None:
     a = []
     for i in range(1000):
-        a.append('Foobar-%d' % i)
-        a.append('%d-ab-asdfsdf-asdf' % i)
-        a.append('yeah')
+        a.append("Foobar-%d" % i)
+        a.append("%d-ab-asdfsdf-asdf" % i)
+        a.append("yeah")
     n = 0
     for i in range(100):
         for s in a:
@@ -135,17 +135,17 @@ def encode_decode() -> None:
 def str_searching() -> None:
     a = []
     for i in range(1000):
-        a.append('Foobar-%d' % i)
-        a.append('%d-ab-asdfsdf-asdf' % i)
-        a.append('yeah')
+        a.append("Foobar-%d" % i)
+        a.append("%d-ab-asdfsdf-asdf" % i)
+        a.append("yeah")
     n = 0
     for i in range(100):
         for s in a:
-            if 'i' in s:
+            if "i" in s:
                 n += 1
-            if s.find('asd') >= 0:
+            if s.find("asd") >= 0:
                 n += 1
-            n += s.index('a')
+            n += s.index("a")
     assert n == 1089000, n
 
 
@@ -177,9 +177,9 @@ class Cls:
 def ord_builtin() -> None:
     a = []
     for i in range(1000):
-        a.append('Foobar-%d' % i)
-        a.append('%d-ab-asdfsdf-asdf' % i)
-        a.append('yeah')
+        a.append("Foobar-%d" % i)
+        a.append("%d-ab-asdfsdf-asdf" % i)
+        a.append("yeah")
     n = 0
     for i in range(50):
         for s in a:
@@ -188,7 +188,7 @@ def ord_builtin() -> None:
                     n += 1
                 if is_upper_case_letter(s[j]):
                     n += 2
-                if s[j] == ord('a'):
+                if s[j] == "a":
                     n += 3
     assert n == 1200000, n
 
@@ -199,8 +199,10 @@ def is_upper_case_letter(ch: str) -> bool:
 
 rot13_trans = str.maketrans(
     string.ascii_lowercase + string.ascii_uppercase,
-    string.ascii_lowercase[13:] + string.ascii_lowercase[:13]
-    + string.ascii_uppercase[13:] + string.ascii_uppercase[:13],
+    string.ascii_lowercase[13:]
+    + string.ascii_lowercase[:13]
+    + string.ascii_uppercase[13:]
+    + string.ascii_uppercase[:13],
 )
 
 
@@ -208,7 +210,12 @@ rot13_trans = str.maketrans(
 def rot13() -> None:
     # This has a mypyc-optimized variant which implements rot13 using a loop
     # over str items in strings_mypyc.py
-    values = ["foo bar", "longer strings With UPPER CASE as well.", "..-..--.", "\u1234"]
+    values = [
+        "foo bar",
+        "longer strings With UPPER CASE as well.",
+        "..-..--.",
+        "\u1234",
+    ]
     n = 0
     for i in range(1000 * 1000):
         for v in values:
