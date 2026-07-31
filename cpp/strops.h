@@ -1,10 +1,11 @@
 #pragma once
 
-// str methods that return a list, defined here because list.h includes
-// str.h and so cannot be included from it.
+// str methods that return a list or tuple, defined here because list.h and
+// tuple.h both include str.h and so cannot be included from it.
 
 #include "list.h"
 #include "str.h"
+#include "tuple.h"
 
 namespace py {
 
@@ -71,6 +72,26 @@ inline str str::join(const ptr<list<str>> &parts) const {
         out += parts->__getitem__(i).raw();
     }
     return str(std::move(out));
+}
+
+// Splits on the first (partition) or last (rpartition) occurrence of sep.
+// Absent, Python returns (s, "", "") / ("", "", s) rather than raising.
+inline tuple<str, str, str> str::partition(const str &sep) const {
+    const std::string &s = raw();
+    size_t at = s.find(sep.raw());
+    if (at == std::string::npos)
+        return tuple<str, str, str>(*this, str(""), str(""));
+    return tuple<str, str, str>(str(s.substr(0, at)), sep,
+                                str(s.substr(at + sep.raw().size())));
+}
+
+inline tuple<str, str, str> str::rpartition(const str &sep) const {
+    const std::string &s = raw();
+    size_t at = s.rfind(sep.raw());
+    if (at == std::string::npos)
+        return tuple<str, str, str>(str(""), str(""), *this);
+    return tuple<str, str, str>(str(s.substr(0, at)), sep,
+                                str(s.substr(at + sep.raw().size())));
 }
 
 } // namespace py

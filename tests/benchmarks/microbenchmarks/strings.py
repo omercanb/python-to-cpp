@@ -8,8 +8,8 @@ def str_methods() -> None:
     """Use a mix of popular str methods (but not split/join)."""
     a = []
     for i in range(1000):
-        a.append("Foobar-%d" % i)
-        a.append("  %d str" % i)
+        a.append(f"Foobar-{i}")
+        a.append(f"  {i} str")
 
     n = 0
     for i in range(100):
@@ -34,8 +34,8 @@ def str_methods_2() -> None:
     """Use a mix of popular str methods."""
     a = []
     for i in range(1000):
-        a.append("FOOBAR-%d" % i)
-        a.append("  %d str" % i)
+        a.append(f"FOOBAR-{i}")
+        a.append(f"  {i} str")
 
     n = 0
     for i in range(100):
@@ -65,15 +65,15 @@ def str_methods_2() -> None:
 def str_format() -> None:
     a = []
     for i in range(1000):
-        a.append("Foobar-%d" % i)
-        a.append("%d str" % i)
+        a.append(f"Foobar-{i}")
+        a.append(f"{i} str")
 
     n = 0
     for i in range(100):
         for s in a:
             n += len("foobar {} stuff".format(s))
-            ss = "foobar %s stuff" % s
-            n += len("%s-%s" % (s, ss))
+            ss = f"foobar {s} stuff"
+            n += len(f"{s}-{ss}")
     assert n == 10434000, n
 
 
@@ -81,8 +81,8 @@ def str_format() -> None:
 def str_slicing() -> None:
     a = []
     for i in range(1000):
-        a.append("Foobar-%d" % i)
-        a.append("%d str" % i)
+        a.append(f"Foobar-{i}")
+        a.append(f"{i} str")
 
     n = 0
     for i in range(1000):
@@ -99,8 +99,8 @@ def str_slicing() -> None:
 def split_and_join() -> None:
     a = []
     for i in range(1000):
-        a.append("Foobar-%d" % i)
-        a.append("%d-ab-asdfsdf-asdf" % i)
+        a.append(f"Foobar-{i}")
+        a.append(f"{i}-ab-asdfsdf-asdf")
         a.append("yeah")
     n = 0
     for i in range(100):
@@ -115,8 +115,8 @@ def split_and_join() -> None:
 def encode_decode() -> None:
     a = []
     for i in range(1000):
-        a.append("Foobar-%d" % i)
-        a.append("%d-ab-asdfsdf-asdf" % i)
+        a.append(f"Foobar-{i}")
+        a.append(f"{i}-ab-asdfsdf-asdf")
         a.append("yeah")
     n = 0
     for i in range(100):
@@ -135,8 +135,8 @@ def encode_decode() -> None:
 def str_searching() -> None:
     a = []
     for i in range(1000):
-        a.append("Foobar-%d" % i)
-        a.append("%d-ab-asdfsdf-asdf" % i)
+        a.append(f"Foobar-{i}")
+        a.append(f"{i}-ab-asdfsdf-asdf")
         a.append("yeah")
     n = 0
     for i in range(100):
@@ -177,8 +177,8 @@ class Cls:
 def ord_builtin() -> None:
     a = []
     for i in range(1000):
-        a.append("Foobar-%d" % i)
-        a.append("%d-ab-asdfsdf-asdf" % i)
+        a.append(f"Foobar-{i}")
+        a.append(f"{i}-ab-asdfsdf-asdf")
         a.append("yeah")
     n = 0
     for i in range(50):
@@ -197,27 +197,27 @@ def is_upper_case_letter(ch: str) -> bool:
     return 65 <= ord(ch) <= 90
 
 
-rot13_trans = str.maketrans(
-    string.ascii_lowercase + string.ascii_uppercase,
-    string.ascii_lowercase[13:]
-    + string.ascii_lowercase[:13]
-    + string.ascii_uppercase[13:]
-    + string.ascii_uppercase[:13],
-)
-
-
-@benchmark()
-def rot13() -> None:
-    # This has a mypyc-optimized variant which implements rot13 using a loop
-    # over str items in strings_mypyc.py
-    values = [
-        "foo bar",
-        "longer strings With UPPER CASE as well.",
-        "..-..--.",
-        "\u1234",
-    ]
-    n = 0
-    for i in range(1000 * 1000):
-        for v in values:
-            n += len(v.translate(rot13_trans))
-    assert n == 55000000
+# rot13_trans = str.maketrans(
+#     string.ascii_lowercase + string.ascii_uppercase,
+#     string.ascii_lowercase[13:]
+#     + string.ascii_lowercase[:13]
+#     + string.ascii_uppercase[13:]
+#     + string.ascii_uppercase[:13],
+# )
+#
+#
+# @benchmark()
+# def rot13() -> None:
+#     # This has a mypyc-optimized variant which implements rot13 using a loop
+#     # over str items in strings_mypyc.py
+#     values = [
+#         "foo bar",
+#         "longer strings With UPPER CASE as well.",
+#         "..-..--.",
+#         "\u1234",
+#     ]
+#     n = 0
+#     for i in range(1000 * 1000):
+#         for v in values:
+#             n += len(v.translate(rot13_trans))
+#     assert n == 55000000

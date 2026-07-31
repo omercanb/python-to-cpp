@@ -108,9 +108,9 @@ def get_resolved_types(tree: MypyFile, types: dict[Expression, Type]) -> TypeTab
             # This is an artifact from type checking according to mypy
             continue
         if isinstance(expr, RefExpr) and expr.node is not None:
-            if isinstance(expr.node, TypeInfo):
-                type_table[expr] = expr.node
-            elif isinstance(expr.node, Var) or isinstance(expr.node, FuncDef):
+            # if isinstance(expr.node, TypeInfo):
+            #     type_table[expr] = expr.node
+            if isinstance(expr.node, Var) or isinstance(expr.node, FuncDef):
                 assert expr.node.type is not None
                 type_table[expr] = get_proper_type(expr.node.type)
             else:

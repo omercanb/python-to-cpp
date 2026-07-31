@@ -15,8 +15,11 @@
 #include <array>
 #include <cctype>
 #include <charconv>
+#include <cmath>
+#include <functional>
 #include <ostream>
 #include <string>
+#include <vector>
 
 namespace py {
 
@@ -201,12 +204,19 @@ class str {
     bool isupper() const { return casedAllAre(true); }
     bool islower() const { return casedAllAre(false); }
 
-    // ---- list-returning: defined in strops.h --------------------------------
+    // ---- list/tuple-returning: defined in strops.h ---------------------------
     ptr<list<str>> split() const;                  // on whitespace
     ptr<list<str>> split(const str &sep) const;
     ptr<list<str>> rsplit(const str &sep) const;
     ptr<list<str>> splitlines() const;
     str join(const ptr<list<str>> &parts) const;
+    tuple<str, str, str> partition(const str &sep) const;
+    tuple<str, str, str> rpartition(const str &sep) const;
+
+    // ---- format: PEP 3101 Format Mini-Language, enough for str.format()
+    // and the "{conv:{}}" calls f-strings desugar into. Defined below, after
+    // to_str()/repr(), which it needs to render arbitrary argument types.
+    template <typename... Args> str format(const Args &...args) const;
 
     // ---- operators ----------------------------------------------------------
     str operator+(const str &o) const { return str(data_ + o.data_); }
@@ -377,6 +387,314 @@ template <typename T> str repr(const T &x) {
     } else {
         return to_str(x);
     }
+}
+
+// ---- format() implementation -----------------------------------------------
+// A parsed "[[fill]align][sign][#][0][width][,][.precision][type]" spec, per
+// the Format Mini-Language (PEP 3101).
+namespace detail {
+
+struct FormatSpec {
+    char fill = ' ';
+    char align = '\0'; // '<', '>', '^', '=', or '\0' for the type's default
+    char sign = '-';   // '+', '-', ' '
+    bool alt = false;  // '#'
+    _int width = 0;
+    bool group = false;  // ',' or '_' thousands separator
+    _int precision = -1; // -1 means unset
+    char type = '\0';
+};
+
+inline FormatSpec parse_format_spec(const std::string &s) {
+    FormatSpec spec;
+    size_t i = 0;
+    auto is_align = [](char c) {
+        return c == '<' || c == '>' || c == '^' || c == '=';
+    };
+    if (s.size() >= 2 && is_align(s[1])) {
+        spec.fill = s[0];
+        spec.align = s[1];
+        i = 2;
+    } else if (!s.empty() && is_align(s[0])) {
+        spec.align = s[0];
+        i = 1;
+    }
+    if (i < s.size() && (s[i] == '+' || s[i] == '-' || s[i] == ' ')) {
+        spec.sign = s[i];
+        ++i;
+    }
+    if (i < s.size() && s[i] == '#') {
+        spec.alt = true;
+        ++i;
+    }
+    if (i < s.size() && s[i] == '0') {
+        if (spec.align == '\0') {
+            spec.align = '=';
+            spec.fill = '0';
+        }
+        ++i;
+    }
+    size_t wstart = i;
+    while (i < s.size() && std::isdigit((unsigned char)s[i]))
+        ++i;
+    if (i > wstart)
+        spec.width = std::stoll(s.substr(wstart, i - wstart));
+    if (i < s.size() && (s[i] == ',' || s[i] == '_')) {
+        spec.group = true;
+        ++i;
+    }
+    if (i < s.size() && s[i] == '.') {
+        ++i;
+        size_t pstart = i;
+        while (i < s.size() && std::isdigit((unsigned char)s[i]))
+            ++i;
+        spec.precision = std::stoll(s.substr(pstart, i - pstart));
+    }
+    if (i < s.size())
+        spec.type = s[i];
+    return spec;
+}
+
+// Pads `body` to spec.width. `default_align` is the type's own default
+// ('>' for numbers, '<' for strings) when the spec doesn't set one.
+inline std::string pad(const std::string &body, const FormatSpec &spec,
+                       char default_align) {
+    _int extra = spec.width - static_cast<_int>(body.size());
+    if (extra <= 0)
+        return body;
+    char align = spec.align ? spec.align : default_align;
+    if (align == '<')
+        return body + std::string(extra, spec.fill);
+    if (align == '^') {
+        _int left = extra / 2;
+        return std::string(left, spec.fill) + body + std::string(extra - left, spec.fill);
+    }
+    if (align == '=') {
+        // Padding goes after a leading sign, so "-0005" not "000-5".
+        bool has_sign = !body.empty() && (body[0] == '-' || body[0] == '+' || body[0] == ' ');
+        return has_sign ? body.substr(0, 1) + std::string(extra, spec.fill) + body.substr(1)
+                        : std::string(extra, spec.fill) + body;
+    }
+    return std::string(extra, spec.fill) + body; // '>'
+}
+
+inline std::string signed_prefix(bool negative, char sign_mode) {
+    if (negative)
+        return "-";
+    if (sign_mode == '+')
+        return "+";
+    if (sign_mode == ' ')
+        return " ";
+    return "";
+}
+
+inline void add_thousands(std::string &digits) {
+    for (_int pos = static_cast<_int>(digits.size()) - 3; pos > 0; pos -= 3)
+        digits.insert(static_cast<size_t>(pos), ",");
+}
+
+inline std::string apply_format(const FormatSpec &spec, _int value) {
+    bool negative = value < 0;
+    // Cast first, then negate in unsigned arithmetic: negating a signed
+    // INT64_MIN directly overflows, but this wraps correctly.
+    unsigned long long mag =
+        negative ? (0ULL - (unsigned long long)value) : (unsigned long long)value;
+    std::string digits, prefix;
+    int base = 10;
+    switch (spec.type) {
+    case 'x': base = 16; prefix = spec.alt ? "0x" : ""; break;
+    case 'X': base = 16; prefix = spec.alt ? "0X" : ""; break;
+    case 'o': base = 8; prefix = spec.alt ? "0o" : ""; break;
+    case 'b': base = 2; prefix = spec.alt ? "0b" : ""; break;
+    default: break;
+    }
+    if (base == 10) {
+        digits = std::to_string(mag);
+        if (spec.group)
+            add_thousands(digits);
+    } else if (mag == 0) {
+        digits = "0";
+    } else {
+        const char *hexd = spec.type == 'X' ? "0123456789ABCDEF" : "0123456789abcdef";
+        while (mag) {
+            digits.insert(digits.begin(), hexd[mag % (unsigned)base]);
+            mag /= (unsigned)base;
+        }
+    }
+    return pad(signed_prefix(negative, spec.sign) + prefix + digits, spec, '>');
+}
+
+inline std::string apply_format(const FormatSpec &spec, _float value) {
+    if (!spec.type) {
+        // No type char: match to_str()'s shortest round-trip rendering,
+        // which is Python's own default for a float with an empty spec.
+        std::string body = signed_prefix(value < 0, spec.sign) +
+                           (value < 0 ? to_str(-value).raw() : to_str(value).raw());
+        return pad(body, spec, '>');
+    }
+    bool negative = std::signbit(value);
+    _float mag = negative ? -value : value;
+    _int precision = spec.precision < 0 ? 6 : spec.precision;
+    if (spec.type == '%')
+        mag *= 100;
+    auto fmt = (spec.type == 'e' || spec.type == 'E') ? std::chars_format::scientific
+              : (spec.type == 'g' || spec.type == 'G') ? std::chars_format::general
+                                                        : std::chars_format::fixed;
+    std::array<char, 64> buf;
+    auto result =
+        std::to_chars(buf.data(), buf.data() + buf.size(), mag, fmt, (int)precision);
+    std::string digits(buf.data(), result.ptr);
+    if (spec.type == '%')
+        digits += "%";
+    return pad(signed_prefix(negative, spec.sign) + digits, spec, '>');
+}
+
+inline std::string apply_format(const FormatSpec &spec, bool value) {
+    if (spec.type)
+        return apply_format(spec, static_cast<_int>(value));
+    return pad(value ? "True" : "False", spec, '<');
+}
+
+inline std::string apply_format(const FormatSpec &spec, const std::string &value) {
+    std::string body = spec.precision >= 0 && spec.precision < (_int)value.size()
+                           ? value.substr(0, (size_t)spec.precision)
+                           : value;
+    return pad(body, spec, '<');
+}
+
+inline std::string apply_format(const FormatSpec &spec, const str &value) {
+    return apply_format(spec, value.raw());
+}
+
+// Fallback for any other type: render via to_str(), like Python falls back
+// to object.__format__, which calls str().
+template <typename T>
+std::string apply_format(const FormatSpec &spec, const T &value) {
+    return apply_format(spec, to_str(value).raw());
+}
+
+template <typename T> std::string render_arg(const T &value, const std::string &raw_spec) {
+    return apply_format(parse_format_spec(raw_spec), value);
+}
+
+// One entry per positional argument to format(): a spec-aware renderer plus
+// str()/repr() renderers for the "!s"/"!r"/"!a" conversions, which convert
+// to a string *before* the (string) spec is applied.
+struct FormatArg {
+    std::function<std::string(const std::string &)> typed;
+    std::function<std::string()> as_str;
+    std::function<std::string()> as_repr;
+};
+
+class FormatArgs {
+  public:
+    template <typename... Ts> explicit FormatArgs(const Ts &...values) {
+        (args_.push_back(FormatArg{
+             [&values](const std::string &spec) { return render_arg(values, spec); },
+             [&values] { return to_str(values).raw(); },
+             [&values] { return repr(values).raw(); },
+         }),
+         ...);
+    }
+
+    std::string render(size_t index, char conv, const std::string &spec) const {
+        if (index >= args_.size())
+            throw IndexError("Replacement index out of range for positional args tuple");
+        const FormatArg &a = args_[index];
+        if (conv == 'r')
+            return apply_format(parse_format_spec(spec), a.as_repr());
+        if (conv == 's' || conv == 'a')
+            return apply_format(parse_format_spec(spec), a.as_str());
+        return a.typed(spec);
+    }
+
+  private:
+    std::vector<FormatArg> args_;
+};
+
+// Finds the '}' matching the '{' at tmpl[open], honoring nesting so a spec
+// like "{:{}}" doesn't stop at the inner field's closing brace.
+inline size_t find_matching_brace(const std::string &tmpl, size_t open) {
+    size_t depth = 1;
+    size_t j = open + 1;
+    for (; j < tmpl.size() && depth > 0; ++j) {
+        if (tmpl[j] == '{')
+            ++depth;
+        else if (tmpl[j] == '}')
+            --depth;
+    }
+    if (depth != 0)
+        throw ValueError("Single '{' encountered in format string");
+    return j - 1;
+}
+
+// Resolves one level of nested replacement fields inside a spec, e.g. the
+// "{}" in "{:{}}" -- the shape f-strings desugar their format specs into.
+inline std::string resolve_nested_spec(const std::string &raw_spec, size_t &auto_index,
+                                       const FormatArgs &args) {
+    std::string spec;
+    size_t j = 0;
+    while (j < raw_spec.size()) {
+        if (raw_spec[j] != '{') {
+            spec += raw_spec[j++];
+            continue;
+        }
+        size_t end = find_matching_brace(raw_spec, j);
+        std::string field = raw_spec.substr(j + 1, end - j - 1);
+        size_t index = field.empty() ? auto_index++ : (size_t)std::stoull(field);
+        spec += args.render(index, '\0', "");
+        j = end + 1;
+    }
+    return spec;
+}
+
+inline std::string format_impl(const std::string &tmpl, const FormatArgs &args) {
+    std::string out;
+    size_t auto_index = 0;
+    size_t i = 0;
+    while (i < tmpl.size()) {
+        if (tmpl[i] == '{' && i + 1 < tmpl.size() && tmpl[i + 1] == '{') {
+            out += '{';
+            i += 2;
+            continue;
+        }
+        if (tmpl[i] == '}' && i + 1 < tmpl.size() && tmpl[i + 1] == '}') {
+            out += '}';
+            i += 2;
+            continue;
+        }
+        if (tmpl[i] != '{') {
+            out += tmpl[i++];
+            continue;
+        }
+        size_t end = find_matching_brace(tmpl, i);
+        std::string field = tmpl.substr(i + 1, end - i - 1);
+        i = end + 1;
+
+        // field := [index] ['!' conv] [':' spec]
+        size_t colon = field.find(':');
+        std::string head = colon == std::string::npos ? field : field.substr(0, colon);
+        std::string raw_spec = colon == std::string::npos ? "" : field.substr(colon + 1);
+
+        char conv = '\0';
+        size_t bang = head.find('!');
+        if (bang != std::string::npos) {
+            conv = head[bang + 1];
+            head = head.substr(0, bang);
+        }
+
+        size_t index = head.empty() ? auto_index++ : (size_t)std::stoull(head);
+        std::string spec = resolve_nested_spec(raw_spec, auto_index, args);
+        out += args.render(index, conv, spec);
+    }
+    return out;
+}
+
+} // namespace detail
+
+template <typename... Args> str str::format(const Args &...args) const {
+    detail::FormatArgs fa(args...);
+    return str(detail::format_impl(data_, fa));
 }
 
 } // namespace py

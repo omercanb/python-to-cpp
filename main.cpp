@@ -16,30 +16,21 @@
 #include "mathops.h"
 #include "builtins.h"
 using namespace py;
-int main() {
-    _int a;
-    _int b;
-    _int c;
-    ptr<list<_int>> l;
-    _int d;
-    ptr<list<_int>> l1;
-    ptr<list<_int>> l2;
-    a = 1LL;
-    b = 2LL;
-    c = 3LL;
-    l = ptr(new list<_int>());
-    l->append(1LL);
-    print(l);
-    print(((a < b) && (b < c)));
-    print(((a > b)));
-    print(((a > b) && (b > c)));
-    d = 3LL;
-    print(((c <= d)));
-    print(((a == d)));
-    print(((c == d)));
-    l1 = ptr(new list<_int>({1LL, 2LL, 3LL}));
-    l2 = ptr(new list<_int>({1LL, 2LL, 3LL}));
-    print((__is(l1, l1)));
-    print((__is(l1, l2)));
-    return 0LL;
+void multiple_assignment() {
+    _int x;
+    _int y;
+    ptr<list<_int>> a;
+    _int n;
+    _int i;
+    _int xx;
+    _int yy;
+    x = 0LL;
+    y = 1LL;
+    a = ptr(new list<_int>({2LL, 3LL}));
+    n = 0LL;
+    for (_int i = 0; i < 1000000LL; ++i) {
+        destructure(x, y) = tuple(y, x);
+        destructure(a->__getitem__(0LL), a->__getitem__(1LL)) = tuple(a->__getitem__(1LL), a->__getitem__(0LL));
+        destructure(xx, yy) = a;
+    }
 }
