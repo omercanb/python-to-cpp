@@ -120,6 +120,11 @@ inline bool to_bool(const ptr<T> &p) {
 }
 
 template <typename T1, typename T2>
+bool operator==(const ptr<T1> &p1, const ptr<T2> &p2) {
+    return (void *)p1.object == (void *)p2.object;
+}
+
+template <typename T1, typename T2>
 bool __is(const ptr<T1> &p1, const ptr<T2> &p2) {
     return (void *)p1.object == (void *)p2.object;
 }

@@ -78,7 +78,6 @@ class ExpressionCodegen(Visitor[str]):
 
     def visit_member_expr(self, o: MemberExpr) -> str:
         """Handle attribute access considering whether the object will be a pointer or value"""
-        # TODO: Handle attribute access
         obj = self.visit(o.expr)
         name = translate_method_name(o.name)
         return member_access(obj, self.types[o.expr], name)

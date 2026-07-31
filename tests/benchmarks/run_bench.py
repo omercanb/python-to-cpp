@@ -178,7 +178,6 @@ def translate_module_for_benchmarking(module: str, benchmark: str) -> str:
     """Remove all the benchmark decorators form a module, translate to C++, and add a main function that times the benchmark function"""
     fnam = module.replace(".", "/") + ".py"
     file = open(fnam).read()
-    file = file.replace("@benchmark()\n", "")
     cpp = pipeline(fnam, file)
     assert "int main" not in cpp
     main_function = main_function_template(benchmark)

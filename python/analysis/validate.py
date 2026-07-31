@@ -50,6 +50,7 @@ from mypy.nodes import (
 )
 from mypy.types import (
     CallableType,
+    Instance,
     ProperType,
     TupleType,
     Type,
@@ -116,7 +117,7 @@ def _tuple_index_hint(o: IndexExpr) -> str:
 
 
 class _Validator(Traverser):
-    def __init__(self, types: dict[Expression, ProperType]):
+    def __init__(self, types: dict[Expression, Type]):
         self.types = types
         self.diagnostics: list[Diagnostic] = []
 
@@ -204,6 +205,19 @@ class _Validator(Traverser):
     def visit_assignment_stmt(self, o: AssignmentStmt) -> None:
         for lvalue in o.lvalues:
             self.check_lvalue(lvalue)
+        if isinstance(o.lvalues[0], TupleExpr):
+            print(o.rvalue)
+            for k, v in self.types.items():
+                print(f"{k} : {v}")
+            if o.rvalue in self.types:
+                rhs = self.types[o.rvalue]
+                if isinstance(rhs, Instance) and rhs.type.fullname == "builtins.list":
+                    self.report(
+                        o,
+                        "assignment",
+                        "Can't use desugaring assignment on a list.",
+                        "Assign the right hand side elements one by one.",
+                    )
         super().visit_assignment_stmt(o)
 
     def check_lvalue(self, lvalue: Lvalue) -> None:

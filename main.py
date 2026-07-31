@@ -15,9 +15,9 @@ def full_pipeline():
 
     file = "input.py"
     result = _analyse(file, open(file).read())
-    for k, v in result.types.items():
-        print(f"{k} : {v}")
-    # print(result.tree)
+    # for k, v in result.types.items():
+    #     print(f"{k} : {v}")
+    print(result.tree)
     # print_types(result.types)
     diagnostics = validate(result.tree, result.types)
     if diagnostics:

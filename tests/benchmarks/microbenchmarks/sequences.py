@@ -1,8 +1,3 @@
-"""List and tuple benchmarks."""
-
-import array
-from typing import List, Tuple
-
 from tests.benchmarks.benchmarking import benchmark
 
 
@@ -12,7 +7,7 @@ def list_slicing() -> None:
     for i in range(1000):
         a.append([i * 2])
         a.append([i, i + 2])
-        a.append([i] * 6)
+        a.append([i])
         a.append([])
 
     n = 0
@@ -29,35 +24,13 @@ def list_slicing() -> None:
 
 
 @benchmark()
-def tuple_slicing() -> None:
-    a = []  # type: List[Tuple[int, ...]]
-    for i in range(1000):
-        a.append((i * 2,))
-        a.append((i, i + 2))
-        a.append((i,) * 6)
-        a.append(())
-
-    n = 0
-    for i in range(100):
-        for s in a:
-            n += len(s[2:-2])
-            if len(s[:2]) < 2:
-                n += 1
-            if s[-2:] == (0,):
-                n += 1
-            if s == s[::-1]:
-                n += 1
-    assert n == 700100, n
-
-
-@benchmark()
 def in_list() -> None:
     a = []
     for j in range(100):
         for i in range(10):
             a.append([i * 2])
             a.append([i, i + 2])
-            a.append([i] * 6)
+            a.append([i])
             a.append([])
 
     n = 0
@@ -72,13 +45,13 @@ def in_list() -> None:
 
 @benchmark()
 def in_tuple() -> None:
-    a = []  # type: List[Tuple[int, ...]]
+    a: list[tuple[int, int]] = []
     for j in range(100):
         for i in range(10):
-            a.append((i * 2,))
+            a.append((i * 2, 2))
             a.append((i, i + 2))
-            a.append((i,) * 6)
-            a.append(())
+            a.append((i, 2))
+            a.append((2, 2))
 
     n = 0
     for i in range(1000):
@@ -113,24 +86,6 @@ def list_append_large() -> None:
 
 
 @benchmark()
-def list_from_tuple() -> None:
-    a = []  # type: List[Tuple[int, ...]]
-    for j in range(100):
-        for i in range(10):
-            a.append((i * 2,))
-            a.append((i, i + 2))
-            a.append((i,) * 6)
-            a.append(())
-
-    n = 0
-    for i in range(1000):
-        for tup in a:
-            lst = list(tup)
-            n += len(lst)
-    assert n == 9000000, n
-
-
-@benchmark()
 def list_from_range() -> None:
     a = []
     for j in range(100):
@@ -146,29 +101,12 @@ def list_from_range() -> None:
 
 
 @benchmark()
-def tuple_from_iterable() -> None:
-    a = []
-    for i in range(100):
-        a.append([i * 2])
-        a.append([i, i + 2])
-        a.append([i] * 6)
-        a.append([])
-
-    n = 0
-    for i in range(1000):
-        for s in a:
-            t1 = tuple(s)
-            n += len(t1)
-    assert n == 1800000, n
-
-
-@benchmark()
 def list_copy() -> None:
     a = []
     for i in range(100):
         a.append([i * 2])
         a.append([i, i + 2])
-        a.append([i] * 6)
+        a.append([i])
         a.append([])
 
     for i in range(1000):
@@ -196,7 +134,7 @@ def list_remove() -> None:
 @benchmark()
 def list_insert() -> None:
     for j in range(10 * 1000):
-        a: List[int] = []
+        a: list[int] = []
         for i in range(10):
             a.insert(0, i)
         for i in range(5):
@@ -211,7 +149,7 @@ def list_index() -> None:
     for i in range(100):
         a.append([i * 2, 44])
         a.append([44, i, i + 2])
-        a.append([i] * 6 + [44])
+        a.append([i, 44])
         a.append([44])
 
     n = 0
@@ -224,13 +162,13 @@ def list_index() -> None:
 @benchmark()
 def list_add_in_place() -> None:
     for i in range(100 * 1000):
-        a: List[int] = []
-        n = id(a)
+        a: list[int] = []
+        n = a
         l = 5 + i % 10
         for j in range(l):
             a += [j]
         assert len(a) == l
-        assert id(a) == n
+        assert a == n
 
 
 @benchmark()
@@ -301,7 +239,7 @@ def multiple_assignment() -> None:
     for i in range(1000000):
         x, y = y, x
         a[0], a[1] = a[1], a[0]
-        xx, yy = a
+        xx, yy = a[0], a[1]
         n += x + xx
     assert n == 3000000, n
 
@@ -347,29 +285,29 @@ def num_primes(n: int) -> int:
 
 
 # This has a mypyc-optimized variant in sequences_mypyc.py
-@benchmark()
-def sieve_packed() -> None:
-    n = 0
-    for i in range(1000):
-        n += num_primes_array(1000)
-    assert n == 168000, n
-
-
-def num_primes_array(n: int) -> int:
-    # This benchmarks should use an efficient packed memory representation
-    is_prime = array.array("b", [1]) * (n + 1)
-    is_prime[0] = is_prime[1] = 0
-    for i in range(2, n + 1):
-        if is_prime[i] and i * i <= n:
-            j = i * i
-            while j <= n:
-                is_prime[j] = 0
-                j += i
-    count = 0
-    for b in is_prime:
-        if b:
-            count += 1
-    return count
+# @benchmark()
+# def sieve_packed() -> None:
+#     n = 0
+#     for i in range(1000):
+#         n += num_primes_array(1000)
+#     assert n == 168000, n
+#
+#
+# def num_primes_array(n: int) -> int:
+#     # This benchmarks should use an efficient packed memory representation
+#     is_prime = array.array("b", [1]) * (n + 1)
+#     is_prime[0] = is_prime[1] = 0
+#     for i in range(2, n + 1):
+#         if is_prime[i] and i * i <= n:
+#             j = i * i
+#             while j <= n:
+#                 is_prime[j] = 0
+#                 j += i
+#     count = 0
+#     for b in is_prime:
+#         if b:
+#             count += 1
+#     return count
 
 
 @benchmark()

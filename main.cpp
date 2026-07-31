@@ -31,6 +31,11 @@ void multiple_assignment() {
     for (_int i = 0; i < 1000000LL; ++i) {
         destructure(x, y) = tuple(y, x);
         destructure(a->__getitem__(0LL), a->__getitem__(1LL)) = tuple(a->__getitem__(1LL), a->__getitem__(0LL));
-        destructure(xx, yy) = a;
+        destructure(xx, yy) = tuple(a->__getitem__(0LL), a->__getitem__(1LL));
     }
+}
+
+int main() {
+    multiple_assignment();
+    return 0LL;
 }

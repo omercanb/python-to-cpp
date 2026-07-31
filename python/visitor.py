@@ -21,6 +21,7 @@ from mypy.nodes import (
     ClassDef,
     ComparisonExpr,
     ConditionalExpr,
+    Decorator,
     DelStmt,
     DictExpr,
     DictionaryComprehension,
@@ -312,3 +313,7 @@ class Traverser(Visitor[None]):
         for conditions in o.condlists:
             for condition in conditions:
                 self.visit(condition)
+
+    def visit_decorator(self, o: Decorator) -> None:
+        self.visit(o.func)
+        pass
