@@ -26,9 +26,6 @@ MIN_TIME = 2.0
 # Minimum number of iterations to run a benchmark
 MIN_ITER = 10
 
-
-# utils.set_cpp_dir(Path("../../../cpp"))
-
 # A cache of the translated executables that gets populated when first translated
 translated_executable_paths: dict[str, str] = {}
 # A cache of the compiled handwritten files

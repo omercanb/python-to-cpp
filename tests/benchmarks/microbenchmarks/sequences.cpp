@@ -459,7 +459,7 @@ void sorted_with_key() {
 
     int main() {
         auto t0 = std::chrono::steady_clock::now();
-        multiple_assignment(); // Call the benchmarked function
+        sorted_with_key(); // Call the benchmarked function
         auto t1 = std::chrono::steady_clock::now();
         auto s = std::chrono::duration<double>(t1 - t0).count() ;
         std::cout << "elapsed: " << s << '\n';

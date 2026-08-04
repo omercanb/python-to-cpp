@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_free_variable_snapshot
+  list([
+    tuple(
+      '[[x for x in range(n)] for x in range(n)]',
+      list([
+        PrintedName(fullname='n', line=3, column=29),
+      ]),
+    ),
+    tuple(
+      '[x for x in range(n)]',
+      list([
+        PrintedName(fullname='n', line=3, column=29),
+      ]),
+    ),
+    tuple(
+      '[x for x in range(n) if x > threshold]',
+      list([
+        PrintedName(fullname='threshold', line=6, column=38),
+        PrintedName(fullname='n', line=6, column=28),
+      ]),
+    ),
+    tuple(
+      '[(x + y) for x in range(n) for y in range(x)]',
+      list([
+        PrintedName(fullname='n', line=8, column=32),
+      ]),
+    ),
+    tuple(
+      '[a[i] for i in range(n)]',
+      list([
+        PrintedName(fullname='a', line=11, column=11),
+        PrintedName(fullname='n', line=11, column=31),
+      ]),
+    ),
+    tuple(
+      '{a: a for a in a}',
+      list([
+        PrintedName(fullname='a', line=13, column=11),
+      ]),
+    ),
+    tuple(
+      '[a[i] for i in range(n)]',
+      list([
+        PrintedName(fullname='a', line=15, column=5),
+        PrintedName(fullname='n', line=15, column=25),
+      ]),
+    ),
+  ])
+# ---

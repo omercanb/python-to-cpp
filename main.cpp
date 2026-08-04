@@ -16,26 +16,34 @@
 #include "mathops.h"
 #include "builtins.h"
 using namespace py;
-void multiple_assignment() {
-    _int x;
-    _int y;
-    ptr<list<_int>> a;
-    _int n;
-    _int i;
-    _int xx;
-    _int yy;
-    x = 0LL;
-    y = 1LL;
-    a = ptr(new list<_int>({2LL, 3LL}));
-    n = 0LL;
-    for (_int i = 0; i < 1000000LL; ++i) {
-        destructure(x, y) = tuple(y, x);
-        destructure(a->__getitem__(0LL), a->__getitem__(1LL)) = tuple(a->__getitem__(1LL), a->__getitem__(0LL));
-        destructure(xx, yy) = tuple(a->__getitem__(0LL), a->__getitem__(1LL));
-    }
-}
-
 int main() {
-    multiple_assignment();
+    _int i;
+    ptr<set<_int>> __set_comprehension_0;
+    _int a;
+    ptr<set<_int>> s;
+    ptr<dict<_int, _int>> __dict_comprehension_0;
+    ptr<dict<_int, _int>> d;
+    ptr<dict<_int, _int>> __dict_comprehension_1;
+    _int b;
+    for (_int i = 0; i < 10LL; ++i) {
+        print(i);
+    }
+    for (_int i = 0; i < 10LL; ++i) {
+        print(i);
+    }
+    __set_comprehension_0 = ptr(new set<_int>());
+    for (_int a = 0; a < 10LL; ++a) {
+    }
+    s = __set_comprehension_0;
+    __dict_comprehension_0 = ptr(new dict<_int, _int>());
+    for (_int a = 0; a < 10LL; ++a) {
+        __dict_comprehension_0->__setitem__(a, a);
+    }
+    d = __dict_comprehension_0;
+    __dict_comprehension_1 = ptr(new dict<_int, _int>());
+    for (_int b = 0; b < 10LL; ++b) {
+        __dict_comprehension_1->__setitem__(b, b);
+    }
+    __dict_comprehension_1;
     return 0LL;
 }

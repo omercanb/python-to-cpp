@@ -31,6 +31,7 @@ from python.codegen.comprehension import (
     find_comprehensions,
     translate_comprehension,
 )
+from python.codegen.exceptions import translate_raise_stmt, translate_try_stmt
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.for_loop import translate_for_stmt
 from python.codegen.translation_utils import (
@@ -38,7 +39,6 @@ from python.codegen.translation_utils import (
     is_truthy,
     translate_func_signature,
 )
-from python.codegen.exceptions import translate_raise_stmt, translate_try_stmt
 from python.codegen.typegen import cpp_type, is_pointer, ptr_type
 from python.visitor import Traverser
 
@@ -162,9 +162,7 @@ class StatementCodegen(Traverser):
         locals_of = self.local_names(definition)
         for node, enclosing in find_comprehensions(definition):
             name = self.temp_name("comprehension").lstrip("_")
-            captures = captured_names(
-                node, lambda n: n in locals_of or n in enclosing
-            )
+            captures = captured_names(node, lambda n: n in locals_of or n in enclosing)
             translate_comprehension(self, node, name, captures)
             arguments = ", ".join(capture.name for capture in captures)
             self.comprehension_calls[node] = f"{name}({arguments})"
@@ -239,7 +237,6 @@ class StatementCodegen(Traverser):
         translate_for_stmt(self, o)
 
     def visit_while_stmt(self, o: WhileStmt):
-        self.emit("// While loop")
         self.emit(f"while ({self.get_condition(o.expr)}) {{")
         self.visit_block(o.body)
         self.emit("}")
@@ -253,8 +250,8 @@ class StatementCodegen(Traverser):
     def visit_expression_stmt(self, o: ExpressionStmt):
         self.emit(f"{self.get_expr(o.expr)};")
 
-    def visit_break_stmt(self, _: BreakStmt):
+    def visit_break_stmt(self, o: BreakStmt):
         self.emit("break;")
 
-    def visit_continue_stmt(self, _: ContinueStmt):
+    def visit_continue_stmt(self, o: ContinueStmt):
         self.emit("continue;")

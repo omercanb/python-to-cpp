@@ -153,32 +153,6 @@ void split_and_join() {
     }
 }
 
-void encode_decode() {
-    ptr<list<str>> a;
-    _int i;
-    _int n;
-    str s;
-    ptr<bytes> b;
-    a = ptr(new list<str>());
-    for (_int i = 0; i < 1000LL; ++i) {
-        a->append(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(i, str(""))}))));
-        a->append(str("").join(ptr(new list<str>({str("{:{}}").format(i, str("")), str("-ab-asdfsdf-asdf")}))));
-        a->append(str("yeah"));
-    }
-    n = 0LL;
-    for (_int i = 0; i < 100LL; ++i) {
-        for (auto __iter_6 = iter(a); !__iter_6.done();) {
-            s = next(__iter_6);
-            b = s.encode(str("ascii"));
-            if (to_bool(((b->decode(str("ascii")) != s)))) {
-            }
-            b = s.encode(str("utf8"));
-            if (to_bool(((b->decode(str("utf8")) == s)))) {
-            }
-        }
-    }
-}
-
 void str_searching() {
     ptr<list<str>> a;
     _int i;
@@ -192,8 +166,8 @@ void str_searching() {
     }
     n = 0LL;
     for (_int i = 0; i < 100LL; ++i) {
-        for (auto __iter_7 = iter(a); !__iter_7.done();) {
-            s = next(__iter_7);
+        for (auto __iter_6 = iter(a); !__iter_6.done();) {
+            s = next(__iter_6);
             if (to_bool((s.__contains__(str("i"))))) {
             }
             if (to_bool(((s.find(str("asd")) >= 0LL)))) {
@@ -215,8 +189,8 @@ void str_call() {
     }
     n = 0LL;
     for (_int i = 0; i < (10LL * 1000LL); ++i) {
-        for (auto __iter_8 = iter(a); !__iter_8.done();) {
-            obj = next(__iter_8);
+        for (auto __iter_7 = iter(a); !__iter_7.done();) {
+            obj = next(__iter_7);
             s1 = to_str(obj);
             s2 = to_str(s1);
         }
@@ -253,8 +227,8 @@ void ord_builtin() {
     }
     n = 0LL;
     for (_int i = 0; i < 50LL; ++i) {
-        for (auto __iter_9 = iter(a); !__iter_9.done();) {
-            s = next(__iter_9);
+        for (auto __iter_8 = iter(a); !__iter_8.done();) {
+            s = next(__iter_8);
             for (size_t j = 0; j < len(s); ++j) {
                 if (to_bool(((97LL <= ord(s.__getitem__(j))) && (ord(s.__getitem__(j)) <= 122LL)))) {
                 }

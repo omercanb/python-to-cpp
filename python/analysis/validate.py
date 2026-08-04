@@ -206,9 +206,6 @@ class _Validator(Traverser):
         for lvalue in o.lvalues:
             self.check_lvalue(lvalue)
         if isinstance(o.lvalues[0], TupleExpr):
-            print(o.rvalue)
-            for k, v in self.types.items():
-                print(f"{k} : {v}")
             if o.rvalue in self.types:
                 rhs = self.types[o.rvalue]
                 if isinstance(rhs, Instance) and rhs.type.fullname == "builtins.list":

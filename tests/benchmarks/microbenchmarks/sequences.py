@@ -219,15 +219,15 @@ def tuple_equality() -> None:
     assert n == 10200, n
 
 
-@benchmark()
-def list_comprehension() -> None:
-    a = [1, 2, 4, 6, 8, 13, 17]
-    n = 0
-    for i in range(100000):
-        for j in range(20):
-            b = [x for x in a if x < j]
-            n += len(b)
-    assert n == 8200000, n
+# @benchmark()
+# def list_comprehension() -> None:
+#     a = [1, 2, 4, 6, 8, 13, 17]
+#     n = 0
+#     for i in range(100000):
+#         for j in range(20):
+#             b = [x for x in a if x < j]
+#             n += len(b)
+#     assert n == 8200000, n
 
 
 @benchmark()

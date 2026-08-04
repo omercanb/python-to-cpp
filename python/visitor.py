@@ -92,7 +92,7 @@ class Visitor(Generic[T]):
         return method(node)
 
 
-class Traverser(Visitor[None]):
+class Traverser(Visitor[T]):
     """Walk every child of a node. Subclasses override what they care about."""
 
     def visit_mypy_file(self, o: MypyFile) -> None:

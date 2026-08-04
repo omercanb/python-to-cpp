@@ -39,12 +39,6 @@ def get_argument_names(func: FuncDef) -> list[str]:
     return filtered_args
 
 
-def generate_func_def(o: FuncDef):
-    # get signature
-    # create block (place for declarations)
-    pass
-
-
 def translate_func_signature(o: FuncDef, expr_translator: Visitor[str]) -> str:
     """Generate a C++ function signature"""
     func = get_function_type(o)

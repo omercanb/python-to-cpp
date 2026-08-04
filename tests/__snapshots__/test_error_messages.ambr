@@ -156,6 +156,13 @@
 # ---
 # name: test_error_message[starred_assignment.py]
   '''
+  starred_assignment.py:3:5: error: Can't use desugaring assignment on a list.
+  
+    3 |     first, *rest = values
+      |     ^^^^^^^^^^^^^^^^^^^^^
+  
+    help: Assign the right hand side elements one by one.
+  
   starred_assignment.py:3:12: error: a starred assignment target is not supported
   
     3 |     first, *rest = values

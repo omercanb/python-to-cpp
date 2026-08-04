@@ -16,6 +16,9 @@ cpp_path = "cpp"
 # adding a class here is a deliberate call, not a way to silence the test.
 NOT_PRINTABLE = {
     "Finally": "a scope guard, only ever a local that runs its body",
+    "FormatArg": "for formatting",
+    "FormatArgs": "for formatting",
+    "FormatSpec": "for formatting",
     "hasher": "a hash policy handed to std::unordered_map",
     "has_hash_method": "a type trait",
     "has_bool_conversion": "a type trait",
@@ -112,7 +115,9 @@ def test_classes_needing_repr_have_one():
     source = headers()
     classes = declared_classes(source)
     missing = [
-        name for name in ALSO_NEEDS_REPR if not defines("__repr__", name, classes, source)
+        name
+        for name in ALSO_NEEDS_REPR
+        if not defines("__repr__", name, classes, source)
     ]
     assert not missing, f"no __repr__ on {', '.join(sorted(missing))}"
 

@@ -26,6 +26,8 @@ from mypy.types import ProperType, Type, get_proper_type
 from python.analysis.validate import validate
 from python.codegen.mypy_codegen import StatementCodegen
 from python.errors import UnsupportedProgram, render
+from python.transform.comprehension_transformer import ComprehensionRemover
+from python.transform.tree_transformer import Transformer
 from python.visitor import Traverser
 
 type TypeTable = dict[Expression, ProperType | TypeInfo]
@@ -58,7 +60,19 @@ def mypy_options():
     return opts
 
 
-def _analyse(path: str | None, source: str) -> AnalysisResult:
+def parse(path: str | None, source: str) -> MypyFile:
+    # Path is an optional parameter because it's only used for error messages
+    result = build.build(
+        sources=[BuildSource(path, "main", source)], options=mypy_options()
+    )
+    if result.errors:
+        print("\n".join(result.errors))
+        sys.exit(1)
+    tree = result.files["main"]
+    return tree
+
+
+def analyse(path: str | None, source: str) -> AnalysisResult:
     """
     The mypy analysis pass
     Does type inference, defines classes, resolves names
@@ -72,9 +86,17 @@ def _analyse(path: str | None, source: str) -> AnalysisResult:
         print("\n".join(result.errors))
         sys.exit(1)
     tree = result.files["main"]
+    _apply_transforms(tree, result.types)
+
     types = get_resolved_types(result.files["main"], result.types)
 
     return AnalysisResult(result.files["main"], types, source, path)
+
+
+def _apply_transforms(tree: MypyFile, types: dict[Expression, Type]):
+    t = ComprehensionRemover(types)
+    t.visit(tree)
+    print(tree)
 
 
 def _generate(result: AnalysisResult) -> str:
@@ -83,7 +105,7 @@ def _generate(result: AnalysisResult) -> str:
 
 
 def pipeline(path: str, source: str) -> str:
-    result = _analyse(path, source)
+    result = analyse(path, source)
     diagnostics = validate(result.tree, result.types)
     if diagnostics:
         print(render(diagnostics, result.source, path))

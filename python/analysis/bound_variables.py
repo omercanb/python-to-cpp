@@ -16,8 +16,8 @@ from mypy.types import CallableType, Type, get_proper_type
 from python.visitor import Traverser
 
 
-class _DeclarationCollector(Traverser):
-    """Collect all local variable declarations in a function."""
+class _BoundVariableCollector(Traverser):
+    """Collect all variables bound inside the node"""
 
     def __init__(self, types_dict: dict[Expression, Type]):
         self.types = types_dict
@@ -60,11 +60,3 @@ class _DeclarationCollector(Traverser):
             #     print(name.name, self.declarations)
             # assert name.name not in self.declarations
             self.declarations[name.name] = self.types[name]
-
-
-def get_declarations(
-    func: FuncDef, types_dict: dict[Expression, Type]
-) -> dict[str, Type]:
-    collector = _DeclarationCollector(types_dict)
-    collector.visit(func)
-    return collector.declarations

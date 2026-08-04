@@ -3,7 +3,7 @@
 import pytest
 from mypy.nodes import ClassDef, FuncDef, TypeInfo
 
-from python.analysis.mypy_pass import _analyse
+from python.analysis.mypy_pass import analyse
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.translation_utils import translate_func_signature
 
@@ -65,7 +65,7 @@ class TestFunctionSignatures:
 
     @classmethod
     def setup_class(cls):
-        result = _analyse(None, test_code)
+        result = analyse(None, test_code)
         cls.tree = result.tree
         cls.types = result.types
         cls.expr_translator = ExpressionCodegen(result.types)

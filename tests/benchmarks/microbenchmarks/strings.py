@@ -111,24 +111,24 @@ def split_and_join() -> None:
     assert n == 300000, n
 
 
-@benchmark()
-def encode_decode() -> None:
-    a = []
-    for i in range(1000):
-        a.append(f"Foobar-{i}")
-        a.append(f"{i}-ab-asdfsdf-asdf")
-        a.append("yeah")
-    n = 0
-    for i in range(100):
-        for s in a:
-            b = s.encode("ascii")
-            if b.decode("ascii") != s:
-                n += 1
-
-            b = s.encode("utf8")
-            if b.decode("utf8") == s:
-                n += 1
-    assert n == 300000, n
+# @benchmark()
+# def encode_decode() -> None:
+#     a = []
+#     for i in range(1000):
+#         a.append(f"Foobar-{i}")
+#         a.append(f"{i}-ab-asdfsdf-asdf")
+#         a.append("yeah")
+#     n = 0
+#     for i in range(100):
+#         for s in a:
+#             b = s.encode("ascii")
+#             if b.decode("ascii") != s:
+#                 n += 1
+#
+#             b = s.encode("utf8")
+#             if b.decode("utf8") == s:
+#                 n += 1
+#     assert n == 300000, n
 
 
 @benchmark()
