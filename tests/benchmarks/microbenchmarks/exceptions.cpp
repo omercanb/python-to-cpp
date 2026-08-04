@@ -21,7 +21,8 @@ void catch_exceptions() {
     _int n;
     _int i;
     n = 0LL;
-    for (_int i = 0; i < (100LL * 1000LL); ++i) {
+    _int __stop_1 = (100LL * 1000LL);
+    for (i = 0; i < __stop_1; ++i) {
         try {
             f(i);
         } catch (ValueError &) {

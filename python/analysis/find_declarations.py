@@ -19,8 +19,9 @@ from python.visitor import Traverser
 class _DeclarationCollector(Traverser):
     """Collect all local variable declarations in a function."""
 
-    def __init__(self, types_dict: dict[Expression, Type]):
+    def __init__(self, types_dict: dict[Expression, Type], parameter_names: set[str]):
         self.types = types_dict
+        self.parameter_names = parameter_names
         self.declarations: dict[str, Type] = {}
 
     def visit_assignment_stmt(self, o: AssignmentStmt) -> None:
@@ -54,6 +55,9 @@ class _DeclarationCollector(Traverser):
 
     def check_add_declaration(self, name: NameExpr):
         """Check if name is a declaration and add it to declarations"""
+        if name.name in self.parameter_names:
+            # Already declared as a function parameter.
+            return
         if name.is_new_def:
             # TODO uncomment this after making comprehensions into functions
             # if name.name in self.declarations:
@@ -65,6 +69,7 @@ class _DeclarationCollector(Traverser):
 def get_declarations(
     func: FuncDef, types_dict: dict[Expression, Type]
 ) -> dict[str, Type]:
-    collector = _DeclarationCollector(types_dict)
+    parameter_names = {argument.variable.name for argument in func.arguments}
+    collector = _DeclarationCollector(types_dict, parameter_names)
     collector.visit(func)
     return collector.declarations

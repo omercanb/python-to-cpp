@@ -25,21 +25,11 @@ from mypy.types import Type
 
 from python.analysis.find_declarations import get_declarations
 from python.codegen.class_def import translate_class_def
-from python.codegen.codegen_utils import pointer_to
-from python.codegen.comprehension import (
-    captured_names,
-    find_comprehensions,
-    translate_comprehension,
-)
 from python.codegen.exceptions import translate_raise_stmt, translate_try_stmt
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.for_loop import translate_for_stmt
-from python.codegen.translation_utils import (
-    call_method,
-    is_truthy,
-    translate_func_signature,
-)
-from python.codegen.typegen import cpp_type, is_pointer, ptr_type
+from python.codegen.translation_utils import call_method, translate_func_signature
+from python.codegen.typegen import cpp_type, is_pointer
 from python.visitor import Traverser
 
 includes = [
@@ -77,9 +67,6 @@ class StatementCodegen(Traverser):
         self.indent_level = 0
         self.output: list[str] = []
         self.temp_count = 0
-        # Each comprehension node mapped to the call that replaces it.
-        self.comprehension_calls: dict[object, str] = {}
-        self.expr_codegen.comprehension_calls = self.comprehension_calls
 
     def temp_name(self, prefix: str) -> str:
         """A name for a generated variable, unique across the file."""
@@ -151,21 +138,8 @@ class StatementCodegen(Traverser):
         return "\n".join(self.output)
 
     def visit_mypy_file(self, o: MypyFile):
-        # A comprehension becomes a function, which has to be defined before
-        # whatever definition calls it.
         for definition in o.defs:
-            self.lift_comprehensions(definition)
             self.visit(definition)
-
-    def lift_comprehensions(self, definition):
-        """Emit a function per comprehension, and record how to call each."""
-        locals_of = self.local_names(definition)
-        for node, enclosing in find_comprehensions(definition):
-            name = self.temp_name("comprehension").lstrip("_")
-            captures = captured_names(node, lambda n: n in locals_of or n in enclosing)
-            translate_comprehension(self, node, name, captures)
-            arguments = ", ".join(capture.name for capture in captures)
-            self.comprehension_calls[node] = f"{name}({arguments})"
 
     def local_names(self, definition) -> set[str]:
         """The names a definition holds itself, rather than reading globally."""

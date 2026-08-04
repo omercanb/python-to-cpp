@@ -35,6 +35,7 @@ from mypy.nodes import (
     ListExpr,
     MemberExpr,
     MypyFile,
+    Node,
     OperatorAssignmentStmt,
     OpExpr,
     RaiseStmt,
@@ -75,7 +76,8 @@ class PythonPrinter(Visitor[str]):
         proper = get_proper_type(o.type) if o.type is not None else None
         arg_types = (
             proper.arg_types
-            if isinstance(proper, CallableType) and len(proper.arg_types) == len(o.arguments)
+            if isinstance(proper, CallableType)
+            and len(proper.arg_types) == len(o.arguments)
             else None
         )
         params = ", ".join(
@@ -91,7 +93,9 @@ class PythonPrinter(Visitor[str]):
     def _param(self, argument, resolved_type) -> str:
         prefix = {ARG_STAR: "*", ARG_STAR2: "**"}.get(argument.kind, "")
         text = f"{prefix}{argument.variable.name}"
-        annotation = resolved_type if resolved_type is not None else argument.type_annotation
+        annotation = (
+            resolved_type if resolved_type is not None else argument.type_annotation
+        )
         if annotation is not None:
             text += f": {annotation}"
         if argument.initializer is not None:
@@ -359,3 +363,7 @@ class PythonPrinter(Visitor[str]):
             f"{{{self.visit(o.key)}: {self.visit(o.value)} "
             f"{self._comprehension_clauses(o)}}}"
         )
+
+
+def convert_to_python(node: Node) -> str:
+    return PythonPrinter().visit(node)

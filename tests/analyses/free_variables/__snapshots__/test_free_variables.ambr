@@ -4,7 +4,7 @@
     tuple(
       '[[x for x in range(n)] for x in range(n)]',
       list([
-        PrintedName(fullname='n', line=3, column=29),
+        PrintedName(fullname='n', line=3, column=48),
       ]),
     ),
     tuple(
@@ -16,8 +16,8 @@
     tuple(
       '[x for x in range(n) if x > threshold]',
       list([
-        PrintedName(fullname='threshold', line=6, column=38),
         PrintedName(fullname='n', line=6, column=28),
+        PrintedName(fullname='threshold', line=6, column=38),
       ]),
     ),
     tuple(
@@ -29,21 +29,21 @@
     tuple(
       '[a[i] for i in range(n)]',
       list([
-        PrintedName(fullname='a', line=11, column=11),
         PrintedName(fullname='n', line=11, column=31),
+        PrintedName(fullname='a', line=11, column=11),
       ]),
     ),
     tuple(
       '{a: a for a in a}',
       list([
-        PrintedName(fullname='a', line=13, column=11),
+        PrintedName(fullname='a', line=13, column=25),
       ]),
     ),
     tuple(
       '[a[i] for i in range(n)]',
       list([
-        PrintedName(fullname='a', line=15, column=5),
         PrintedName(fullname='n', line=15, column=25),
+        PrintedName(fullname='a', line=15, column=5),
       ]),
     ),
   ])

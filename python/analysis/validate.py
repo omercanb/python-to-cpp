@@ -22,6 +22,7 @@ from mypy.nodes import (
     DictionaryComprehension,
     Expression,
     ExpressionStmt,
+    ForStmt,
     FuncDef,
     GeneratorExpr,
     IfStmt,
@@ -62,6 +63,7 @@ from python.codegen.builtins import EXCEPTION_TYPES
 from python.codegen.exceptions import names_a_class
 from python.codegen.typegen import UnsupportedType, cpp_type, cpp_type_name
 from python.errors import Diagnostic, diagnostic
+from python.printer import convert_to_python
 from python.visitor import Traverser
 
 SUPPORTED_EXCEPTIONS = ", ".join(
@@ -83,6 +85,30 @@ def returns(block: Block) -> bool:
     return finder.found
 
 
+class _CallFinder(Traverser):
+    def __init__(self) -> None:
+        self.found = False
+
+    def visit_call_expr(self, o: CallExpr) -> None:
+        self.found = True
+        super().visit_call_expr(o)
+
+
+def _contains_call(expression: Expression) -> bool:
+    finder = _CallFinder()
+    finder.visit(expression)
+    return finder.found
+
+
+def _lvalue_names(lvalue: Lvalue) -> list[str]:
+    """The names a target binds, for tracking what a `for` loop leaves stale."""
+    if isinstance(lvalue, NameExpr):
+        return [lvalue.name]
+    if isinstance(lvalue, TupleExpr):
+        return [name for item in lvalue.items for name in _lvalue_names(item)]
+    return []
+
+
 def _type_hint(t: Type) -> str:
     """Holding a function in a variable is the common way to land here."""
     proper = get_proper_type(t)
@@ -100,6 +126,22 @@ def _type_hint(t: Type) -> str:
 def _name_of(expression: Expression, fallback: str) -> str:
     """The written name, for hints that quote the code back at the reader."""
     return expression.name if isinstance(expression, NameExpr) else fallback
+
+
+def _subject_name(node) -> str | None:
+    """The name behind a type-check target, when the node has one at all.
+
+    check_type() is called against several different kinds of node (a
+    FuncDef for a return type, an Argument for a parameter, a Var for a
+    module-level symbol, any Expression for everything else) - only some of
+    which carry a name to quote back at the reader.
+    """
+    if isinstance(node, (NameExpr, Var, FuncDef)):
+        return node.name
+    variable = getattr(node, "variable", None)
+    if variable is not None:
+        return variable.name
+    return None
 
 
 def _tuple_index_hint(o: IndexExpr) -> str:
@@ -120,6 +162,11 @@ class _Validator(Traverser):
     def __init__(self, types: dict[Expression, Type]):
         self.types = types
         self.diagnostics: list[Diagnostic] = []
+        # Names a `for` loop has finished with, in the current function - read
+        # after that point in program order is not a translation this project
+        # matches, since C++'s for loop leaves its counter one past the value
+        # Python's would.
+        self.closed_loop_targets: dict[str, ForStmt] = {}
 
     def report(self, node, kind: str, message: str, hint: str) -> None:
         self.diagnostics.append(diagnostic(node, kind, message, hint))
@@ -130,11 +177,14 @@ class _Validator(Traverser):
             cpp_type(t)
         except UnsupportedType as unsupported:
             if str(unsupported.problematic_member_type) == "object":
+                name = _subject_name(node)
+                subject = f"`{name}`" if name else "this expression"
                 self.report(
                     node,
                     "object type",
                     f"Type of expression is inferred as `{unsupported.type}` which contains `object`. This cannot be translated to C++.",
-                    "Everything must have strictly one type only. There may be multiple different types being assigned to the field with type `object`. You can give this expression a type annotation to help you catch the error.",
+                    "Everything must have strictly one type only. There may be multiple different types being assigned to the field with type `object`. "
+                    f"You can give {subject} a type annotation to help you catch the error.",
                 )
             else:
                 self.report(
@@ -156,9 +206,9 @@ class _Validator(Traverser):
                 "class-inheritance",
                 "a base class is not supported",
                 "give the class its own copy of what it needs:\n"
-                "class Square:\n"
-                "    def __init__(self, side: int) -> None:\n"
-                "        self.side = side",
+                f"class {o.name}:\n"
+                "    def __init__(self, value: int) -> None:\n"
+                "        self.value = value",
             )
         for statement in o.defs.body:
             self.check_class_member(statement)
@@ -177,13 +227,15 @@ class _Validator(Traverser):
             # `x: int` parses as an assignment whose value is a placeholder.
             if isinstance(statement.rvalue, TempNode):
                 return
+            name = convert_to_python(statement.lvalues[0])
+            value = convert_to_python(statement.rvalue)
             self.report(
                 statement,
                 "class-variable",
                 "a class level value is not supported",
                 "every attribute is per instance, so set it in __init__:\n"
                 "def __init__(self) -> None:\n"
-                '    self.kind = "point"',
+                f"    self.{name} = {value}",
             )
             return
         self.report(
@@ -200,25 +252,57 @@ class _Validator(Traverser):
         for argument in o.arguments:
             if argument.variable.type is not None:
                 self.check_type(argument, argument.variable.type)
+        # A nested def gets its own set of stale loop targets, restored on exit.
+        outer_closed = self.closed_loop_targets
+        self.closed_loop_targets = {}
         super().visit_func_def(o)
+        self.closed_loop_targets = outer_closed
 
     def visit_assignment_stmt(self, o: AssignmentStmt) -> None:
         for lvalue in o.lvalues:
             self.check_lvalue(lvalue)
+        if len(o.lvalues) > 1:
+            first, *rest = o.lvalues
+            first_name = convert_to_python(first)
+            copies = "\n".join(
+                f"{convert_to_python(target)} = {first_name}" for target in rest
+            )
+            self.report(
+                o,
+                "chained-assignment",
+                "assigning to multiple targets in one statement is not supported",
+                "assign the value once, then copy it to the rest:\n"
+                f"{first_name} = {convert_to_python(o.rvalue)}\n"
+                f"{copies}",
+            )
         if isinstance(o.lvalues[0], TupleExpr):
             if o.rvalue in self.types:
                 rhs = self.types[o.rvalue]
                 if isinstance(rhs, Instance) and rhs.type.fullname == "builtins.list":
+                    targets = o.lvalues[0].items
+                    source = convert_to_python(o.rvalue)
+                    if any(isinstance(target, StarExpr) for target in targets):
+                        # A starred target needs a slice, not a single index;
+                        # the starred-assignment check explains that part.
+                        hint = "Assign the right hand side elements one by one."
+                    else:
+                        lines = "\n".join(
+                            f"{convert_to_python(target)} = {source}[{i}]"
+                            for i, target in enumerate(targets)
+                        )
+                        hint = f"Assign the right hand side elements one by one:\n{lines}"
                     self.report(
                         o,
                         "assignment",
                         "Can't use desugaring assignment on a list.",
-                        "Assign the right hand side elements one by one.",
+                        hint,
                     )
         super().visit_assignment_stmt(o)
 
     def check_lvalue(self, lvalue: Lvalue) -> None:
         if isinstance(lvalue, NameExpr):
+            # A fresh bind, whether new or a rebind, is no longer stale.
+            self.closed_loop_targets.pop(lvalue.name, None)
             if lvalue.is_new_def:
                 self.check_inferred_type(lvalue)
             return
@@ -243,11 +327,14 @@ class _Validator(Traverser):
             # mypy records no span for the `except*` token itself, so point at
             # the first handler's class rather than at `try`.
             handled = next((t for t in o.types if t is not None), o)
+            first_var = next((v for v in o.vars if v is not None), None)
+            klass = convert_to_python(handled) if handled is not o else "ValueError"
+            as_clause = f" as {first_var.name}" if first_var is not None else ""
             self.report(
                 handled,
                 "except-star",
                 "`except*` groups are not supported",
-                "use a plain except clause:\nexcept ValueError as error:",
+                f"use a plain except clause:\nexcept {klass}{as_clause}:",
             )
         for type_expression in o.types:
             self.check_handler_type(type_expression)
@@ -265,34 +352,40 @@ class _Validator(Traverser):
         if type_expression is None:
             return
         if isinstance(type_expression, TupleExpr):
+            example = "\n".join(
+                f"except {convert_to_python(item)}:\n    ..."
+                for item in type_expression.items
+            )
             self.report(
                 type_expression,
                 "except-tuple",
                 "an except clause takes a single exception class",
-                "write one clause per class:\n"
-                "except ValueError:\n    ...\nexcept KeyError:\n    ...",
+                f"write one clause per class:\n{example}",
             )
             return
         self.check_exception_class(type_expression)
 
     def visit_raise_stmt(self, o: RaiseStmt) -> None:
         if o.from_expr is not None:
+            example = convert_to_python(o.expr) if o.expr is not None else "ValueError()"
             self.report(
                 o,
                 "raise-from",
                 "chaining exceptions with `from` is not supported",
-                'raise the new exception on its own:\nraise KeyError("missing")',
+                f"raise the new exception on its own:\nraise {example}",
             )
         raised = o.expr
         if raised is not None:
             klass = raised.callee if isinstance(raised, CallExpr) else raised
             self.check_exception_class(klass)
             if isinstance(raised, CallExpr) and len(raised.args) > 1:
+                joined = " + ".join(convert_to_python(a) for a in raised.args)
                 self.report(
                     raised,
                     "exception-arguments",
                     "an exception takes a single message",
-                    'join the parts into one string:\nraise ValueError("a: " + b)',
+                    f"join the parts into one string:\n"
+                    f"raise {convert_to_python(klass)}({joined})",
                 )
         super().visit_raise_stmt(o)
 
@@ -312,17 +405,22 @@ class _Validator(Traverser):
             )
 
     def visit_dict_expr(self, o: DictExpr) -> None:
-        for key, _ in o.items:
-            if key is None:
-                self.report(
-                    o,
-                    "dict-unpacking",
-                    "`**` unpacking in a dict literal is not supported",
-                    "copy the entries across in a loop:\n"
-                    'merged = {"a": 1}\n'
-                    "for key in other:\n    merged[key] = other[key]",
-                )
-                break
+        unpacked = next((value for key, value in o.items if key is None), None)
+        if unpacked is not None:
+            kept = ", ".join(
+                f"{convert_to_python(key)}: {convert_to_python(value)}"
+                for key, value in o.items
+                if key is not None
+            )
+            source = convert_to_python(unpacked)
+            self.report(
+                o,
+                "dict-unpacking",
+                "`**` unpacking in a dict literal is not supported",
+                "copy the entries across in a loop:\n"
+                f"merged = {{{kept}}}\n"
+                f"for key in {source}:\n    merged[key] = {source}[key]",
+            )
         self.check_inferred_type(o)
         super().visit_dict_expr(o)
 
@@ -344,12 +442,13 @@ class _Validator(Traverser):
         super().visit_dictionary_comprehension(o)
 
     def visit_generator_expr(self, o: GeneratorExpr) -> None:
+        as_list = convert_to_python(ListComprehension(o))
         self.report(
             o,
             "generator-expression",
             "generator expressions are not supported",
             "wrap it in a list, which is built in one go rather than lazily:\n"
-            "total = sum([v * 2 for v in values])",
+            f"total = sum({as_list})",
         )
 
     def visit_list_expr(self, o: ListExpr) -> None:
@@ -384,6 +483,60 @@ class _Validator(Traverser):
         self.visit(o.body)
         if o.else_body is not None:
             self.visit(o.else_body)
+
+    def visit_for_stmt(self, o: ForStmt) -> None:
+        self.check_range_start(o)
+        self.check_lvalue(o.index)
+        self.visit(o.index)
+        self.visit(o.expr)
+        self.visit(o.body)
+        for name in _lvalue_names(o.index):
+            self.closed_loop_targets[name] = o
+        if o.else_body is not None:
+            self.visit(o.else_body)
+
+    def check_range_start(self, o: ForStmt) -> None:
+        """range()'s stop/step get evaluated before start once this compiles,
+        so a call in start could run in the wrong order relative to them.
+        """
+        iterable = o.expr
+        if not (
+            isinstance(iterable, CallExpr)
+            and isinstance(iterable.callee, NameExpr)
+            and iterable.callee.name == "range"
+            and len(iterable.args) >= 2
+        ):
+            return
+        start = iterable.args[0]
+        if _contains_call(start):
+            rest = ", ".join(convert_to_python(a) for a in iterable.args[1:])
+            self.report(
+                start,
+                "range-start-side-effect",
+                "a function call in range()'s start argument is not supported",
+                "evaluate it into a variable first, so it runs before "
+                "range()'s other arguments do:\n"
+                f"start = {convert_to_python(start)}\n"
+                f"for {convert_to_python(o.index)} in range(start, {rest}):",
+            )
+
+    def visit_name_expr(self, o: NameExpr) -> None:
+        closing = self.closed_loop_targets.get(o.name)
+        if closing is not None:
+            capture = f"{o.name}_last"
+            self.report(
+                o,
+                "stale-loop-variable",
+                f"`{o.name}` is read after the `for` loop that bound it has ended",
+                "C++'s for loop leaves its counter one past the last value "
+                "used, unlike Python, so this would read a different value "
+                "here. Assign it to another variable inside the loop body "
+                "instead:\n"
+                f"for {convert_to_python(closing.index)} in "
+                f"{convert_to_python(closing.expr)}:\n"
+                f"    {capture} = {o.name}\n"
+                f"print({capture})",
+            )
 
     def visit_condition(self, expression: Expression) -> None:
         """Walk an expression in condition position.
@@ -420,7 +573,7 @@ class _Validator(Traverser):
                 f"`{o.op}` on unrelated types has no single C++ type",
                 f"`{o.op}` returns one of its operands, so both sides need the "
                 "same type.\nUse it directly in a condition instead:\n"
-                "if count or fallback:",
+                f"if {convert_to_python(o.left)} {o.op} {convert_to_python(o.right)}:",
             )
 
 

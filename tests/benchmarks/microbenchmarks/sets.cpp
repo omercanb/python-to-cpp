@@ -25,8 +25,10 @@ void in_set() {
     _int n;
     ptr<tuple> s;
     a = ptr(new list<ptr<tuple>>());
-    for (_int j = 0; j < 100LL; ++j) {
-        for (_int i = 0; i < 10LL; ++i) {
+    _int __stop_1 = 100LL;
+    for (j = 0; j < __stop_1; ++j) {
+        _int __stop_2 = 10LL;
+        for (i = 0; i < __stop_2; ++i) {
             a->append(tuple((i * 2LL)));
             a->append(tuple(i, (i + 2LL)));
             a->append((tuple(i) * 6LL));
@@ -34,9 +36,10 @@ void in_set() {
         }
     }
     n = 0LL;
-    for (_int i = 0; i < 1000LL; ++i) {
-        for (auto __iter_1 = iter(a); !__iter_1.done();) {
-            s = next(__iter_1);
+    _int __stop_3 = 1000LL;
+    for (i = 0; i < __stop_3; ++i) {
+        for (auto __iter_4 = iter(a); !__iter_4.done();) {
+            s = next(__iter_4);
             if (to_bool((s->__contains__(6LL)))) {
             }
             if (to_bool((ptr(new set<_int>({3LL, 4LL, 5LL}))->__contains__(i)))) {
@@ -52,18 +55,20 @@ void set_literal_iteration() {
     str s;
     bool a;
     n = 0LL;
-    for (_int _ = 0; _ < 1000LL; ++_) {
-        for (_int _ = 0; _ < 10LL; ++_) {
-            for (auto __iter_2 = iter(ptr(new set<_int>({1LL, 2LL, 3LL, 4LL, 5LL, 6LL, 7LL, 8LL, 9LL, 10LL}))); !__iter_2.done();) {
-                i = next(__iter_2);
+    _int __stop_5 = 1000LL;
+    for (_ = 0; _ < __stop_5; ++_) {
+        _int __stop_6 = 10LL;
+        for (_ = 0; _ < __stop_6; ++_) {
+            for (auto __iter_7 = iter(ptr(new set<_int>({1LL, 2LL, 3LL, 4LL, 5LL, 6LL, 7LL, 8LL, 9LL, 10LL}))); !__iter_7.done();) {
+                i = next(__iter_7);
             }
-            for (auto __iter_3 = iter(ptr(new set<str>({str("yes"), str("no")}))); !__iter_3.done();) {
-                s = next(__iter_3);
+            for (auto __iter_8 = iter(ptr(new set<str>({str("yes"), str("no")}))); !__iter_8.done();) {
+                s = next(__iter_8);
                 if (to_bool(((s == str("yes"))))) {
                 }
             }
-            for (auto __iter_4 = iter(ptr(new set<bool>({true, false}))); !__iter_4.done();) {
-                a = next(__iter_4);
+            for (auto __iter_9 = iter(ptr(new set<bool>({true, false}))); !__iter_9.done();) {
+                a = next(__iter_9);
             }
         }
     }

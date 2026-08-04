@@ -26,11 +26,15 @@ from mypy.types import Instance, ProperType, Type, get_proper_type
 from python.analysis.validate import validate
 from python.codegen.mypy_codegen import StatementCodegen
 from python.errors import UnsupportedProgram, render
-from python.transform.comprehension_transformer import ComprehensionRemover
+from python.printer import convert_to_python
+from python.transform.comprehension_transformer import (
+    ComprehensionRemover,
+    apply_comprehension_transforms,
+)
 from python.transform.tree_transformer import Transformer
 from python.visitor import Traverser
 
-type TypeTable = dict[Expression, ProperType | TypeInfo]
+type TypeTable = dict[Expression, Type]
 
 _STRICT_ASSIGNMENTS = define_options()[2]
 
@@ -108,9 +112,7 @@ def analyse(path: str | None, source: str) -> AnalysisResult:
 
 
 def _apply_transforms(tree: MypyFile, types: dict[Expression, Type]):
-    t = ComprehensionRemover(types)
-    t.visit(tree)
-    print(tree)
+    apply_comprehension_transforms(tree, types)
 
 
 def _generate(result: AnalysisResult) -> str:

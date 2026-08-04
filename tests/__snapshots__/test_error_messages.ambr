@@ -1,4 +1,17 @@
 # serializer version: 1
+# name: test_error_message[chained_assignment.py]
+  '''
+  chained_assignment.py:2:5: error: assigning to multiple targets in one statement is not supported
+  
+    2 |     a = b = [1, 2, 3]
+      |     ^^^^^^^^^^^^^^^^^
+  
+    help: assign the value once, then copy it to the rest:
+            a = [1, 2, 3]
+            b = a
+  
+  '''
+# ---
 # name: test_error_message[class_body.py]
   '''
   class_body.py:4:5: error: only attributes and methods are supported in a class body
@@ -19,8 +32,8 @@
   
     help: give the class its own copy of what it needs:
             class Square:
-                def __init__(self, side: int) -> None:
-                    self.side = side
+                def __init__(self, value: int) -> None:
+                    self.value = value
   
   '''
 # ---
@@ -33,7 +46,7 @@
   
     help: every attribute is per instance, so set it in __init__:
             def __init__(self) -> None:
-                self.kind = "point"
+                self.kind = 'point'
   
   '''
 # ---
@@ -45,9 +58,9 @@
       |              ^^^^^^^^^^^^^^^^
   
     help: copy the entries across in a loop:
-            merged = {"a": 1}
-            for key in other:
-                merged[key] = other[key]
+            merged = {'b': 2}
+            for key in base:
+                merged[key] = base[key]
   
   '''
 # ---
@@ -86,7 +99,7 @@
       |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   
     help: join the parts into one string:
-            raise ValueError("a: " + b)
+            raise ValueError('first' + 'second')
   
   '''
 # ---
@@ -98,7 +111,7 @@
       |                ^^^^^^^^^^^^^^^^^^^^^^^
   
     help: wrap it in a list, which is built in one go rather than lazily:
-            total = sum([v * 2 for v in values])
+            total = sum([(v * 2) for v in values])
   
   '''
 # ---
@@ -111,7 +124,7 @@
   
     help: `or` returns one of its operands, so both sides need the same type.
             Use it directly in a condition instead:
-            if count or fallback:
+            if count() or 'none':
   
   '''
 # ---
@@ -134,7 +147,20 @@
       |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   
     help: raise the new exception on its own:
-            raise KeyError("missing")
+            raise KeyError('missing')
+  
+  '''
+# ---
+# name: test_error_message[range_start_side_effect.py]
+  '''
+  range_start_side_effect.py:6:20: error: a function call in range()'s start argument is not supported
+  
+    6 |     for i in range(get_start(), 10):
+      |                    ^^^^^^^^^^^
+  
+    help: evaluate it into a variable first, so it runs before range()'s other arguments do:
+            start = get_start()
+            for i in range(start, 10):
   
   '''
 # ---
@@ -151,6 +177,20 @@
             finally:
                 cleanup()
             return result
+  
+  '''
+# ---
+# name: test_error_message[stale_loop_variable.py]
+  '''
+  stale_loop_variable.py:4:11: error: `i` is read after the `for` loop that bound it has ended
+  
+    4 |     print(i)
+      |           ^
+  
+    help: C++'s for loop leaves its counter one past the last value used, unlike Python, so this would read a different value here. Assign it to another variable inside the loop body instead:
+            for i in range(5):
+                i_last = i
+            print(i_last)
   
   '''
 # ---

@@ -52,18 +52,15 @@ class ExpressionCodegen(Visitor[str]):
         # Keeps track of wether the current expression is an lvalue
         # Set from outside the class
         self.lvalue = False
-        # Each comprehension is lifted into its own function; this holds the
-        # call that stands in for it. Filled in by the statement codegen.
-        self.comprehension_calls: dict[object, str] = {}
 
     def visit_list_comprehension(self, o) -> str:
-        return self.comprehension_calls[o]
+        assert False, "Comprehensions should removed by previous transformations"
 
     def visit_set_comprehension(self, o) -> str:
-        return self.comprehension_calls[o]
+        assert False, "Comprehensions should removed by previous transformations"
 
     def visit_dictionary_comprehension(self, o) -> str:
-        return self.comprehension_calls[o]
+        assert False, "Comprehensions should removed by previous transformations"
 
     def visit_name_expr(self, o: NameExpr) -> str:
         if o.fullname == "builtins.True":

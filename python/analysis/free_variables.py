@@ -64,6 +64,7 @@ class FreeBoundSet:
     identifiers: dict[str, NameExpr] = field(default_factory=dict)
 
     def join(self, other: FreeBoundSet):
+        """Joins the sets, giving precedence to the identifiers of self"""
         self.free.union(other.free)
         self.bound.union(other.bound)
         self.identifiers = dict(other.identifiers, **self.identifiers)
@@ -129,7 +130,8 @@ class _FreeVariableCollector(Visitor[FreeBoundSet]):
         result_set.join(rest_iter_sets)
         result_set.join(cond_sets)
         result_set.bind(target_sets)
-        result_set.join(first_iter_set)
+        first_iter_set.join(result_set)
+        result_set = first_iter_set
 
         return result_set
 

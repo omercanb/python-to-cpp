@@ -17,3 +17,7 @@ class TempNameGenerator:
         count = self.prefix_counts[prefix]
         self.prefix_counts[prefix] += 1
         return f"__{prefix}_{count}"
+
+
+def temp_name(prefix: str) -> str:
+    return TempNameGenerator().temp_name(prefix)

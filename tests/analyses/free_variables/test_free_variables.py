@@ -11,7 +11,7 @@ from mypy.nodes import (
 
 from python.analysis.free_variables import get_free_variables
 from python.analysis.mypy_pass import analyse, parse
-from python.printer import PythonPrinter
+from python.printer import convert_to_python
 from python.visitor import Traverser
 
 test_file = Path(__file__).parent / "program.py"
@@ -50,17 +50,17 @@ class ComprehensionCollector(Traverser):
 
     def visit_list_comprehension(self, o: ListComprehension):
         self.free_var_list.append(get_free_variables(o))
-        self.comprehension_text.append(PythonPrinter().visit(o))
+        self.comprehension_text.append(convert_to_python(o))
         self.visit_comprehension(o.generator)
 
     def visit_set_comprehension(self, o: SetComprehension):
         self.free_var_list.append(get_free_variables(o))
-        self.comprehension_text.append(PythonPrinter().visit(o))
+        self.comprehension_text.append(convert_to_python(o))
         self.visit_comprehension(o.generator)
 
     def visit_dictionary_comprehension(self, o: DictionaryComprehension):
         self.free_var_list.append(get_free_variables(o))
-        self.comprehension_text.append(PythonPrinter().visit(o))
+        self.comprehension_text.append(convert_to_python(o))
         self.visit_comprehension(o)
 
     def visit_comprehension(self, o: GeneratorExpr | DictionaryComprehension) -> None:

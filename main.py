@@ -6,7 +6,7 @@ from mypy.types import ProperType
 from python.analysis.mypy_pass import _generate, analyse
 from python.analysis.validate import validate
 from python.errors import UnsupportedProgram, render
-from python.printer import PythonPrinter
+from python.printer import convert_to_python
 from python.utils import build_and_run
 
 # Mypys strict upgrades
@@ -19,7 +19,7 @@ def full_pipeline():
     # for k, v in result.types.items():
     #     print(f"{k} : {v}")
     print(str(result.tree))
-    print(PythonPrinter().visit(result.tree))
+    print(convert_to_python(result.tree))
     # print_types(result.types)
     diagnostics = validate(result.tree, result.types)
     if diagnostics:

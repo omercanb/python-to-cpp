@@ -98,14 +98,15 @@ int run() {
 }
 
 namespace prog_builtin_functions {
-ptr<list<_int>> comprehension_1(ptr<list<_int>> numbers) {
-    ptr<list<_int>> __result_2 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_0(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __tmp_0;
     _int v;
-    for (auto __iter_3 = iter(numbers); !__iter_3.done();) {
-        v = next(__iter_3);
-        __result_2->append((v * 2LL));
+    __tmp_0 = ptr(new list<_int>());
+    for (auto __iter_1 = iter(numbers); !__iter_1.done();) {
+        v = next(__iter_1);
+        __tmp_0->append((v * 2LL));
     }
-    return __result_2;
+    return __tmp_0;
 }
 
 int run() {
@@ -131,7 +132,7 @@ int run() {
     print(py::round(5LL));
     print(chr(65LL), ord(str("A")));
     print(chr((ord(str("a")) + 1LL)));
-    print(sum(comprehension_1(numbers)));
+    print(sum(__list_comprehension_0(numbers)));
     return 0LL;
 }
 }
@@ -276,162 +277,187 @@ int run() {
 }
 
 namespace prog_comprehensions {
-ptr<list<_int>> comprehension_1(ptr<list<_int>> values, _int factor, _int offset) {
-    ptr<list<_int>> __result_2 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_1(ptr<list<_int>> values, _int factor, _int offset) {
+    ptr<list<_int>> __tmp_1;
     _int v;
-    for (auto __iter_3 = iter(values); !__iter_3.done();) {
-        v = next(__iter_3);
-        __result_2->append(((v * factor) + offset));
+    __tmp_1 = ptr(new list<_int>());
+    for (auto __iter_1 = iter(values); !__iter_1.done();) {
+        v = next(__iter_1);
+        __tmp_1->append(((v * factor) + offset));
     }
-    return __result_2;
+    return __tmp_1;
 }
 
 ptr<list<_int>> scaled(ptr<list<_int>> values, _int factor) {
     _int offset;
     str("A comprehension reads the enclosing function's locals and parameters.");
     offset = 1LL;
-    return comprehension_1(values, factor, offset);
+    return __list_comprehension_1(values, factor, offset);
 }
 
-ptr<list<_int>> comprehension_4(ptr<list<_int>> numbers) {
-    ptr<list<_int>> __result_5 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_2(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __tmp_2;
     _int v;
-    for (auto __iter_6 = iter(numbers); !__iter_6.done();) {
-        v = next(__iter_6);
-        __result_5->append(v);
+    __tmp_2 = ptr(new list<_int>());
+    for (auto __iter_2 = iter(numbers); !__iter_2.done();) {
+        v = next(__iter_2);
+        __tmp_2->append(v);
     }
-    return __result_5;
+    return __tmp_2;
 }
 
-ptr<list<_int>> comprehension_7(ptr<list<_int>> numbers) {
-    ptr<list<_int>> __result_8 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_3(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __tmp_3;
     _int v;
-    for (auto __iter_9 = iter(numbers); !__iter_9.done();) {
-        v = next(__iter_9);
+    __tmp_3 = ptr(new list<_int>());
+    for (auto __iter_3 = iter(numbers); !__iter_3.done();) {
+        v = next(__iter_3);
         if (to_bool(((v > 2LL)))) {
-            __result_8->append(v);
+            __tmp_3->append(v);
         }
     }
-    return __result_8;
+    return __tmp_3;
 }
 
-ptr<list<_int>> comprehension_10() {
-    ptr<list<_int>> __result_11 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_4() {
+    ptr<list<_int>> __tmp_4;
     _int i;
-    for (_int i = 0; i < 4LL; ++i) {
-        __result_11->append(i);
+    __tmp_4 = ptr(new list<_int>());
+    _int __stop_4 = 4LL;
+    for (i = 0; i < __stop_4; ++i) {
+        __tmp_4->append(i);
     }
-    return __result_11;
+    return __tmp_4;
 }
 
-ptr<list<_int>> comprehension_12() {
-    ptr<list<_int>> __result_13 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_5() {
+    ptr<list<_int>> __tmp_5;
     _int i;
-    for (_int i = 1LL; i < 8LL; i += 2) {
-        __result_13->append(i);
+    __tmp_5 = ptr(new list<_int>());
+    _int __stop_5 = 8LL;
+    for (i = 1LL; i < __stop_5; i += 2) {
+        __tmp_5->append(i);
     }
-    return __result_13;
+    return __tmp_5;
 }
 
-ptr<list<_int>> comprehension_14(ptr<list<_int>> numbers) {
-    ptr<list<_int>> __result_15 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_6(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __tmp_6;
     _int i;
-    for (size_t i = 0; i < len(numbers); ++i) {
-        __result_15->append(numbers->__getitem__(i));
+    __tmp_6 = ptr(new list<_int>());
+    _int __len_6 = len(numbers);
+    for (i = 0; i < __len_6; ++i) {
+        __tmp_6->append(numbers->__getitem__(i));
     }
-    return __result_15;
+    return __tmp_6;
 }
 
-ptr<list<_int>> comprehension_16(ptr<list<_int>> numbers) {
-    ptr<list<_int>> __result_17 = ptr(new list<_int>());
+ptr<set<_int>> __set_comprehension_0(ptr<list<_int>> numbers) {
+    ptr<set<_int>> __tmp_7;
+    _int v;
+    __tmp_7 = ptr(new set<_int>());
+    for (auto __iter_7 = iter(numbers); !__iter_7.done();) {
+        v = next(__iter_7);
+        __tmp_7->add((v * v));
+    }
+    return __tmp_7;
+}
+
+ptr<dict<_int, _int>> __dict_comprehension_0(ptr<list<_int>> numbers) {
+    ptr<dict<_int, _int>> __tmp_8;
+    _int v;
+    __tmp_8 = ptr(new dict<_int, _int>());
+    for (auto __iter_8 = iter(numbers); !__iter_8.done();) {
+        v = next(__iter_8);
+        if (to_bool(((v > 1LL)))) {
+            __tmp_8->__setitem__(v, (v * v));
+        }
+    }
+    return __tmp_8;
+}
+
+ptr<list<_int>> __list_comprehension_7(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __tmp_9;
     _int x;
     _int y;
-    for (auto __iter_18 = iter(numbers); !__iter_18.done();) {
-        x = next(__iter_18);
-        for (auto __iter_19 = iter(numbers); !__iter_19.done();) {
-            y = next(__iter_19);
+    __tmp_9 = ptr(new list<_int>());
+    for (auto __iter_9 = iter(numbers); !__iter_9.done();) {
+        x = next(__iter_9);
+        for (auto __iter_10 = iter(numbers); !__iter_10.done();) {
+            y = next(__iter_10);
             if (to_bool(((x < y)))) {
-                __result_17->append((x * y));
+                __tmp_9->append((x * y));
             }
         }
     }
-    return __result_17;
+    return __tmp_9;
 }
 
-ptr<list<_int>> comprehension_20(_int v) {
-    ptr<list<_int>> __result_21 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_11(_int v) {
+    ptr<list<_int>> __tmp_13;
     _int w;
-    for (_int w = 0; w < v; ++w) {
-        __result_21->append(w);
+    __tmp_13 = ptr(new list<_int>());
+    _int __stop_11 = v;
+    for (w = 0; w < __stop_11; ++w) {
+        __tmp_13->append(w);
     }
-    return __result_21;
+    return __tmp_13;
 }
 
-ptr<list<_int>> comprehension_22(ptr<list<_int>> numbers) {
-    ptr<list<_int>> __result_23 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_8(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __tmp_10;
     _int v;
-    for (auto __iter_24 = iter(numbers); !__iter_24.done();) {
-        v = next(__iter_24);
-        __result_23->append(len(comprehension_20(v)));
+    __tmp_10 = ptr(new list<_int>());
+    for (auto __iter_12 = iter(numbers); !__iter_12.done();) {
+        v = next(__iter_12);
+        __tmp_10->append(len(__list_comprehension_11(v)));
     }
-    return __result_23;
+    return __tmp_10;
 }
 
-ptr<list<_int>> comprehension_25(ptr<list<_int>> numbers) {
-    ptr<list<_int>> __result_26 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_9(ptr<list<_int>> numbers) {
+    ptr<list<_int>> __tmp_11;
     _int v;
-    for (auto __iter_27 = iter(numbers); !__iter_27.done();) {
-        v = next(__iter_27);
-        __result_26->append((v * 2LL));
+    __tmp_11 = ptr(new list<_int>());
+    for (auto __iter_13 = iter(numbers); !__iter_13.done();) {
+        v = next(__iter_13);
+        __tmp_11->append((v * 2LL));
     }
-    return __result_26;
+    return __tmp_11;
 }
 
-ptr<list<_int>> comprehension_28(ptr<list<_int>> doubled) {
-    ptr<list<_int>> __result_29 = ptr(new list<_int>());
+ptr<list<_int>> __list_comprehension_10(ptr<list<_int>> doubled) {
+    ptr<list<_int>> __tmp_12;
     _int v;
-    for (auto __iter_30 = iter(doubled); !__iter_30.done();) {
-        v = next(__iter_30);
-        __result_29->append((v + 1LL));
+    __tmp_12 = ptr(new list<_int>());
+    for (auto __iter_14 = iter(doubled); !__iter_14.done();) {
+        v = next(__iter_14);
+        __tmp_12->append((v + 1LL));
     }
-    return __result_29;
+    return __tmp_12;
 }
 
 int run() {
     ptr<list<_int>> numbers;
-    ptr<set<_int>> __set_comprehension_0;
-    _int v;
     ptr<set<_int>> squares;
-    ptr<dict<_int, _int>> __dict_comprehension_0;
     ptr<dict<_int, _int>> lookup;
     ptr<list<_int>> doubled;
     numbers = ptr(new list<_int>({1LL, 2LL, 3LL, 4LL}));
-    print(comprehension_4(numbers));
-    print(comprehension_7(numbers));
-    print(comprehension_10());
-    print(comprehension_12());
-    print(comprehension_14(numbers));
+    print(__list_comprehension_2(numbers));
+    print(__list_comprehension_3(numbers));
+    print(__list_comprehension_4());
+    print(__list_comprehension_5());
+    print(__list_comprehension_6(numbers));
     print(scaled(numbers, 10LL));
-    __set_comprehension_0 = ptr(new set<_int>());
-    for (auto __iter_31 = iter(numbers); !__iter_31.done();) {
-        v = next(__iter_31);
-    }
-    squares = __set_comprehension_0;
+    squares = __set_comprehension_0(numbers);
     print(sorted(squares));
-    __dict_comprehension_0 = ptr(new dict<_int, _int>());
-    for (auto __iter_32 = iter(numbers); !__iter_32.done();) {
-        v = next(__iter_32);
-        if (to_bool(((v > 1LL)))) {
-            __dict_comprehension_0->__setitem__(v, (v * v));
-        }
-    }
-    lookup = __dict_comprehension_0;
+    lookup = __dict_comprehension_0(numbers);
     print(len(lookup), lookup->__getitem__(2LL), lookup->__getitem__(4LL));
     print(sorted(lookup));
-    print(comprehension_16(numbers));
-    print(comprehension_22(numbers));
-    doubled = comprehension_25(numbers);
-    print(comprehension_28(doubled));
+    print(__list_comprehension_7(numbers));
+    print(__list_comprehension_8(numbers));
+    doubled = __list_comprehension_9(numbers);
+    print(__list_comprehension_10(doubled));
     return 0LL;
 }
 }
@@ -674,7 +700,8 @@ int run() {
     } catch (ValueError &e) {
         print(str("float refused it"));
     }
-    for (_int i = 0; i < 3LL; ++i) {
+    _int __stop_1 = 3LL;
+    for (i = 0; i < __stop_1; ++i) {
         {
             Finally __finally([&] {
                 print(str("loop finally"), i);
@@ -855,38 +882,48 @@ int run() {
     _int n;
     x = 2LL;
     l = ptr(new list<_int>({2LL, 3LL, 4LL}));
-    for (size_t i = 0; i < len(l); ++i) {
+    _int __len_1 = len(l);
+    for (i = 0; i < __len_1; ++i) {
         print(l);
     }
-    for (_int i = 0; i < x; ++i) {
+    _int __stop_2 = x;
+    for (i = 0; i < __stop_2; ++i) {
         print(str("first"), i);
     }
-    for (_int i = x; i < (x + 5LL); ++i) {
+    _int __stop_3 = (x + 5LL);
+    for (i = x; i < __stop_3; ++i) {
         print(str("second"), i);
     }
-    for (_int i = x; i < (x + 10LL); i += 2) {
+    _int __stop_4 = (x + 10LL);
+    for (i = x; i < __stop_4; i += 2) {
         print(str("third"), i);
     }
-    for (_int i = x;; i += (-2LL)) {
-        if (((-2LL) > 0 && i >= (x - 7LL)) || ((-2LL) < 0 && i <= (x - 7LL))) break;
+    _int __stop_5 = (x - 7LL);
+    _int __step_6 = (-2LL);
+    for (i = x;; i += __step_6) {
+        if ((__step_6 > 0 && i >= __stop_5) || (__step_6 < 0 && i <= __stop_5)) break;
         print(str("fourth"), i);
     }
     step = x;
-    for (_int i = x;; i += step) {
-        if ((step > 0 && i >= (10LL * x)) || (step < 0 && i <= (10LL * x))) break;
+    _int __stop_7 = (10LL * x);
+    _int __step_8 = step;
+    for (i = x;; i += __step_8) {
+        if ((__step_8 > 0 && i >= __stop_7) || (__step_8 < 0 && i <= __stop_7)) break;
         print(str("fifth"), i);
     }
     step = (-2LL);
-    for (_int i = (5LL * x);; i += step) {
-        if ((step > 0 && i >= (10LL * x)) || (step < 0 && i <= (10LL * x))) break;
+    _int __stop_9 = (10LL * x);
+    _int __step_10 = step;
+    for (i = (5LL * x);; i += __step_10) {
+        if ((__step_10 > 0 && i >= __stop_9) || (__step_10 < 0 && i <= __stop_9)) break;
         print(str("sixth"), i);
     }
-    for (auto __iter_1 = iter(l); !__iter_1.done();) {
-        n = next(__iter_1);
+    for (auto __iter_11 = iter(l); !__iter_11.done();) {
+        n = next(__iter_11);
         print(str("seventh"), n);
     }
-    for (auto __iter_2 = iter(l); !__iter_2.done();) {
-        n = next(__iter_2);
+    for (auto __iter_12 = iter(l); !__iter_12.done();) {
+        n = next(__iter_12);
         print(str("eight"), n);
     }
     return 0LL;

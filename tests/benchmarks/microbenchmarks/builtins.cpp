@@ -27,17 +27,19 @@ void min_max_pair() {
     _int m;
     _int j;
     a = ptr(new list<_int>());
-    for (_int i = 0; i < 20LL; ++i) {
+    _int __stop_1 = 20LL;
+    for (i = 0; i < __stop_1; ++i) {
         a->append(mod((i * 12753LL), (pow(2LL, 15LL) - 1LL)));
     }
     expected_min = min(a);
     expected_max = max(a);
     n = 0LL;
-    for (_int i = 0; i < (100LL * 1000LL); ++i) {
+    _int __stop_2 = (100LL * 1000LL);
+    for (i = 0; i < __stop_2; ++i) {
         n = 1000000000LL;
         m = 0LL;
-        for (auto __iter_1 = iter(a); !__iter_1.done();) {
-            j = next(__iter_1);
+        for (auto __iter_3 = iter(a); !__iter_3.done();) {
+            j = next(__iter_3);
             n = min(n, j);
             m = max(m, j);
         }
@@ -51,15 +53,17 @@ void min_max_sequence() {
     ptr<list<_int>> s;
     _int x;
     a = ptr(new list<ptr<list<_int>>>());
-    for (_int i = 0; i < 1000LL; ++i) {
+    _int __stop_4 = 1000LL;
+    for (i = 0; i < __stop_4; ++i) {
         a->append(ptr(new list<_int>({(i * 2LL)})));
         a->append(ptr(new list<_int>({i, (i + 2LL)})));
         a->append((ptr(new list<_int>({i})) * 15LL));
     }
     n = 0LL;
-    for (_int i = 0; i < 100LL; ++i) {
-        for (auto __iter_2 = iter(a); !__iter_2.done();) {
-            s = next(__iter_2);
+    _int __stop_5 = 100LL;
+    for (i = 0; i < __stop_5; ++i) {
+        for (auto __iter_6 = iter(a); !__iter_6.done();) {
+            s = next(__iter_6);
             x = min(s);
             x = max(s);
         }
@@ -76,18 +80,21 @@ void map_builtin() {
     ptr<list<_int>> x;
     str y;
     a = ptr(new list<ptr<list<_int>>>());
-    for (_int j = 0; j < 100LL; ++j) {
-        for (_int i = 0; i < 10LL; ++i) {
+    _int __stop_7 = 100LL;
+    for (j = 0; j < __stop_7; ++j) {
+        _int __stop_8 = 10LL;
+        for (i = 0; i < __stop_8; ++i) {
             a->append(ptr(new list<_int>({(i * 2LL)})));
             a->append(ptr(new list<_int>({i, (i + 2LL)})));
             a->append((ptr(new list<_int>({i})) * 6LL));
         }
     }
     n = 0LL;
-    for (_int i = 0; i < 100LL; ++i) {
+    _int __stop_9 = 100LL;
+    for (i = 0; i < __stop_9; ++i) {
         k = 0LL;
-        for (auto __iter_3 = iter(a); !__iter_3.done();) {
-            lst = next(__iter_3);
+        for (auto __iter_10 = iter(a); !__iter_10.done();) {
+            lst = next(__iter_10);
             x = ptr(new list<_int>(map(inc, lst)));
             if (to_bool(((k == 0LL)))) {
                 y = str("").join(map(str, lst));

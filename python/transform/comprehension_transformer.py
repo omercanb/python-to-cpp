@@ -65,6 +65,7 @@ class ComprehensionRemover(Transformer):
     def __init__(self, types: dict[Expression, Type]):
         super().__init__()
         self.types = types
+        self.transform_done = False
 
     def transform_comprehension(
         self,
@@ -76,19 +77,28 @@ class ComprehensionRemover(Transformer):
         method_params: list[Expression],
     ):
         """Create a new funcdef that behaves like the comprehension in the global scope and return the function call that replaces the comprehension"""
+        self.transform_done = True
+
+        def typed_name(name: str) -> NameExpr:
+            e = NameExpr(name)
+            self.types[e] = comprehension_type
+            return e
+
         # Create a temp variable which will be returned
         tmp_name = TempNameGenerator().temp_name("tmp")
-        declaration_name = NameExpr(tmp_name)
+        declaration_name = typed_name(tmp_name)
         declaration_name.is_new_def = True
 
         initialize_tmp = AssignmentStmt([declaration_name], empty_container)
+        self.types[empty_container] = comprehension_type
 
         # Inner statement that gros the tmp variable
-        grow_tmp_call = method_expr(NameExpr(tmp_name), method_name, method_params)
+        grow_tmp_call = method_expr(typed_name(tmp_name), method_name, method_params)
+
         loop_body = self.expand_comprehension(o, ExpressionStmt(grow_tmp_call))
 
         # Return the temp variable
-        return_tmp = ReturnStmt(NameExpr(tmp_name))
+        return_tmp = ReturnStmt(typed_name(tmp_name))
 
         function_body = Block([initialize_tmp, loop_body, return_tmp])
 
@@ -119,6 +129,7 @@ class ComprehensionRemover(Transformer):
             NameExpr(free_var.name) for free_var in free_variables
         ]
         replacing_call = call_expr(new_name, replacing_call_arguments)
+
         return replacing_call
 
     def expand_comprehension(
@@ -155,10 +166,6 @@ class ComprehensionRemover(Transformer):
             "add",
             [o.generator.left_expr],
         )
-        # typ = self.types[o]
-        # self.types[assign.rvalue] = typ
-        # self.types[assign.lvalues[0]] = typ
-        # self.types[body_statement.callee] = typ
 
     def visit_list_comprehension(self, o: ListComprehension):
         new_name = TempNameGenerator().temp_name("list_comprehension")
@@ -177,8 +184,10 @@ class ComprehensionRemover(Transformer):
             o, self.types[o], new_name, DictExpr([]), "__setitem__", [o.key, o.value]
         )
 
-        # typ = self.types[o]
-        # self.types[assign.rvalue] = typ
-        # self.types[assign.lvalues[0]] = typ
-        # self.types[body_statement.lvalues[0].base] = typ
-        #
+
+def apply_comprehension_transforms(tree: Node, types):
+    while True:
+        t = ComprehensionRemover(types)
+        t.visit(tree)
+        if not t.transform_done:
+            break

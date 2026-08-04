@@ -9,6 +9,8 @@ from mypy.nodes import CallExpr
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import ForStmt, IntExpr, NameExpr, OpExpr
 
+from python.codegen.typegen import cpp_type
+
 if TYPE_CHECKING:
     from python.codegen.mypy_codegen import StatementCodegen
 
@@ -72,6 +74,22 @@ def loop_header(
     return for_generic(codegen, index, iterable)
 
 
+def _hoist(
+    codegen: StatementCodegen, value: str, cpp_type_name: str, prefix: str
+) -> str:
+    """Evaluate `value` into a fresh temporary before the loop starts.
+
+    Python evaluates a range()/len() argument exactly once, before the
+    loop's target is ever assigned. Splicing the expression directly into
+    the C++ condition would instead re-read it on every iteration -
+    wrong the moment its value depends on the loop target itself
+    (`range(x)` inside `for x in ...`), or changes during the loop.
+    """
+    temp = codegen.temp_name(prefix)
+    codegen.emit(f"{cpp_type_name} {temp} = {value};")
+    return temp
+
+
 def for_range_len(
     codegen: StatementCodegen, index: MypyExpression, inner_iterable: MypyExpression
 ) -> LoopHeader:
@@ -79,9 +97,8 @@ def for_range_len(
     assert isinstance(index, NameExpr)
     target = index.name
     inner_iter_expr = codegen.get_expr(inner_iterable)
-    return LoopHeader(
-        f"for (size_t {target} = 0; {target} < len({inner_iter_expr}); ++{target})"
-    )
+    stop = _hoist(codegen, f"len({inner_iter_expr})", "_int", "len")
+    return LoopHeader(f"for ({target} = 0; {target} < {stop}; ++{target})")
 
 
 def _extract_int_constant(expr: MypyExpression) -> int | None:
@@ -118,12 +135,16 @@ def for_range_no_step(
     target = index.name
 
     if len(args) == 1:
-        stop = codegen.get_expr(args[0])
-        return LoopHeader(f"for (_int {target} = 0; {target} < {stop}; ++{target})")
+        stop = _hoist(
+            codegen, codegen.get_expr(args[0]), cpp_type(codegen.types[args[0]]), "stop"
+        )
+        return LoopHeader(f"for ({target} = 0; {target} < {stop}; ++{target})")
 
     start = codegen.get_expr(args[0])
-    stop = codegen.get_expr(args[1])
-    return LoopHeader(f"for (_int {target} = {start}; {target} < {stop}; ++{target})")
+    stop = _hoist(
+        codegen, codegen.get_expr(args[1]), cpp_type(codegen.types[args[1]]), "stop"
+    )
+    return LoopHeader(f"for ({target} = {start}; {target} < {stop}; ++{target})")
 
 
 def for_range_constant_step(
@@ -136,10 +157,12 @@ def for_range_constant_step(
     assert isinstance(index, NameExpr)
     target = index.name
     start = codegen.get_expr(args[0])
-    stop = codegen.get_expr(args[1])
+    stop = _hoist(
+        codegen, codegen.get_expr(args[1]), cpp_type(codegen.types[args[1]]), "stop"
+    )
     comparison = "<" if step > 0 else ">"
     return LoopHeader(
-        f"for (_int {target} = {start}; {target} {comparison} {stop}; "
+        f"for ({target} = {start}; {target} {comparison} {stop}; "
         f"{target} += {step})"
     )
 
@@ -151,11 +174,15 @@ def for_range_unknown_step(
     assert isinstance(index, NameExpr)
     target = index.name
     start = codegen.get_expr(args[0])
-    stop = codegen.get_expr(args[1])
-    step = codegen.get_expr(args[2])
+    stop = _hoist(
+        codegen, codegen.get_expr(args[1]), cpp_type(codegen.types[args[1]]), "stop"
+    )
+    step = _hoist(
+        codegen, codegen.get_expr(args[2]), cpp_type(codegen.types[args[2]]), "step"
+    )
 
     return LoopHeader(
-        f"for (_int {target} = {start};; {target} += {step})",
+        f"for ({target} = {start};; {target} += {step})",
         [
             f"if (({step} > 0 && {target} >= {stop}) || "
             f"({step} < 0 && {target} <= {stop})) break;"
@@ -170,6 +197,7 @@ def for_generic(
     target = codegen.get_expr(index, lvalue=True)
     iterable_expr = codegen.get_expr(iterable)
     iter_var = codegen.temp_name("iter")
+    # TODO itervar shouldnt be declared in the loop
 
     return LoopHeader(
         f"for (auto {iter_var} = iter({iterable_expr}); !{iter_var}.done();)",

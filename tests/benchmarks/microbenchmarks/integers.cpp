@@ -27,19 +27,22 @@ void int_bitwise_ops() {
     _int k;
     _int x;
     a = ptr(new list<_int>());
-    for (_int i = 0; i < 1000LL; ++i) {
+    _int __stop_1 = 1000LL;
+    for (i = 0; i < __stop_1; ++i) {
         a->append(mod(((i * i) * 12753LL), (pow(2LL, 20LL) - 1LL)));
     }
     b = ptr(new list<_int>());
-    for (_int t = 0; t < 40LL; ++t) {
+    _int __stop_2 = 40LL;
+    for (t = 0; t < __stop_2; ++t) {
         b->append(a->__getitem__((10LL + t)));
     }
     n = 0LL;
-    for (_int i = 0; i < 50LL; ++i) {
-        for (auto __iter_1 = iter(a); !__iter_1.done();) {
-            j = next(__iter_1);
-            for (auto __iter_2 = iter(b); !__iter_2.done();) {
-                k = next(__iter_2);
+    _int __stop_3 = 50LL;
+    for (i = 0; i < __stop_3; ++i) {
+        for (auto __iter_4 = iter(a); !__iter_4.done();) {
+            j = next(__iter_4);
+            for (auto __iter_5 = iter(b); !__iter_5.done();) {
+                k = next(__iter_5);
                 x = (j >> 5LL);
             }
         }
@@ -55,19 +58,22 @@ void int_bitwise_ops2() {
     _int j;
     _int k;
     a = ptr(new list<_int>());
-    for (_int i = 0; i < 1000LL; ++i) {
+    _int __stop_6 = 1000LL;
+    for (i = 0; i < __stop_6; ++i) {
         a->append((((i * i) * 2654435761LL) & 4294967295LL));
     }
     b = ptr(new list<_int>());
-    for (_int t = 0; t < 49LL; ++t) {
+    _int __stop_7 = 49LL;
+    for (t = 0; t < __stop_7; ++t) {
         b->append(a->__getitem__((10LL + (t * 10LL))));
     }
     n = 0LL;
-    for (_int i = 0; i < 10LL; ++i) {
-        for (auto __iter_3 = iter(a); !__iter_3.done();) {
-            j = next(__iter_3);
-            for (auto __iter_4 = iter(b); !__iter_4.done();) {
-                k = next(__iter_4);
+    _int __stop_8 = 10LL;
+    for (i = 0; i < __stop_8; ++i) {
+        for (auto __iter_9 = iter(a); !__iter_9.done();) {
+            j = next(__iter_9);
+            for (auto __iter_10 = iter(b); !__iter_10.done();) {
+                k = next(__iter_10);
                 if (to_bool(((1LL << (i * 3LL)) & j))) {
                 }
             }
