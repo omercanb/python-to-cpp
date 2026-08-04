@@ -21,7 +21,7 @@ from mypy.nodes import (
     Var,
 )
 from mypy.options import Options
-from mypy.types import ProperType, Type, get_proper_type
+from mypy.types import Instance, ProperType, Type, get_proper_type
 
 from python.analysis.validate import validate
 from python.codegen.mypy_codegen import StatementCodegen
@@ -33,6 +33,8 @@ from python.visitor import Traverser
 type TypeTable = dict[Expression, ProperType | TypeInfo]
 
 _STRICT_ASSIGNMENTS = define_options()[2]
+
+function_fallback: Instance
 
 
 @dataclass
@@ -72,6 +74,16 @@ def parse(path: str | None, source: str) -> MypyFile:
     return tree
 
 
+def set_global_function_fallback(result: build.BuildResult):
+    """Used when creating custom function definitions directly using the ast"""
+    global function_fallback
+    sym = result.files["builtins"].names["function"]
+    assert sym.node is not None
+    function_type_info = sym.node
+    assert isinstance(function_type_info, TypeInfo)
+    function_fallback = Instance(function_type_info, [])
+
+
 def analyse(path: str | None, source: str) -> AnalysisResult:
     """
     The mypy analysis pass
@@ -86,9 +98,11 @@ def analyse(path: str | None, source: str) -> AnalysisResult:
         print("\n".join(result.errors))
         sys.exit(1)
     tree = result.files["main"]
-    _apply_transforms(tree, result.types)
+
+    set_global_function_fallback(result)
 
     types = get_resolved_types(result.files["main"], result.types)
+    _apply_transforms(tree, types)
 
     return AnalysisResult(result.files["main"], types, source, path)
 

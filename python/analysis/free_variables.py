@@ -81,6 +81,9 @@ Comprehension = (
 
 class _FreeVariableCollector(Visitor[FreeBoundSet]):
 
+    def visit_generator_expr(self, o: GeneratorExpr) -> FreeBoundSet:
+        return self.comprehension(o)
+
     def visit_list_comprehension(self, o: ListComprehension) -> FreeBoundSet:
         return self.comprehension(o.generator)
 
@@ -251,7 +254,7 @@ class _FreeVariableCollector(Visitor[FreeBoundSet]):
             assert False, "Not a possible lvalue target"
 
 
-def free_variables(comprehension: Comprehension) -> list[NameExpr]:
+def get_free_variables(comprehension: Comprehension) -> list[NameExpr]:
     """The enclosing scope's variables a comprehension reads, in first-use order."""
     collector = _FreeVariableCollector()
     s = collector.visit(comprehension)
