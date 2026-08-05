@@ -2,6 +2,7 @@
 
 from mypy.nodes import (
     AssignmentStmt,
+    CallExpr,
     Expression,
     ForStmt,
     FuncDef,
@@ -47,8 +48,9 @@ class _DeclarationCollector(Traverser):
             for item in lvalue.items:
                 self.check_names(item)
 
-        elif isinstance(lvalue, (IndexExpr, MemberExpr)):
-            # d[k] = ... / obj.attr = ... write into something that exists.
+        elif isinstance(lvalue, (IndexExpr, MemberExpr, CallExpr)):
+            # d[k] = ... / obj.attr = ... / a.back() = ... write into
+            # something that exists.
             pass
         else:
             assert False, "rejected by validation"

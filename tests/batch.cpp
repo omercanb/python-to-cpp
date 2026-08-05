@@ -809,6 +809,8 @@ int run() {
     _int z;
     ptr<list<_int>> l3;
     _int n;
+    ptr<list<_int>> l4;
+    ptr<list<_int>> l5;
     print(ptr(new list<_int>(ptr(new list<_int>({1LL, 2LL, 3LL})))));
     l = ptr(new list<_int>({1LL, 2LL, 3LL}));
     print(l);
@@ -868,7 +870,20 @@ int run() {
     print(l2);
     n = len(l2);
     print(n);
-    print(l2->__getitem__(0LL), l2->__getitem__((-1LL)));
+    print(l2->__getitem__(0LL), l2->back());
+    if (!(to_bool(((l2->back() == l2->__getitem__((n - 1LL))))))) throw AssertionError("");
+    l4 = ptr(new list<_int>({1LL, 2LL, 3LL}));
+    print(l4->back());
+    l4->back() += 10LL;
+    if (!(to_bool(((l4->back() == 13LL))))) throw AssertionError("");
+    print(l4);
+    l5 = (ptr(new list<_int>({1LL, 2LL})) * 3LL);
+    print(l5);
+    l5 = (3LL * ptr(new list<_int>({1LL, 2LL})));
+    print(l5);
+    if (!(to_bool(((l5 == (ptr(new list<_int>({1LL, 2LL})) * 3LL)))))) throw AssertionError("");
+    l5 *= 2LL;
+    print(l5);
     return 0LL;
 }
 }
@@ -1189,7 +1204,7 @@ int run() {
     s = str("Hello World");
     print(s);
     print(len(s));
-    print(s.__getitem__(0LL), s.__getitem__((-1LL)));
+    print(s.__getitem__(0LL), s.back());
     print(s.upper());
     print(s.lower());
     print(s.swapcase());

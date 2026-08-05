@@ -55,6 +55,12 @@ class str {
     str __getitem__(size_type i) const {
         return str(std::string(1, data_[normIndex(i)]));
     }
+    // s[-1] -- a length-1 str, same as __getitem__.
+    str back() const {
+        if (data_.empty())
+            throw IndexError("string index out of range");
+        return str(std::string(1, data_.back()));
+    }
     // s[i:j:k] -- defined in slice.h, which this header cannot include.
     str __getitem__(const slice &s) const;
     bool __contains__(const str &sub) const {

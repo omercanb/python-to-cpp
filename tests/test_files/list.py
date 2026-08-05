@@ -78,5 +78,20 @@ def main() -> int:
     n = len(l2)
     print(n)
     print(l2[0], l2[-1])
+    assert l2[-1] == l2[n - 1]
+
+    l4 = [1, 2, 3]
+    print(l4[-1])
+    l4[-1] += 10
+    assert l4[-1] == 13
+    print(l4)
+
+    l5 = [1, 2] * 3
+    print(l5)
+    l5 = 3 * [1, 2]
+    print(l5)
+    assert l5 == [1, 2] * 3
+    l5 *= 2
+    print(l5)
 
     return 0

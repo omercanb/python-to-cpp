@@ -4,7 +4,7 @@ Fill in the visit_* methods to generate C++ code.
 Separated into expression and statement visitors.
 """
 
-from mypy.nodes import AssignmentStmt, Block, BreakStmt, ClassDef, ContinueStmt
+from mypy.nodes import AssignmentStmt, AssertStmt, Block, BreakStmt, ClassDef, ContinueStmt
 from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import (
@@ -12,8 +12,8 @@ from mypy.nodes import (
     ForStmt,
     FuncDef,
     IfStmt,
-    IndexExpr,
     MypyFile,
+    OperatorAssignmentStmt,
     RaiseStmt,
     ReturnStmt,
     SymbolTable,
@@ -28,7 +28,7 @@ from python.codegen.class_def import translate_class_def
 from python.codegen.exceptions import translate_raise_stmt, translate_try_stmt
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.for_loop import translate_for_stmt
-from python.codegen.translation_utils import call_method, translate_func_signature
+from python.codegen.translation_utils import translate_func_signature
 from python.codegen.typegen import cpp_type, is_pointer
 from python.visitor import Traverser
 
@@ -173,17 +173,30 @@ class StatementCodegen(Traverser):
         translate_class_def(self, o)
 
     def visit_assignment_stmt(self, o: AssignmentStmt):
+        # a[i] = x / a[-1] = x are already __setitem__/back() CallExprs by
+        # the time this runs - IndexTransformer rewrote them before
+        # codegen ever sees the tree, so lvalues[0] is a plain target here.
         target = o.lvalues[0]
         rhs = self.get_expr(o.rvalue)
-        # a[i] = x goes through __setitem__ so dict can insert new keys.
-        if isinstance(target, IndexExpr):
-            base = self.get_expr(target.base)
-            index = self.get_expr(target.index)
-            call = call_method(base, self.types[target.base], "__setitem__", index, rhs)
-            self.emit(f"{call};")
-            return
         lhs = self.get_expr(target, lvalue=True)
         self.emit(f"{lhs} = {rhs};")
+
+    def visit_operator_assignment_stmt(self, o: OperatorAssignmentStmt):
+        # a[i] is likewise already a __getitem__/back() CallExpr here, a
+        # reference the compound operator can act on directly. Ops with no
+        # direct C++ compound form (/, //, %, **) are rejected by
+        # validate.py before this ever runs - see its comment for why.
+        lhs = self.get_expr(o.lvalue, lvalue=True)
+        rhs = self.get_expr(o.rvalue)
+        self.emit(f"{lhs} {o.op}= {rhs};")
+
+    def visit_assert_stmt(self, o: AssertStmt):
+        condition = self.get_condition(o.expr)
+        if o.msg is not None:
+            message = self.get_expr(o.msg)
+            self.emit(f"if (!({condition})) throw AssertionError({message});")
+        else:
+            self.emit(f'if (!({condition})) throw AssertionError("");')
 
     def visit_return_stmt(self, o: ReturnStmt):
         if o.expr:

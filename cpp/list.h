@@ -55,6 +55,19 @@ class list {
     T &__getitem__(size_type i) { return data_[normIndex(i)]; }
     const T &__getitem__(size_type i) const { return data_[normIndex(i)]; }
 
+    // a[-1] and a[-1] = x. A reference, like operator[], so both read and
+    // write go through the same call.
+    T &back() {
+        if (data_.empty())
+            throw IndexError("list index out of range");
+        return data_.back();
+    }
+    const T &back() const {
+        if (data_.empty())
+            throw IndexError("list index out of range");
+        return data_.back();
+    }
+
     // a[i:j:k] -- a new list, like Python. Out of range bounds clamp rather
     // than raising, which is why this does not go through normIndex.
     ptr<list<T>> __getitem__(const slice &s) const {
@@ -271,6 +284,25 @@ auto next(It &it) { return it.next(); }
 template <typename T>
 list<T> operator*(typename list<T>::size_type n, const list<T> &a) {
     return a * n;
+}
+
+// Python list values are pointer-backed, so codegen's `a * n` / `n * a`
+// need this repeated here rather than on list<T> itself - forwards to the
+// value-type operator* above and re-wraps the result.
+template <typename T>
+ptr<list<T>> operator*(const ptr<list<T>> &a, typename list<T>::size_type n) {
+    return ptr<list<T>>(new list<T>(*a * n));
+}
+template <typename T>
+ptr<list<T>> operator*(typename list<T>::size_type n, const ptr<list<T>> &a) {
+    return a * n;
+}
+
+// a *= n -- mutates the pointed-to list in place, mirroring list<T>::operator*=.
+template <typename T>
+ptr<list<T>> &operator*=(ptr<list<T>> &a, typename list<T>::size_type n) {
+    *a *= n;
+    return a;
 }
 
 template <typename T>

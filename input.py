@@ -38,12 +38,11 @@
 
 
 def main() -> int:
-    a: list[bool] = []
-    a.append(True)
-    a.append(False)
-    print(a[0])
-    a[0] = False
-    print(a[0])
+    x = 10
+    a: list[int] = []
+    for x in range(x):
+        a.append(x)
+    a.sort(key=lambda x: x < 5)
     return 0
 
 

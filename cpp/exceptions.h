@@ -43,5 +43,9 @@ struct FileNotFoundError : PyException {
     using PyException::PyException;
     void raise() const override { throw *this; }
 };
+struct AssertionError : PyException {
+    using PyException::PyException;
+    void raise() const override { throw *this; }
+};
 
 } // namespace py

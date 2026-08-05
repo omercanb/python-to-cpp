@@ -49,6 +49,8 @@ from mypy.nodes import (
     TupleExpr,
     UnaryExpr,
     WhileStmt,
+    YieldExpr,
+    YieldFromExpr,
 )
 
 T = TypeVar("T")
@@ -287,6 +289,13 @@ class Traverser(Visitor[T]):
         self.visit(o.value)
 
     def visit_cast_expr(self, o: CastExpr) -> None:
+        self.visit(o.expr)
+
+    def visit_yield_expr(self, o: YieldExpr) -> None:
+        if o.expr is not None:
+            self.visit(o.expr)
+
+    def visit_yield_from_expr(self, o: YieldFromExpr) -> None:
         self.visit(o.expr)
 
     def visit_generator_expr(self, o: GeneratorExpr) -> None:

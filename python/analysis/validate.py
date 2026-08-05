@@ -34,6 +34,7 @@ from mypy.nodes import (
     MemberExpr,
     MypyFile,
     NameExpr,
+    OperatorAssignmentStmt,
     OpExpr,
     PassStmt,
     RaiseStmt,
@@ -49,6 +50,8 @@ from mypy.nodes import (
     UnaryExpr,
     Var,
     WhileStmt,
+    YieldExpr,
+    YieldFromExpr,
 )
 from mypy.types import (
     CallableType,
@@ -61,7 +64,7 @@ from mypy.types import (
 )
 
 from python.analysis.free_variables import get_free_variables
-from python.codegen.builtins import EXCEPTION_TYPES
+from python.codegen.builtins import EXCEPTION_TYPES, OP_MAP
 from python.codegen.exceptions import names_a_class
 from python.codegen.typegen import UnsupportedType, cpp_type, cpp_type_name
 from python.errors import Diagnostic, diagnostic
@@ -317,6 +320,24 @@ class _Validator(Traverser):
                     )
         super().visit_assignment_stmt(o)
 
+    def visit_operator_assignment_stmt(self, o: OperatorAssignmentStmt) -> None:
+        if o.op in OP_MAP:
+            # These compile to `lhs = f(lhs, rhs)`, since C++ has no direct
+            # compound form for them - lhs's text would then appear twice,
+            # so a side-effecting target (a[f()] //= 2) would evaluate that
+            # side effect twice, and could even read one element and write
+            # a different one if f() isn't idempotent.
+            lvalue = convert_to_python(o.lvalue)
+            rvalue = convert_to_python(o.rvalue)
+            self.report(
+                o,
+                "compound-assign-op",
+                f"`{o.op}=` is not supported",
+                "compute the target once, then write it out normally:\n"
+                f"{lvalue} = {lvalue} {o.op} ({rvalue})",
+            )
+        super().visit_operator_assignment_stmt(o)
+
     def check_lvalue(self, lvalue: Lvalue, source: str | None = None) -> None:
         if isinstance(lvalue, NameExpr):
             # A fresh bind, whether new or a rebind, is no longer stale.
@@ -503,6 +524,19 @@ class _Validator(Traverser):
             "wrap it in a list, which is built in one go rather than lazily:\n"
             f"total = sum({as_list})",
         )
+
+    def visit_yield_expr(self, o: YieldExpr) -> None:
+        self.report(
+            o,
+            "generator-expression",
+            "generators aren't supported",
+            "return the values in a list instead of yielding them:\n"
+            "def values() -> list[int]:\n"
+            "    return [1, 2, 3]",
+        )
+
+    def visit_yield_from_expr(self, o: YieldFromExpr) -> None:
+        self.visit_yield_expr(o)
 
     def visit_list_expr(self, o: ListExpr) -> None:
         self.check_inferred_type(o)
