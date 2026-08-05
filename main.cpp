@@ -16,14 +16,13 @@
 #include "mathops.h"
 #include "builtins.h"
 using namespace py;
+_int helper(_int x);
 int main();
 
+_int helper(_int x) {
+    return (x + 1LL);
+}
+
 int main() {
-    _int x;
-    str y;
-    x = ord(str("a"));
-    y = chr(98LL);
-    print(x);
-    print(y);
-    return 0LL;
+    return helper(41LL);
 }

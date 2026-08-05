@@ -79,6 +79,12 @@ class IndexTransformer(Transformer):
         return CallExpr(NameExpr("slice"), bounds, [ArgKind.ARG_POS] * 3, [None] * 3)
 
     def visit_index_expr(self, o: IndexExpr) -> Node:
+        # A subscript in type position (eg. `Matrix = List[List[float]]`)
+        # looks identical to a real one syntactically, but mypy never
+        # type-checks it as a value, so it has no entry in self.types.
+        # Leave it exactly as-is - it isn't a runtime operation to lower.
+        if o not in self.types:
+            return o
         o.base = self.visit(o.base)
         if self._is_tuple(o.base):
             o.index = self.visit(o.index)

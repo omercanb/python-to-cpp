@@ -31,6 +31,7 @@ from python.transform.comprehension_transformer import (
     ComprehensionRemover,
     apply_comprehension_transforms,
 )
+from python.transform.docstring_transformer import DocstringRemover
 from python.transform.index_transformer import IndexTransformer
 from python.transform.tree_transformer import Transformer
 from python.visitor import Traverser
@@ -122,6 +123,7 @@ def analyse(path: str | None, source: str) -> AnalysisResult:
 
 
 def _apply_transforms(tree: MypyFile, types: dict[Expression, Type]):
+    DocstringRemover().visit(tree)
     apply_comprehension_transforms(tree, types)
     IndexTransformer(types).visit(tree)
 

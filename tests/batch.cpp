@@ -331,7 +331,6 @@ ptr<list<_int>> __list_comprehension_1(ptr<list<_int>> values, _int factor, _int
 
 ptr<list<_int>> scaled(ptr<list<_int>> values, _int factor) {
     _int offset;
-    str("A comprehension reads the enclosing function's locals and parameters.");
     offset = 1LL;
     return __list_comprehension_1(values, factor, offset);
 }
@@ -557,7 +556,6 @@ _int relay();
 int run();
 
 _int guarded_parse(str text) {
-    str("finally must run when the try returns, and when it raises through.");
     {
         Finally __finally([&] {
             print(str("cleanup"), text);
@@ -568,7 +566,6 @@ _int guarded_parse(str text) {
 
 _int parse_or(str text, _int fallback) {
     _int value;
-    str("else runs only when nothing was raised.");
     {
         bool __thrown = false;
         try {
@@ -605,7 +602,6 @@ _int nested() {
 }
 
 _int handler_raises() {
-    str("A raising handler skips else and still runs finally on the way out.");
     try {
         {
             Finally __finally([&] {
@@ -637,7 +633,6 @@ _int check_positive(_int n) {
 }
 
 _int reraise(_int n) {
-    str("A bare raise passes the live exception on, finally still runs.");
     {
         Finally __finally([&] {
             print(str("reraise finally"));
@@ -656,7 +651,6 @@ _int raise_bare_class(str key) {
 }
 
 _int siblings(str first, str second) {
-    str("Two try statements in one scope must not collide over their flags.");
     {
         bool __thrown = false;
         try {
@@ -685,7 +679,6 @@ _int siblings(str first, str second) {
 }
 
 _int relay() {
-    str("`raise e` keeps the real type, rather than the one the handler declared.");
     try {
         throw ValueError(str("original"));
     } catch (PyException &e) {

@@ -52,7 +52,6 @@ void str_methods() {
     _int i;
     _int n;
     str s;
-    str("Use a mix of popular str methods (but not split/join).");
     a = ptr(new list<str>());
     _int __stop_1 = 1000LL;
     for (i = 0; i < __stop_1; ++i) {
@@ -95,7 +94,6 @@ void str_methods_2() {
     str x;
     str y;
     str z;
-    str("Use a mix of popular str methods.");
     a = ptr(new list<str>());
     _int __stop_4 = 1000LL;
     for (i = 0; i < __stop_4; ++i) {

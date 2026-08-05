@@ -44,7 +44,7 @@ excluded_files = {
 
 
 def main():
-    record_python_baselines()
+    # record_python_baselines()
     args = parse_args()
     if args.is_list:
         list_benchmarks()

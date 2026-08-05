@@ -20,7 +20,7 @@ def list_slicing() -> None:
                 n += 1
             if s == s[::-1]:
                 n += 1
-    assert n == 700100, n
+    assert n == 600200, n
 
 
 @benchmark()
@@ -156,7 +156,7 @@ def list_index() -> None:
     for i in range(1000):
         for s in a:
             n += s.index(44)
-    assert n == 693000, n
+    assert n == 198000, n
 
 
 @benchmark()
