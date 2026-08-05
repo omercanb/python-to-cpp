@@ -60,6 +60,7 @@ from mypy.types import (
     get_proper_type,
 )
 
+from python.analysis.free_variables import get_free_variables
 from python.codegen.builtins import EXCEPTION_TYPES
 from python.codegen.exceptions import names_a_class
 from python.codegen.typegen import UnsupportedType, cpp_type, cpp_type_name
@@ -114,7 +115,11 @@ def _negative_int_literal(expr: Expression) -> int | None:
     """The value of a literal negative int (`-1`), which parses as a unary
     minus applied to a positive IntExpr rather than as a negative IntExpr.
     """
-    if isinstance(expr, UnaryExpr) and expr.op == "-" and isinstance(expr.expr, IntExpr):
+    if (
+        isinstance(expr, UnaryExpr)
+        and expr.op == "-"
+        and isinstance(expr.expr, IntExpr)
+    ):
         return -expr.expr.value
     return None
 
@@ -301,7 +306,9 @@ class _Validator(Traverser):
                             f"{convert_to_python(target)} = {source}[{i}]"
                             for i, target in enumerate(targets)
                         )
-                        hint = f"Assign the right hand side elements one by one:\n{lines}"
+                        hint = (
+                            f"Assign the right hand side elements one by one:\n{lines}"
+                        )
                     self.report(
                         o,
                         "assignment",
@@ -391,7 +398,9 @@ class _Validator(Traverser):
 
     def visit_raise_stmt(self, o: RaiseStmt) -> None:
         if o.from_expr is not None:
-            example = convert_to_python(o.expr) if o.expr is not None else "ValueError()"
+            example = (
+                convert_to_python(o.expr) if o.expr is not None else "ValueError()"
+            )
             self.report(
                 o,
                 "raise-from",
@@ -453,17 +462,37 @@ class _Validator(Traverser):
     # bare generator.
     def visit_list_comprehension(self, o: ListComprehension) -> None:
         self.check_inferred_type(o)
-        self.visit_comprehension_parts(o.generator)
-        self.visit(o.generator.left_expr)
+        self._visit_comprehension(o, o.generator, [o.generator.left_expr])
 
     def visit_set_comprehension(self, o: SetComprehension) -> None:
         self.check_inferred_type(o)
-        self.visit_comprehension_parts(o.generator)
-        self.visit(o.generator.left_expr)
+        self._visit_comprehension(o, o.generator, [o.generator.left_expr])
 
     def visit_dictionary_comprehension(self, o: DictionaryComprehension) -> None:
         self.check_inferred_type(o)
-        super().visit_dictionary_comprehension(o)
+        self._visit_comprehension(o, o, [o.key, o.value])
+
+    def _visit_comprehension(self, o, generator, elements: list[Expression]) -> None:
+        for free in get_free_variables(o):
+            self._report_if_stale(free)
+
+        bound_names = {
+            name for index in generator.indices for name in _lvalue_names(index)
+        }
+        saved = {name: self.closed_loop_targets.pop(name, None) for name in bound_names}
+        for index in generator.indices:
+            self.check_lvalue(index)
+            self.visit(index)
+        for sequence in generator.sequences:
+            self.visit(sequence)
+        for conditions in generator.condlists:
+            for condition in conditions:
+                self.visit(condition)
+        for element in elements:
+            self.visit(element)
+        for name, prior in saved.items():
+            if prior is not None:
+                self.closed_loop_targets[name] = prior
 
     def visit_generator_expr(self, o: GeneratorExpr) -> None:
         as_list = convert_to_python(ListComprehension(o))
@@ -556,6 +585,9 @@ class _Validator(Traverser):
             )
 
     def visit_name_expr(self, o: NameExpr) -> None:
+        self._report_if_stale(o)
+
+    def _report_if_stale(self, o: NameExpr) -> None:
         closing = self.closed_loop_targets.get(o.name)
         if closing is not None:
             capture = f"{o.name}_last"

@@ -38,16 +38,12 @@
 
 
 def main() -> int:
-    [n for n in range(10)]
-    x = 20
-    [x for x in range(x)]
-    {x: x for x in range(x) if x % 2 == 0}
-    [x for x in range(x) if x % 2 for y in range(x) if y % 2]
-    y = 10
-    z = [1, 2, 3]
-    [x for x in zip(z, range(x))]
-    [x for x in "a,b,c,d"]
-    [x for x in zip(range(x), "a, b, c, d")]
+    a: list[bool] = []
+    a.append(True)
+    a.append(False)
+    print(a[0])
+    a[0] = False
+    print(a[0])
     return 0
 
 
