@@ -16,13 +16,14 @@
 #include "mathops.h"
 #include "builtins.h"
 using namespace py;
+int main();
+
 int main() {
-    ptr<list<bool>> a;
-    a = ptr(new list<bool>());
-    a->append(true);
-    a->append(false);
-    print(a->__getitem__(0LL));
-    a->__setitem__(0LL, false);
-    print(a->__getitem__(0LL));
+    _int x;
+    str y;
+    x = ord(str("a"));
+    y = chr(98LL);
+    print(x);
+    print(y);
     return 0LL;
 }

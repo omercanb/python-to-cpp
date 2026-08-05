@@ -17,18 +17,8 @@
 #include "mathops.h"
 #include "builtins.h"
 using namespace py;
-void catch_exceptions() {
-    _int n;
-    _int i;
-    n = 0LL;
-    _int __stop_1 = (100LL * 1000LL);
-    for (i = 0; i < __stop_1; ++i) {
-        try {
-            f(i);
-        } catch (ValueError &) {
-        }
-    }
-}
+void f(_int i);
+void g(_int i);
 
 void f(_int i) {
     if (to_bool(((mod(i, 4LL) == 0LL)))) {

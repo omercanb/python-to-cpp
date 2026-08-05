@@ -4,7 +4,15 @@ Fill in the visit_* methods to generate C++ code.
 Separated into expression and statement visitors.
 """
 
-from mypy.nodes import AssignmentStmt, AssertStmt, Block, BreakStmt, ClassDef, ContinueStmt
+from mypy.nodes import (
+    AssertStmt,
+    AssignmentStmt,
+    Block,
+    BreakStmt,
+    ClassDef,
+    ContinueStmt,
+    Decorator,
+)
 from mypy.nodes import Expression
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import (
@@ -24,7 +32,7 @@ from mypy.nodes import (
 from mypy.types import Type
 
 from python.analysis.find_declarations import get_declarations
-from python.codegen.class_def import translate_class_def
+from python.codegen.class_def import write_class_bodies, write_class_declaration
 from python.codegen.exceptions import translate_raise_stmt, translate_try_stmt
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.for_loop import translate_for_stmt
@@ -138,8 +146,46 @@ class StatementCodegen(Traverser):
         return "\n".join(self.output)
 
     def visit_mypy_file(self, o: MypyFile):
-        for definition in o.defs:
-            self.visit(definition)
+        """
+        Emit declarations before bodies, so forward references compile.
+        The ordering to be able to compile everything is
+          1. forward-declare every class
+          2. forward-declare every free function's signature
+          3. emit each class's full structure, methods as signatures only
+          4. emit every method body out-of-line (all classes now fully known)
+          5. emit every free function's body
+        """
+        classes = [d for d in o.defs if isinstance(d, ClassDef)]
+        # A decorator is ignored - the function underneath is translated as
+        # if it were never decorated.
+        functions = [
+            d.func if isinstance(d, Decorator) else d
+            for d in o.defs
+            if isinstance(d, (FuncDef, Decorator))
+        ]
+
+        for class_def in classes:
+            self.emit(f"class {class_def.name};")
+        if classes:
+            self.emit("")
+
+        # NOTE: a parameter default that constructs another user class (eg.
+        # `def f(x: Other = Other()) -> None`) would need that class's full
+        # definition already visible here, not just a forward declaration -
+        # an accepted, out-of-scope limitation (see translate_parameters).
+        for function in functions:
+            self.emit(f"{translate_func_signature(function, self.expr_codegen)};")
+        if functions:
+            self.emit("")
+
+        for class_def in classes:
+            write_class_declaration(self, class_def)
+
+        for class_def in classes:
+            write_class_bodies(self, class_def)
+
+        for function in functions:
+            self.visit_func_def(function)
 
     def local_names(self, definition) -> set[str]:
         """The names a definition holds itself, rather than reading globally."""
@@ -150,16 +196,19 @@ class StatementCodegen(Traverser):
             argument.variable.name for argument in definition.arguments
         }
 
-    def visit_func_def(self, o: FuncDef):
-        """Generate a function or method definition"""
-        signature = translate_func_signature(o, self.expr_codegen)
+    def emit_function_body(self, header: str, o: FuncDef) -> None:
+        """Emit a function/method body under an arbitrary header line.
+
+        Shared between an inline definition (`visit_func_def`) and a class
+        method's out-of-line definition, `ClassName::method(...) { ... }`
+        (see class_def.py's `write_class_bodies`).
+        """
         declarations = get_declarations(o, self.types)
         declaration_lines = [
             self.translate_declaration(name, typ) for name, typ in declarations.items()
         ]
 
-        definition_line = f"{signature} {{"
-        self.emit(definition_line)
+        self.emit(header)
         self.indent()
         for declaration in declaration_lines:
             self.emit(declaration)
@@ -169,8 +218,10 @@ class StatementCodegen(Traverser):
         self.emit("}")
         self.emit("")
 
-    def visit_class_def(self, o: ClassDef):
-        translate_class_def(self, o)
+    def visit_func_def(self, o: FuncDef):
+        """Generate a function or method definition"""
+        signature = translate_func_signature(o, self.expr_codegen)
+        self.emit_function_body(f"{signature} {{", o)
 
     def visit_assignment_stmt(self, o: AssignmentStmt):
         # a[i] = x / a[-1] = x are already __setitem__/back() CallExprs by
@@ -194,7 +245,7 @@ class StatementCodegen(Traverser):
         condition = self.get_condition(o.expr)
         if o.msg is not None:
             message = self.get_expr(o.msg)
-            self.emit(f"if (!({condition})) throw AssertionError({message});")
+            self.emit(f"if (!({condition})) throw AssertionError(to_str({message}));")
         else:
             self.emit(f'if (!({condition})) throw AssertionError("");')
 

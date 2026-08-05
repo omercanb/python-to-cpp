@@ -18,6 +18,9 @@
 using namespace py;
 
 namespace prog_boolops {
+_int side(_int v);
+int run();
+
 _int side(_int v) {
     print(str("SIDE"));
     return v;
@@ -98,6 +101,9 @@ int run() {
 }
 
 namespace prog_builtin_functions {
+ptr<list<_int>> __list_comprehension_0(ptr<list<_int>> numbers);
+int run();
+
 ptr<list<_int>> __list_comprehension_0(ptr<list<_int>> numbers) {
     ptr<list<_int>> __tmp_0;
     _int v;
@@ -138,6 +144,8 @@ int run() {
 }
 
 namespace prog_casts {
+int run();
+
 int run() {
     _float a;
     _int b;
@@ -161,24 +169,21 @@ int run() {
 }
 
 namespace prog_classes {
+class Counter;
+class Point;
+class Empty;
+
+int run();
+
 class Counter {
   public:
     _int count;
 
     Counter(_int start) { __init__(start); }
 
-    void __init__(_int start) {
-        this->count = start;
-    }
-
-    void bump(_int by) {
-        this->count = (this->count + by);
-    }
-
-    _int doubled() {
-        return (this->count * 2LL);
-    }
-
+    void __init__(_int start);
+    void bump(_int by);
+    _int doubled();
 };
 
 class Point {
@@ -188,36 +193,54 @@ class Point {
 
     Point(_int x, _int y) { __init__(x, y); }
 
-    void __init__(_int x, _int y) {
-        this->x = x;
-        this->y = y;
-    }
-
-    _int norm() {
-        return ((this->x * this->x) + (this->y * this->y));
-    }
-
-    ptr<Point> moved(_int dx, _int dy) {
-        return ptr(new Point((this->x + dx), (this->y + dy)));
-    }
-
-    str __str__() {
-        return ((((str("Point(") + to_str(this->x)) + str(", ")) + to_str(this->y)) + str(")"));
-    }
-
-    _int __len__() {
-        return 2LL;
-    }
-
-    bool __bool__() {
-        return _or(((this->x != 0LL)), ((this->y != 0LL)));
-    }
-
+    void __init__(_int x, _int y);
+    _int norm();
+    ptr<Point> moved(_int dx, _int dy);
+    str __str__();
+    _int __len__();
+    bool __bool__();
 };
 
 class Empty {
   public:
 };
+
+void Counter::__init__(_int start) {
+    this->count = start;
+}
+
+void Counter::bump(_int by) {
+    this->count = (this->count + by);
+}
+
+_int Counter::doubled() {
+    return (this->count * 2LL);
+}
+
+void Point::__init__(_int x, _int y) {
+    this->x = x;
+    this->y = y;
+}
+
+_int Point::norm() {
+    return ((this->x * this->x) + (this->y * this->y));
+}
+
+ptr<Point> Point::moved(_int dx, _int dy) {
+    return ptr(new Point((this->x + dx), (this->y + dy)));
+}
+
+str Point::__str__() {
+    return ((((str("Point(") + to_str(this->x)) + str(", ")) + to_str(this->y)) + str(")"));
+}
+
+_int Point::__len__() {
+    return 2LL;
+}
+
+bool Point::__bool__() {
+    return _or(((this->x != 0LL)), ((this->y != 0LL)));
+}
 
 int run() {
     ptr<Counter> counter;
@@ -251,6 +274,8 @@ int run() {
 }
 
 namespace prog_comparison {
+int run();
+
 int run() {
     _int a;
     _int b;
@@ -277,6 +302,22 @@ int run() {
 }
 
 namespace prog_comprehensions {
+ptr<list<_int>> __list_comprehension_1(ptr<list<_int>> values, _int factor, _int offset);
+ptr<list<_int>> scaled(ptr<list<_int>> values, _int factor);
+ptr<list<_int>> __list_comprehension_2(ptr<list<_int>> numbers);
+ptr<list<_int>> __list_comprehension_3(ptr<list<_int>> numbers);
+ptr<list<_int>> __list_comprehension_4();
+ptr<list<_int>> __list_comprehension_5();
+ptr<list<_int>> __list_comprehension_6(ptr<list<_int>> numbers);
+ptr<set<_int>> __set_comprehension_0(ptr<list<_int>> numbers);
+ptr<dict<_int, _int>> __dict_comprehension_0(ptr<list<_int>> numbers);
+ptr<list<_int>> __list_comprehension_7(ptr<list<_int>> numbers);
+ptr<list<_int>> __list_comprehension_11(_int v);
+ptr<list<_int>> __list_comprehension_8(ptr<list<_int>> numbers);
+ptr<list<_int>> __list_comprehension_9(ptr<list<_int>> numbers);
+ptr<list<_int>> __list_comprehension_10(ptr<list<_int>> doubled);
+int run();
+
 ptr<list<_int>> __list_comprehension_1(ptr<list<_int>> values, _int factor, _int offset) {
     ptr<list<_int>> __tmp_1;
     _int v;
@@ -463,6 +504,8 @@ int run() {
 }
 
 namespace prog_dict {
+int run();
+
 int run() {
     ptr<dict<_int, _int>> d;
     ptr<dict<_int, _int>> e;
@@ -502,6 +545,17 @@ int run() {
 }
 
 namespace prog_exceptions {
+_int guarded_parse(str text);
+_int parse_or(str text, _int fallback);
+_int nested();
+_int handler_raises();
+_int check_positive(_int n);
+_int reraise(_int n);
+_int raise_bare_class(str key);
+_int siblings(str first, str second);
+_int relay();
+int run();
+
 _int guarded_parse(str text) {
     str("finally must run when the try returns, and when it raises through.");
     {
@@ -717,6 +771,8 @@ int run() {
 }
 
 namespace prog_files {
+int run();
+
 int run() {
     str SAMPLE;
     ptr<file> handle;
@@ -761,6 +817,8 @@ int run() {
 }
 
 namespace prog_iter {
+int run();
+
 int run() {
     ptr<list<_int>> nums;
     ptr<list<_int>> a;
@@ -793,6 +851,9 @@ int run() {
 }
 
 namespace prog_list {
+ptr<list<_int>> give_list(ptr<list<_int>> l);
+int run();
+
 ptr<list<_int>> give_list(ptr<list<_int>> l) {
     print(l);
     l->append(2LL);
@@ -889,6 +950,8 @@ int run() {
 }
 
 namespace prog_loops {
+int run();
+
 int run() {
     _int x;
     ptr<list<_int>> l;
@@ -946,6 +1009,8 @@ int run() {
 }
 
 namespace prog_math {
+int run();
+
 int run() {
     _int a;
     print(pow(10LL, 10LL));
@@ -963,6 +1028,8 @@ int run() {
 }
 
 namespace prog_membership {
+int run();
+
 int run() {
     ptr<list<_int>> l;
     ptr<dict<_int, _int>> d;
@@ -1026,6 +1093,8 @@ int run() {
 }
 
 namespace prog_print {
+int run();
+
 int run() {
     _int a;
     _int b;
@@ -1048,6 +1117,8 @@ int run() {
 }
 
 namespace prog_set {
+int run();
+
 int run() {
     ptr<set<_int>> s;
     ptr<set<_int>> a;
@@ -1131,6 +1202,8 @@ int run() {
 }
 
 namespace prog_slice {
+int run();
+
 int run() {
     ptr<list<_int>> l;
     ptr<list<_int>> empty;
@@ -1194,6 +1267,8 @@ int run() {
 }
 
 namespace prog_string {
+int run();
+
 int run() {
     str s;
     str padded;
@@ -1268,6 +1343,8 @@ int run() {
 }
 
 namespace prog_truthy {
+int run();
+
 int run() {
     _int a;
     _int b;
@@ -1330,6 +1407,8 @@ int run() {
 }
 
 namespace prog_tuple {
+int run();
+
 int run() {
     _int a;
     _int b;

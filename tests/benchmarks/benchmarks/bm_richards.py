@@ -14,13 +14,13 @@ based on a Java version:
 """
 
 from __future__ import annotations
+
 from typing import cast
 
-from typing_extensions import Final
 from mypy_extensions import i64
+from typing_extensions import Final
 
 from tests.benchmarks.benchmarking import benchmark
-
 
 # Task IDs
 I_IDLE: Final = 1
@@ -63,6 +63,7 @@ class Packet(object):
             p.link = self
             return lst
 
+
 # Task Records
 
 
@@ -103,6 +104,8 @@ class WorkerTaskRec(TaskRec):
     def __init__(self) -> None:
         self.destination: i64 = I_HANDLERA
         self.count: i64 = 0
+
+
 # Task
 
 
@@ -163,7 +166,7 @@ def trace(a: object) -> None:
     if layout <= 0:
         print()
         layout = 50
-    print(a, end='')
+    print(a, end="")
 
 
 TASKTABSIZE: Final = 10
@@ -185,8 +188,9 @@ taskWorkArea: Final = TaskWorkArea()
 
 class Task(TaskState):
 
-    def __init__(self, i: i64, p: i64, w: Packet | None, initialState: TaskState,
-                 r: TaskRec) -> None:
+    def __init__(
+        self, i: i64, p: i64, w: Packet | None, initialState: TaskState, r: TaskRec
+    ) -> None:
         self.link = taskWorkArea.taskList
         self.ident = i
         self.priority = p
@@ -264,8 +268,9 @@ class Task(TaskState):
 
 class DeviceTask(Task):
 
-    def __init__(self, i: i64, p: i64, w: Packet | None, s: TaskState,
-                 r: DeviceTaskRec) -> None:
+    def __init__(
+        self, i: i64, p: i64, w: Packet | None, s: TaskState, r: DeviceTaskRec
+    ) -> None:
         Task.__init__(self, i, p, w, s, r)
 
     def fn(self, pkt: Packet | None, r: TaskRec) -> Task | None:
@@ -286,8 +291,9 @@ class DeviceTask(Task):
 
 class HandlerTask(Task):
 
-    def __init__(self, i: i64, p: i64, w: Packet | None, s: TaskState,
-                 r: HandlerTaskRec) -> None:
+    def __init__(
+        self, i: i64, p: i64, w: Packet | None, s: TaskState, r: HandlerTaskRec
+    ) -> None:
         Task.__init__(self, i, p, w, s, r)
 
     def fn(self, pkt: Packet | None, r: TaskRec) -> Task | None:
@@ -314,13 +320,13 @@ class HandlerTask(Task):
         work.datum = count + 1
         return self.qpkt(dev)
 
+
 # IdleTask
 
 
 class IdleTask(Task):
 
-    def __init__(self, i: i64, p: i64, w: i64, s: TaskState,
-                 r: IdleTaskRec) -> None:
+    def __init__(self, i: i64, p: i64, w: i64, s: TaskState, r: IdleTaskRec) -> None:
         Task.__init__(self, i, 0, None, s, r)
 
     def fn(self, pkt: Packet | None, r: TaskRec) -> Task | None:
@@ -332,20 +338,21 @@ class IdleTask(Task):
             i.control //= 2
             return self.release(I_DEVA)
         else:
-            i.control = i.control // 2 ^ 0xd008
+            i.control = i.control // 2 ^ 0xD008
             return self.release(I_DEVB)
 
 
 # WorkTask
 
 
-A: Final[i64] = ord('A')
+A: Final[i64] = ord("A")
 
 
 class WorkTask(Task):
 
-    def __init__(self, i: i64, p: i64, w: Packet | None, s: TaskState,
-                 r: WorkerTaskRec) -> None:
+    def __init__(
+        self, i: i64, p: i64, w: Packet | None, s: TaskState, r: WorkerTaskRec
+    ) -> None:
         Task.__init__(self, i, p, w, s, r)
 
     def fn(self, pkt: Packet | None, r: TaskRec) -> Task | None:
@@ -388,6 +395,9 @@ def schedule() -> None:
             t = t.runTask()
 
 
+chr
+
+
 class Richards(object):
 
     def run(self, iterations: i64) -> bool:
@@ -399,26 +409,27 @@ class Richards(object):
 
             wkq: Packet | None = Packet(None, 0, K_WORK)
             wkq = Packet(wkq, 0, K_WORK)
-            WorkTask(I_WORK, 1000, wkq, TaskState(
-            ).waitingWithPacket(), WorkerTaskRec())
+            WorkTask(
+                I_WORK, 1000, wkq, TaskState().waitingWithPacket(), WorkerTaskRec()
+            )
 
             wkq = Packet(None, I_DEVA, K_DEV)
             wkq = Packet(wkq, I_DEVA, K_DEV)
             wkq = Packet(wkq, I_DEVA, K_DEV)
-            HandlerTask(I_HANDLERA, 2000, wkq, TaskState(
-            ).waitingWithPacket(), HandlerTaskRec())
+            HandlerTask(
+                I_HANDLERA, 2000, wkq, TaskState().waitingWithPacket(), HandlerTaskRec()
+            )
 
             wkq = Packet(None, I_DEVB, K_DEV)
             wkq = Packet(wkq, I_DEVB, K_DEV)
             wkq = Packet(wkq, I_DEVB, K_DEV)
-            HandlerTask(I_HANDLERB, 3000, wkq, TaskState(
-            ).waitingWithPacket(), HandlerTaskRec())
+            HandlerTask(
+                I_HANDLERB, 3000, wkq, TaskState().waitingWithPacket(), HandlerTaskRec()
+            )
 
             wkq = None
-            DeviceTask(I_DEVA, 4000, wkq,
-                       TaskState().waiting(), DeviceTaskRec())
-            DeviceTask(I_DEVB, 5000, wkq,
-                       TaskState().waiting(), DeviceTaskRec())
+            DeviceTask(I_DEVA, 4000, wkq, TaskState().waiting(), DeviceTaskRec())
+            DeviceTask(I_DEVB, 5000, wkq, TaskState().waiting(), DeviceTaskRec())
 
             schedule()
 

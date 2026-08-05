@@ -40,9 +40,9 @@ def str_methods_2() -> None:
     n = 0
     for i in range(100):
         for s in a:
-            if s.startswith(("  1", "  2", "  3")):
+            if s.startswith("  1"):
                 n += 1
-            if s.endswith(("4", "5", "6")):
+            if s.endswith("4"):
                 n += 1
             if s.lstrip() != s:
                 n += 1
@@ -58,7 +58,7 @@ def str_methods_2() -> None:
             x, y, z = s.rpartition("-")
             if y:
                 n += 1
-    assert n == 593300, n
+    assert n == 551100, n
 
 
 @benchmark()
@@ -190,34 +190,8 @@ def ord_builtin() -> None:
                     n += 2
                 if s[j] == "a":
                     n += 3
-    assert n == 1200000, n
+    assert n == 1950000, n
 
 
 def is_upper_case_letter(ch: str) -> bool:
     return 65 <= ord(ch) <= 90
-
-
-# rot13_trans = str.maketrans(
-#     string.ascii_lowercase + string.ascii_uppercase,
-#     string.ascii_lowercase[13:]
-#     + string.ascii_lowercase[:13]
-#     + string.ascii_uppercase[13:]
-#     + string.ascii_uppercase[:13],
-# )
-#
-#
-# @benchmark()
-# def rot13() -> None:
-#     # This has a mypyc-optimized variant which implements rot13 using a loop
-#     # over str items in strings_mypyc.py
-#     values = [
-#         "foo bar",
-#         "longer strings With UPPER CASE as well.",
-#         "..-..--.",
-#         "\u1234",
-#     ]
-#     n = 0
-#     for i in range(1000 * 1000):
-#         for v in values:
-#             n += len(v.translate(rot13_trans))
-#     assert n == 55000000

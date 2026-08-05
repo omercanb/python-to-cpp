@@ -281,9 +281,9 @@ def main() -> None:
 
     benchmark = get_benchmark(args.benchmark)
 
+    interpreted_times = run_benchmark(benchmark, BenchmarkMode.interpreted)
     compiled_times = run_benchmark(benchmark, BenchmarkMode.translated)
 
-    interpreted_times = run_benchmark(benchmark, BenchmarkMode.interpreted)
     # handwritten_times = run_benchmark(benchmark, BenchmarkMode.handwritten)
 
     stats = []

@@ -13,10 +13,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from mypy.nodes import ClassDef, FuncDef, Var
+from mypy.nodes import ClassDef, Decorator, FuncDef, Var
 from mypy.types import Type
 
-from python.codegen.translation_utils import translate_parameters
+from python.codegen.translation_utils import (
+    translate_func_signature,
+    translate_parameters,
+)
 
 if TYPE_CHECKING:
     from python.codegen.mypy_codegen import StatementCodegen
@@ -24,8 +27,8 @@ if TYPE_CHECKING:
 INIT = "__init__"
 
 
-def translate_class_def(codegen: StatementCodegen, class_def: ClassDef) -> None:
-    """Emit a C++ class for a Python one."""
+def write_class_declaration(codegen: StatementCodegen, class_def: ClassDef) -> None:
+    """Emit a classes full structure, defining methods as signatures only"""
     codegen.emit(f"class {class_def.name} {{")
     codegen.emit("  public:")
     codegen.indent()
@@ -33,11 +36,20 @@ def translate_class_def(codegen: StatementCodegen, class_def: ClassDef) -> None:
     write_attributes(codegen, class_def)
     write_constructor(codegen, class_def)
     for method in methods(class_def):
-        codegen.visit(method)
+        codegen.emit(f"{translate_func_signature(method, codegen.expr_codegen)};")
 
     codegen.unindent()
     codegen.emit("};")
     codegen.emit("")
+
+
+def write_class_bodies(codegen: StatementCodegen, class_def: ClassDef) -> None:
+    """Emit all methods in the class out of line"""
+    for method in methods(class_def):
+        header = translate_func_signature(
+            method, codegen.expr_codegen, qualifier=f"{class_def.name}::"
+        )
+        codegen.emit_function_body(f"{header} {{", method)
 
 
 def attributes(class_def: ClassDef) -> list[tuple[str, Type]]:
@@ -53,11 +65,15 @@ def attributes(class_def: ClassDef) -> list[tuple[str, Type]]:
 
 
 def methods(class_def: ClassDef) -> list[FuncDef]:
-    """The methods, in the order they were written."""
+    """The methods, in the order they were written.
+
+    A decorated method is ignored, not translated - the FuncDef underneath
+    is used as if it were never decorated.
+    """
     return [
-        statement
+        statement.func if isinstance(statement, Decorator) else statement
         for statement in class_def.defs.body
-        if isinstance(statement, FuncDef)
+        if isinstance(statement, (FuncDef, Decorator))
     ]
 
 
@@ -70,10 +86,7 @@ def write_attributes(codegen: StatementCodegen, class_def: ClassDef) -> None:
 
 
 def write_constructor(codegen: StatementCodegen, class_def: ClassDef) -> None:
-    """A constructor that only forwards to __init__.
-
-    Without an __init__ none is emitted, leaving C++'s implicit default.
-    """
+    """A constructor that only forwards to __init__."""
     init = next((method for method in methods(class_def) if method.name == INIT), None)
     if init is None:
         return

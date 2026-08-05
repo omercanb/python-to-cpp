@@ -26,8 +26,10 @@ from mypy.nodes import (
     FuncDef,
     GeneratorExpr,
     IfStmt,
+    Decorator,
     IndexExpr,
     IntExpr,
+    LambdaExpr,
     ListComprehension,
     ListExpr,
     Lvalue,
@@ -234,7 +236,9 @@ class _Validator(Traverser):
 
     def check_class_member(self, statement) -> None:
         """A class body holds annotations and methods, and nothing else."""
-        if isinstance(statement, (FuncDef, PassStmt)):
+        # A decorator is ignored, not translated - the underlying method
+        # still gets visited normally via visit_decorator's traversal.
+        if isinstance(statement, (FuncDef, PassStmt, Decorator)):
             return
         # A docstring is an expression statement; it is simply dropped.
         if isinstance(statement, ExpressionStmt) and isinstance(
@@ -511,6 +515,20 @@ class _Validator(Traverser):
                 self.visit(condition)
         for element in elements:
             self.visit(element)
+        for name, prior in saved.items():
+            if prior is not None:
+                self.closed_loop_targets[name] = prior
+
+    def visit_lambda_expr(self, o: LambdaExpr) -> None:
+        for free in get_free_variables(o):
+            self._report_if_stale(free)
+
+        bound_names = {argument.variable.name for argument in o.arguments}
+        saved = {name: self.closed_loop_targets.pop(name, None) for name in bound_names}
+        for argument in o.arguments:
+            if argument.initializer is not None:
+                self.visit(argument.initializer)
+        self.visit(o.body)
         for name, prior in saved.items():
             if prior is not None:
                 self.closed_loop_targets[name] = prior

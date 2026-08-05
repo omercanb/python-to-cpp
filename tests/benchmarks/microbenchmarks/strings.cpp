@@ -17,6 +17,36 @@
 #include "mathops.h"
 #include "builtins.h"
 using namespace py;
+class Cls;
+
+void str_methods();
+void str_methods_2();
+void str_format();
+void str_slicing();
+void split_and_join();
+void str_searching();
+void str_call();
+void ord_builtin();
+bool is_upper_case_letter(str ch);
+
+class Cls {
+  public:
+    _int x;
+
+    Cls(_int x) { __init__(x); }
+
+    void __init__(_int x);
+    str __str__();
+};
+
+void Cls::__init__(_int x) {
+    this->x = x;
+}
+
+str Cls::__str__() {
+    return to_str(this->x);
+}
+
 void str_methods() {
     ptr<list<str>> a;
     _int i;
@@ -35,19 +65,26 @@ void str_methods() {
         for (auto __iter_3 = iter(a); !__iter_3.done();) {
             s = next(__iter_3);
             if (to_bool(s.startswith(str("foo")))) {
+                n += 1LL;
             }
             if (to_bool(s.endswith(str("r")))) {
+                n += 1LL;
             }
             if (to_bool(((s.replace(str("-"), str("/")) != s)))) {
+                n += 1LL;
             }
             if (to_bool(((s.strip() != s)))) {
+                n += 1LL;
             }
             if (to_bool(((s.rstrip() != s)))) {
+                n += 1LL;
             }
             if (to_bool(((s.lower() == s)))) {
+                n += 1LL;
             }
         }
     }
+    if (!(to_bool(((n == 400000LL))))) throw AssertionError(to_str(n));
 }
 
 void str_methods_2() {
@@ -70,26 +107,35 @@ void str_methods_2() {
     for (i = 0; i < __stop_5; ++i) {
         for (auto __iter_6 = iter(a); !__iter_6.done();) {
             s = next(__iter_6);
-            if (to_bool(s.startswith(tuple(str("  1"), str("  2"), str("  3"))))) {
+            if (to_bool(s.startswith(str("  1")))) {
+                n += 1LL;
             }
-            if (to_bool(s.endswith(tuple(str("4"), str("5"), str("6"))))) {
+            if (to_bool(s.endswith(str("4")))) {
+                n += 1LL;
             }
             if (to_bool(((s.lstrip() != s)))) {
+                n += 1LL;
             }
             if (to_bool(((s.lstrip(str(" ")) != s)))) {
+                n += 1LL;
             }
             if (to_bool(((s.rstrip(str("123")) != s)))) {
+                n += 1LL;
             }
             if (to_bool(((s.upper() == s)))) {
+                n += 1LL;
             }
             destructure(x, y, z) = s.partition(str("-"));
             if (to_bool(y)) {
+                n += 1LL;
             }
             destructure(x, y, z) = s.rpartition(str("-"));
             if (to_bool(y)) {
+                n += 1LL;
             }
         }
     }
+    if (!(to_bool(((n == 551100LL))))) throw AssertionError(to_str(n));
 }
 
 void str_format() {
@@ -109,9 +155,12 @@ void str_format() {
     for (i = 0; i < __stop_8; ++i) {
         for (auto __iter_9 = iter(a); !__iter_9.done();) {
             s = next(__iter_9);
+            n += len(str("foobar {} stuff").format(s));
             ss = str("").join(ptr(new list<str>({str("foobar "), str("{:{}}").format(s, str("")), str(" stuff")})));
+            n += len(str("").join(ptr(new list<str>({str("{:{}}").format(s, str("")), str("-"), str("{:{}}").format(ss, str(""))}))));
         }
     }
+    if (!(to_bool(((n == 10434000LL))))) throw AssertionError(to_str(n));
 }
 
 void str_slicing() {
@@ -130,12 +179,16 @@ void str_slicing() {
     for (i = 0; i < __stop_11; ++i) {
         for (auto __iter_12 = iter(a); !__iter_12.done();) {
             s = next(__iter_12);
+            n += len(s.__getitem__(slice(2LL, (-2LL), std::nullopt)));
             if (to_bool(((s.__getitem__(slice(std::nullopt, 3LL, std::nullopt)) == str("Foo"))))) {
+                n += 1LL;
             }
             if (to_bool(((s.__getitem__(slice((-2LL), std::nullopt, std::nullopt)) == str("00"))))) {
+                n += 1LL;
             }
         }
     }
+    if (!(to_bool(((n == 9789000LL))))) throw AssertionError(to_str(n));
 }
 
 void split_and_join() {
@@ -158,9 +211,11 @@ void split_and_join() {
             s = next(__iter_15);
             items = s.split(str("-"));
             if (to_bool(((str("-").join(items) == s)))) {
+                n += 1LL;
             }
         }
     }
+    if (!(to_bool(((n == 300000LL))))) throw AssertionError(to_str(n));
 }
 
 void str_searching() {
@@ -181,11 +236,15 @@ void str_searching() {
         for (auto __iter_18 = iter(a); !__iter_18.done();) {
             s = next(__iter_18);
             if (to_bool((s.__contains__(str("i"))))) {
+                n += 1LL;
             }
             if (to_bool(((s.find(str("asd")) >= 0LL)))) {
+                n += 1LL;
             }
+            n += s.index(str("a"));
         }
     }
+    if (!(to_bool(((n == 1089000LL))))) throw AssertionError(to_str(n));
 }
 
 void str_call() {
@@ -207,25 +266,11 @@ void str_call() {
             obj = next(__iter_21);
             s1 = to_str(obj);
             s2 = to_str(s1);
+            n += len(s2);
         }
     }
+    if (!(to_bool(((n == 1900000LL))))) throw AssertionError(to_str(n));
 }
-
-class Cls {
-  public:
-    _int x;
-
-    Cls(_int x) { __init__(x); }
-
-    void __init__(_int x) {
-        this->x = x;
-    }
-
-    str __str__() {
-        return to_str(this->x);
-    }
-
-};
 
 void ord_builtin() {
     ptr<list<str>> a;
@@ -248,14 +293,18 @@ void ord_builtin() {
             _int __len_25 = len(s);
             for (j = 0; j < __len_25; ++j) {
                 if (to_bool(((97LL <= ord(s.__getitem__(j))) && (ord(s.__getitem__(j)) <= 122LL)))) {
+                    n += 1LL;
                 }
                 if (to_bool(is_upper_case_letter(s.__getitem__(j)))) {
+                    n += 2LL;
                 }
                 if (to_bool(((s.__getitem__(j) == str("a"))))) {
+                    n += 3LL;
                 }
             }
         }
     }
+    if (!(to_bool(((n == 1950000LL))))) throw AssertionError(to_str(n));
 }
 
 bool is_upper_case_letter(str ch) {

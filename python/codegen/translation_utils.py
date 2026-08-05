@@ -39,15 +39,21 @@ def get_argument_names(func: FuncDef) -> list[str]:
     return filtered_args
 
 
-def translate_func_signature(o: FuncDef, expr_translator: Visitor[str]) -> str:
-    """Generate a C++ function signature"""
+def translate_func_signature(
+    o: FuncDef, expr_translator: Visitor[str], qualifier: str = ""
+) -> str:
+    """Generate a C++ function signature.
+
+    `qualifier` prefixes the name, eg. "ClassName::" for a method's
+    out-of-line definition.
+    """
     func = get_function_type(o)
     return_type = cpp_type(func.ret_type)
     name = o.name
     if name == "main":
         return_type = "int"
     arguments = translate_parameters(o, expr_translator)
-    signature = f"{return_type} {name}({', '.join(arguments)})"
+    signature = f"{return_type} {qualifier}{name}({', '.join(arguments)})"
     return signature
 
 

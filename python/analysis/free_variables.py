@@ -23,6 +23,7 @@ from mypy.nodes import (
     DictionaryComprehension,
     GeneratorExpr,
     IndexExpr,
+    LambdaExpr,
     ListComprehension,
     ListExpr,
     Lvalue,
@@ -30,6 +31,7 @@ from mypy.nodes import (
     NameExpr,
     OpExpr,
     RefExpr,
+    ReturnStmt,
     SetComprehension,
     SetExpr,
     SliceExpr,
@@ -76,7 +78,11 @@ class FreeBoundSet:
 
 
 Comprehension = (
-    GeneratorExpr | DictionaryComprehension | ListComprehension | SetComprehension
+    GeneratorExpr
+    | DictionaryComprehension
+    | ListComprehension
+    | SetComprehension
+    | LambdaExpr
 )
 
 
@@ -134,6 +140,24 @@ class _FreeVariableCollector(Visitor[FreeBoundSet]):
         result_set = first_iter_set
 
         return result_set
+
+    def visit_lambda_expr(self, o: LambdaExpr) -> FreeBoundSet:
+        ret = o.body.body[-1]
+        assert isinstance(ret, ReturnStmt) and ret.expr is not None
+        body_set = self.visit(ret.expr)
+
+        params = FreeBoundSet()
+        for argument in o.arguments:
+            params.bound.add(argument.variable.name)
+        body_set.bind(params)
+        # Note: defaults of lambda parameters are evaluated in the enclosing scope
+        defaults_set = FreeBoundSet()
+        for argument in o.arguments:
+            if argument.initializer is not None:
+                defaults_set.join(self.visit(argument.initializer))
+        defaults_set.join(body_set)
+
+        return defaults_set
 
     def visit_name_expr(self, o: NameExpr) -> FreeBoundSet:
         s = FreeBoundSet()
