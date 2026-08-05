@@ -20,11 +20,12 @@ from mypy.nodes import (
 )
 from mypy.types import TupleType, Type, UnionType, get_proper_type
 
-from python.codegen.codegen_utils import list_of, pointer_to
 from python.codegen.translation_utils import (
     call_method,
     is_truthy,
+    list_of,
     member_access,
+    pointer_to,
     should_translate_kwargs,
     should_wrap_call_in_pointer,
     translate_arguments_with_kwargs,
@@ -67,8 +68,8 @@ class ExpressionCodegen(Visitor[str]):
             return "true"
         if o.fullname == "builtins.False":
             return "false"
-        # A method's self is C++'s this. Classes are pointer backed, so
-        # member_access already reaches through it with ->.
+        if o.fullname == "builtins.None":
+            return "std::nullopt"
         if isinstance(o.node, Var) and o.node.is_self:
             return "this"
         return o.name

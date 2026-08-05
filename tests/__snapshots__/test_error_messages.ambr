@@ -128,6 +128,18 @@
   
   '''
 # ---
+# name: test_error_message[negative_index.py]
+  '''
+  negative_index.py:3:18: error: a negative index other than -1 is not supported
+  
+    3 |     print(values[-2])
+      |                  ^^
+  
+    help: index from the front instead:
+            values[len(values) - 2]
+  
+  '''
+# ---
 # name: test_error_message[object_element.py]
   '''
   object_element.py:2:15: error: Type of expression is inferred as `list[object]` which contains `object`. This cannot be translated to C++.
@@ -177,6 +189,19 @@
             finally:
                 cleanup()
             return result
+  
+  '''
+# ---
+# name: test_error_message[slice_assignment.py]
+  '''
+  slice_assignment.py:4:5: error: assigning to a slice is not supported
+  
+    4 |     values[0:2] = updates
+      |     ^^^^^^^^^^^
+  
+    help: assign the target elements one by one instead:
+            values[0] = updates[0]
+            values[0 + 1] = updates[1]
   
   '''
 # ---

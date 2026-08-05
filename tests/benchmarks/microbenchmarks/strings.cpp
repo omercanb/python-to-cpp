@@ -265,7 +265,7 @@ bool is_upper_case_letter(str ch) {
 
     int main() {
         auto t0 = std::chrono::steady_clock::now();
-        str_methods(); // Call the benchmarked function
+        ord_builtin(); // Call the benchmarked function
         auto t1 = std::chrono::steady_clock::now();
         auto s = std::chrono::duration<double>(t1 - t0).count() ;
         std::cout << "elapsed: " << s << '\n';

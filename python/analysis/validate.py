@@ -40,6 +40,7 @@ from mypy.nodes import (
     ReturnStmt,
     SetComprehension,
     SetExpr,
+    SliceExpr,
     StarExpr,
     StrExpr,
     TempNode,
@@ -107,6 +108,15 @@ def _lvalue_names(lvalue: Lvalue) -> list[str]:
     if isinstance(lvalue, TupleExpr):
         return [name for item in lvalue.items for name in _lvalue_names(item)]
     return []
+
+
+def _negative_int_literal(expr: Expression) -> int | None:
+    """The value of a literal negative int (`-1`), which parses as a unary
+    minus applied to a positive IntExpr rather than as a negative IntExpr.
+    """
+    if isinstance(expr, UnaryExpr) and expr.op == "-" and isinstance(expr.expr, IntExpr):
+        return -expr.expr.value
+    return None
 
 
 def _type_hint(t: Type) -> str:
@@ -259,8 +269,9 @@ class _Validator(Traverser):
         self.closed_loop_targets = outer_closed
 
     def visit_assignment_stmt(self, o: AssignmentStmt) -> None:
+        source = convert_to_python(o.rvalue)
         for lvalue in o.lvalues:
-            self.check_lvalue(lvalue)
+            self.check_lvalue(lvalue, source)
         if len(o.lvalues) > 1:
             first, *rest = o.lvalues
             first_name = convert_to_python(first)
@@ -299,7 +310,7 @@ class _Validator(Traverser):
                     )
         super().visit_assignment_stmt(o)
 
-    def check_lvalue(self, lvalue: Lvalue) -> None:
+    def check_lvalue(self, lvalue: Lvalue, source: str | None = None) -> None:
         if isinstance(lvalue, NameExpr):
             # A fresh bind, whether new or a rebind, is no longer stale.
             self.closed_loop_targets.pop(lvalue.name, None)
@@ -308,7 +319,7 @@ class _Validator(Traverser):
             return
         if isinstance(lvalue, TupleExpr):
             for item in lvalue.items:
-                self.check_lvalue(item)
+                self.check_lvalue(item, source)
             return
         if isinstance(lvalue, StarExpr):
             self.report(
@@ -317,6 +328,19 @@ class _Validator(Traverser):
                 "a starred assignment target is not supported",
                 "take the parts by slicing instead:\n"
                 "first = values[0]\nrest = values[1:]",
+            )
+            return
+        if isinstance(lvalue, IndexExpr) and isinstance(lvalue.index, SliceExpr):
+            base = convert_to_python(lvalue.base)
+            begin = lvalue.index.begin_index
+            start = convert_to_python(begin) if begin is not None else "0"
+            values = source if source is not None else "values"
+            self.report(
+                lvalue,
+                "slice-assignment",
+                "assigning to a slice is not supported",
+                "assign the target elements one by one instead:\n"
+                f"{base}[{start}] = {values}[0]\n{base}[{start} + 1] = {values}[1]",
             )
             return
         # Writing into something that already exists, nothing to declare.
@@ -461,13 +485,24 @@ class _Validator(Traverser):
 
     def visit_index_expr(self, o: IndexExpr) -> None:
         base_type = get_proper_type(self.types.get(o.base))
-        if isinstance(base_type, TupleType) and not isinstance(o.index, IntExpr):
-            self.report(
-                o.index,
-                "tuple-index",
-                "a tuple can only be indexed by an integer literal",
-                _tuple_index_hint(o),
-            )
+        if isinstance(base_type, TupleType):
+            if not isinstance(o.index, IntExpr):
+                self.report(
+                    o.index,
+                    "tuple-index",
+                    "a tuple can only be indexed by an integer literal",
+                    _tuple_index_hint(o),
+                )
+        else:
+            value = _negative_int_literal(o.index)
+            if value is not None and value != -1:
+                base = convert_to_python(o.base)
+                self.report(
+                    o.index,
+                    "negative-index",
+                    "a negative index other than -1 is not supported",
+                    f"index from the front instead:\n{base}[len({base}) - {-value}]",
+                )
         super().visit_index_expr(o)
 
     def visit_if_stmt(self, o: IfStmt) -> None:

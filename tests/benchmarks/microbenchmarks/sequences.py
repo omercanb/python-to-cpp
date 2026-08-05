@@ -319,6 +319,8 @@ def sorted_with_key() -> None:
         for j in range(i):
             aa.append(j * 971 % 11)
         a.append(aa)
+    for i in range(n):
+        print(i)
     a2 = [(str(i), i * 5 % 11) for i in range(20)]
     c = 0
     for i in range(20000):

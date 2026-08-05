@@ -31,6 +31,7 @@ from python.transform.comprehension_transformer import (
     ComprehensionRemover,
     apply_comprehension_transforms,
 )
+from python.transform.index_transformer import IndexTransformer
 from python.transform.tree_transformer import Transformer
 from python.visitor import Traverser
 
@@ -75,6 +76,8 @@ def parse(path: str | None, source: str) -> MypyFile:
         print("\n".join(result.errors))
         sys.exit(1)
     tree = result.files["main"]
+    # See analyse()'s comment: build() leaks its cache connections otherwise.
+    result.manager.metastore.close()
     return tree
 
 
@@ -106,6 +109,13 @@ def analyse(path: str | None, source: str) -> AnalysisResult:
     set_global_function_fallback(result)
 
     types = get_resolved_types(result.files["main"], result.types)
+    # We need to close() to free the SQLite connection, otherwise we get an error
+    result.manager.metastore.close()
+    diagnostics = validate(tree, types)
+    if diagnostics:
+        print(render(diagnostics, source, path))
+        raise UnsupportedProgram(diagnostics)
+
     _apply_transforms(tree, types)
 
     return AnalysisResult(result.files["main"], types, source, path)
@@ -113,21 +123,17 @@ def analyse(path: str | None, source: str) -> AnalysisResult:
 
 def _apply_transforms(tree: MypyFile, types: dict[Expression, Type]):
     apply_comprehension_transforms(tree, types)
+    IndexTransformer(types).visit(tree)
 
 
 def _generate(result: AnalysisResult) -> str:
-    """Validate, then translate. Codegen only ever sees a translatable tree."""
+    """Translate the already-validated, already-transformed tree."""
     return StatementCodegen(result.tree, result.types).generate()
 
 
 def pipeline(path: str, source: str) -> str:
     result = analyse(path, source)
-    diagnostics = validate(result.tree, result.types)
-    if diagnostics:
-        print(render(diagnostics, result.source, path))
-        raise UnsupportedProgram(diagnostics)
-    output = _generate(result)
-    return output
+    return _generate(result)
 
 
 def get_resolved_types(tree: MypyFile, types: dict[Expression, Type]) -> TypeTable:

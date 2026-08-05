@@ -175,8 +175,6 @@ def translate_tuple_access(tuple_type: TupleType, expr: IndexExpr, base: str):
     # compile-time one: t[0] becomes get<0>(), and only literals work.
     assert isinstance(expr.index, IntExpr)
     i = expr.index.value
-    if i < 0:
-        i += len(tuple_type.items)
     return f"{member_access(base, tuple_type, f'get<{i}>')}()"
 
 
@@ -257,3 +255,14 @@ def call_method(obj: str, obj_type: Type, name: str, *args: str) -> str:
 def is_truthy(expr: str) -> str:
     """Wrap a C++ expression with Python's truthiness rules (bool()/`if`/`while`/`not`)."""
     return f"to_bool({expr})"
+
+
+def pointer_to(obj: str):
+    return f"ptr(new {obj})"
+
+
+def list_of(elements: list[str]):
+    if elements:
+        return pointer_to(f"list({{{', '.join(elements)}}})")
+    else:
+        assert False, "We don't support empty lists for now"
