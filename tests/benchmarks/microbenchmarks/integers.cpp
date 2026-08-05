@@ -19,6 +19,10 @@
 using namespace py;
 void int_bitwise_ops();
 void int_bitwise_ops2();
+void __init_module__();
+
+void __init_module__() {
+}
 
 void int_bitwise_ops() {
     ptr<list<_int>> a;
@@ -97,6 +101,7 @@ void int_bitwise_ops2() {
 
 
     int main() {
+        __init_module__();
         auto t0 = std::chrono::steady_clock::now();
         int_bitwise_ops2(); // Call the benchmarked function
         auto t1 = std::chrono::steady_clock::now();

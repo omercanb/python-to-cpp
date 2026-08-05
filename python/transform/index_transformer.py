@@ -2,19 +2,7 @@
 
 `a[i]` becomes `a.__getitem__(i)`, `a[i] = v` becomes `a.__setitem__(i, v)`,
 and a slice index `a[i:j:k]` becomes `a.__getitem__(slice(i, j, k))`, with a
-missing bound passed as `None` (mypy has no dedicated node for it - `None`
-is just a NameExpr named "None" with fullname "builtins.None").
-
-Tuple indexing is left untouched: cpp/tuple.h has no runtime
-__getitem__/__setitem__, only a compile-time get<N>() template method, so it
-needs a real IndexExpr for codegen's translate_tuple_access. This is the one
-case that isn't a validation concern - a plain `pair[0]` is legal Python, it
-just needs a different lowering strategy than every other subscript.
-
-analyse() runs validate() before this pass, so anything validate.py rejects
-(slice assignment, a negative index other than -1, ...) can never reach here
-in the first place - this pass doesn't need to leave those shapes alone for
-some later check to catch, since there is no later check.
+missing bound passed as `None`
 """
 
 from mypy.nodes import (
@@ -45,7 +33,10 @@ def _none_expr() -> NameExpr:
 
 def _method_call(base: Expression, name: str, args: list[Expression]) -> CallExpr:
     return CallExpr(
-        MemberExpr(base, name), args, [ArgKind.ARG_POS for _ in args], [None] * len(args)
+        MemberExpr(base, name),
+        args,
+        [ArgKind.ARG_POS for _ in args],
+        [None] * len(args),
     )
 
 

@@ -123,8 +123,14 @@ class StatementCodegen(Traverser):
         for name, item in declarations.items():
             # tree.names also holds functions, classes, imports and the
             # module dunders (__name__, __spec__, ...), none of which are
-            # user globals to declare.
-            if not isinstance(item.node, Var) or name.startswith("__"):
+            # user globals to declare. An imported name (eg. `from typing
+            # import Tuple`) is a Var too, just one mypy marks module_hidden -
+            # its type (`_SpecialForm` and friends) has no C++ equivalent.
+            if (
+                not isinstance(item.node, Var)
+                or name.startswith("__")
+                or item.module_hidden
+            ):
                 continue
             t = item.type
             assert t
@@ -163,6 +169,12 @@ class StatementCodegen(Traverser):
             for d in o.defs
             if isinstance(d, (FuncDef, Decorator))
         ]
+        self.global_statements = [
+            d
+            for d in o.defs
+            if not isinstance(d, (ClassDef, FuncDef, Decorator))
+            and not (isinstance(d, AssignmentStmt) and d.is_alias_def)
+        ]
 
         for class_def in classes:
             self.emit(f"class {class_def.name};")
@@ -175,14 +187,22 @@ class StatementCodegen(Traverser):
         # an accepted, out-of-scope limitation (see translate_parameters).
         for function in functions:
             self.emit(f"{translate_func_signature(function, self.expr_codegen)};")
-        if functions:
-            self.emit("")
+        self.emit("void __init_module__();")
+        self.emit("")
 
         for class_def in classes:
             write_class_declaration(self, class_def)
 
         for class_def in classes:
             write_class_bodies(self, class_def)
+
+        self.emit("void __init_module__() {")
+        self.indent()
+        for stmt in self.global_statements:
+            self.visit(stmt)
+        self.unindent()
+        self.emit("}")
+        self.emit("")
 
         for function in functions:
             self.visit_func_def(function)
@@ -196,12 +216,17 @@ class StatementCodegen(Traverser):
             argument.variable.name for argument in definition.arguments
         }
 
-    def emit_function_body(self, header: str, o: FuncDef) -> None:
+    def emit_function_body(
+        self, header: str, o: FuncDef, prefix_lines: list[str] | None = None
+    ) -> None:
         """Emit a function/method body under an arbitrary header line.
 
         Shared between an inline definition (`visit_func_def`) and a class
         method's out-of-line definition, `ClassName::method(...) { ... }`
-        (see class_def.py's `write_class_bodies`).
+        (see class_def.py's `write_class_bodies`). `prefix_lines` is emitted
+        verbatim before the function's own body - used only for literal
+        main()'s call to __init_module__(), never for a class method (see
+        visit_func_def).
         """
         declarations = get_declarations(o, self.types)
         declaration_lines = [
@@ -212,6 +237,8 @@ class StatementCodegen(Traverser):
         self.indent()
         for declaration in declaration_lines:
             self.emit(declaration)
+        for line in prefix_lines or []:
+            self.emit(line)
         for stmt in o.body.body:
             self.visit(stmt)
         self.unindent()
@@ -221,7 +248,8 @@ class StatementCodegen(Traverser):
     def visit_func_def(self, o: FuncDef):
         """Generate a function or method definition"""
         signature = translate_func_signature(o, self.expr_codegen)
-        self.emit_function_body(f"{signature} {{", o)
+        prefix = ["__init_module__();"] if o.name == "main" else []
+        self.emit_function_body(f"{signature} {{", o, prefix)
 
     def visit_assignment_stmt(self, o: AssignmentStmt):
         # a[i] = x / a[-1] = x are already __setitem__/back() CallExprs by

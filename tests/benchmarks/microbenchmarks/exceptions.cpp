@@ -20,6 +20,10 @@ using namespace py;
 void catch_exceptions();
 void f(_int i);
 void g(_int i);
+void __init_module__();
+
+void __init_module__() {
+}
 
 void catch_exceptions() {
     _int n;
@@ -52,6 +56,7 @@ void g(_int i) {
 
 
     int main() {
+        __init_module__();
         auto t0 = std::chrono::steady_clock::now();
         catch_exceptions(); // Call the benchmarked function
         auto t1 = std::chrono::steady_clock::now();

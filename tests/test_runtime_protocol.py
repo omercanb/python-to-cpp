@@ -40,6 +40,7 @@ NOT_PRINTABLE = {
     "zip_iter": "iteration state, never reachable from Python",
     "map_iter": "iteration state, never reachable from Python",
     "filter_iter": "iteration state, never reachable from Python",
+    "reversed_iter": "iteration state, never reachable from Python",
 }
 
 # repr() falls back to __str__ for everything, so a class only needs its own

@@ -20,6 +20,10 @@ using namespace py;
 namespace prog_boolops {
 _int side(_int v);
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 _int side(_int v) {
     print(str("SIDE"));
@@ -36,6 +40,7 @@ int run() {
     _float f;
     _float g;
     _int n;
+    __init_module__();
     a = 1LL;
     b = 2LL;
     zero = 0LL;
@@ -103,6 +108,10 @@ int run() {
 namespace prog_builtin_functions {
 ptr<list<_int>> __list_comprehension_0(ptr<list<_int>> numbers);
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 ptr<list<_int>> __list_comprehension_0(ptr<list<_int>> numbers) {
     ptr<list<_int>> __tmp_0;
@@ -120,6 +129,7 @@ int run() {
     ptr<list<_int>> empty;
     ptr<list<_int>> zeros;
     ptr<list<_int>> with_zero;
+    __init_module__();
     numbers = ptr(new list<_int>({4LL, 1LL, 7LL, 3LL}));
     empty = ptr(new list<_int>());
     print(sum(numbers), sum(empty));
@@ -145,6 +155,10 @@ int run() {
 
 namespace prog_casts {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     _float a;
@@ -155,6 +169,7 @@ int run() {
     str int_str;
     _int i1;
     _int i2;
+    __init_module__();
     a = 2.0;
     b = to_int(a);
     c = to_float(b);
@@ -174,6 +189,7 @@ class Point;
 class Empty;
 
 int run();
+void __init_module__();
 
 class Counter {
   public:
@@ -242,6 +258,9 @@ bool Point::__bool__() {
     return _or(((this->x != 0LL)), ((this->y != 0LL)));
 }
 
+void __init_module__() {
+}
+
 int run() {
     ptr<Counter> counter;
     ptr<Point> p;
@@ -249,6 +268,7 @@ int run() {
     ptr<list<ptr<Point>>> points;
     ptr<Point> point;
     ptr<Empty> e;
+    __init_module__();
     counter = ptr(new Counter(5LL));
     counter->bump(3LL);
     print(counter->count, counter->doubled());
@@ -275,6 +295,10 @@ int run() {
 
 namespace prog_comparison {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     _int a;
@@ -283,6 +307,7 @@ int run() {
     _int d;
     ptr<list<_int>> l1;
     ptr<list<_int>> l2;
+    __init_module__();
     a = 1LL;
     b = 2LL;
     c = 3LL;
@@ -317,6 +342,10 @@ ptr<list<_int>> __list_comprehension_8(ptr<list<_int>> numbers);
 ptr<list<_int>> __list_comprehension_9(ptr<list<_int>> numbers);
 ptr<list<_int>> __list_comprehension_10(ptr<list<_int>> doubled);
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 ptr<list<_int>> __list_comprehension_1(ptr<list<_int>> values, _int factor, _int offset) {
     ptr<list<_int>> __tmp_1;
@@ -482,6 +511,7 @@ int run() {
     ptr<set<_int>> squares;
     ptr<dict<_int, _int>> lookup;
     ptr<list<_int>> doubled;
+    __init_module__();
     numbers = ptr(new list<_int>({1LL, 2LL, 3LL, 4LL}));
     print(__list_comprehension_2(numbers));
     print(__list_comprehension_3(numbers));
@@ -504,12 +534,17 @@ int run() {
 
 namespace prog_dict {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     ptr<dict<_int, _int>> d;
     ptr<dict<_int, _int>> e;
     ptr<dict<_int, _int>> c;
     ptr<dict<str, _int>> s;
+    __init_module__();
     d = ptr(new dict<_int, _int>({{1LL, 10LL}, {2LL, 20LL}, {3LL, 30LL}}));
     print(len(d));
     print(d->__getitem__(1LL), d->__getitem__(2LL), d->__getitem__(3LL));
@@ -554,6 +589,10 @@ _int raise_bare_class(str key);
 _int siblings(str first, str second);
 _int relay();
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 _int guarded_parse(str text) {
     {
@@ -691,6 +730,7 @@ int run() {
     ptr<list<_int>> numbers;
     ptr<dict<str, _int>> counts;
     _int i;
+    __init_module__();
     print(guarded_parse(str("41")));
     try {
         print(guarded_parse(str("zzz")));
@@ -765,6 +805,10 @@ int run() {
 
 namespace prog_files {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     str SAMPLE;
@@ -776,6 +820,7 @@ int run() {
     str line;
     ptr<file> out;
     str written;
+    __init_module__();
     SAMPLE = str("tests/test_files/sample.txt");
     handle = open(SAMPLE);
     text = handle->read();
@@ -811,6 +856,10 @@ int run() {
 
 namespace prog_iter {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     ptr<list<_int>> nums;
@@ -821,6 +870,7 @@ int run() {
     _int y;
     _int i;
     _int n;
+    __init_module__();
     nums = ptr(new list<_int>({1LL, 2LL, 3LL, 4LL, 5LL}));
     a = ptr(new list<_int>(map([](auto x) { return (x * 2LL); }, nums)));
     print(a);
@@ -846,6 +896,10 @@ int run() {
 namespace prog_list {
 ptr<list<_int>> give_list(ptr<list<_int>> l);
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 ptr<list<_int>> give_list(ptr<list<_int>> l) {
     print(l);
@@ -865,6 +919,7 @@ int run() {
     _int n;
     ptr<list<_int>> l4;
     ptr<list<_int>> l5;
+    __init_module__();
     print(ptr(new list<_int>(ptr(new list<_int>({1LL, 2LL, 3LL})))));
     l = ptr(new list<_int>({1LL, 2LL, 3LL}));
     print(l);
@@ -944,6 +999,10 @@ int run() {
 
 namespace prog_loops {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     _int x;
@@ -951,6 +1010,7 @@ int run() {
     _int i;
     _int step;
     _int n;
+    __init_module__();
     x = 2LL;
     l = ptr(new list<_int>({2LL, 3LL, 4LL}));
     _int __len_1 = len(l);
@@ -1003,9 +1063,14 @@ int run() {
 
 namespace prog_math {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     _int a;
+    __init_module__();
     print(pow(10LL, 10LL));
     print(idiv((-10LL), 3LL));
     print(idiv(10LL, 3LL));
@@ -1022,6 +1087,10 @@ int run() {
 
 namespace prog_membership {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     ptr<list<_int>> l;
@@ -1037,6 +1106,7 @@ int run() {
     ptr<list<str>> strs;
     _int count;
     _int x;
+    __init_module__();
     l = ptr(new list<_int>({1LL, 2LL, 3LL}));
     print((l->__contains__(2LL)), (l->__contains__(9LL)));
     print((!l->__contains__(2LL)), (!l->__contains__(9LL)));
@@ -1087,11 +1157,16 @@ int run() {
 
 namespace prog_print {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     _int a;
     _int b;
     _int c;
+    __init_module__();
     a = 1LL;
     b = 2LL;
     c = 3LL;
@@ -1111,6 +1186,10 @@ int run() {
 
 namespace prog_set {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     ptr<set<_int>> s;
@@ -1128,6 +1207,7 @@ int run() {
     ptr<set<tuple<_int, _int>>> s1;
     ptr<set<tuple<_int, _int>>> s2;
     ptr<set<str>> s3;
+    __init_module__();
     s = ptr(new set<_int>({3LL, 1LL, 2LL, 1LL}));
     print(len(s));
     print(sorted(s));
@@ -1196,6 +1276,10 @@ int run() {
 
 namespace prog_slice {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     ptr<list<_int>> l;
@@ -1203,6 +1287,7 @@ int run() {
     ptr<list<_int>> original;
     ptr<list<_int>> copied;
     str s;
+    __init_module__();
     l = ptr(new list<_int>({0LL, 1LL, 2LL, 3LL, 4LL, 5LL}));
     print(l->__getitem__(slice(0LL, 1LL, std::nullopt)));
     print(l->__getitem__(slice(1LL, 4LL, std::nullopt)));
@@ -1261,6 +1346,10 @@ int run() {
 
 namespace prog_string {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     str s;
@@ -1269,6 +1358,7 @@ int run() {
     str b;
     str joined;
     str c;
+    __init_module__();
     s = str("Hello World");
     print(s);
     print(len(s));
@@ -1337,6 +1427,10 @@ int run() {
 
 namespace prog_truthy {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     _int a;
@@ -1346,6 +1440,7 @@ int run() {
     ptr<list<_int>> empty;
     ptr<list<_int>> full;
     _int n;
+    __init_module__();
     a = 0LL;
     b = 5LL;
     if (to_bool(a)) {
@@ -1401,6 +1496,10 @@ int run() {
 
 namespace prog_tuple {
 int run();
+void __init_module__();
+
+void __init_module__() {
+}
 
 int run() {
     _int a;
@@ -1414,6 +1513,7 @@ int run() {
     tuple<_int, _int> t;
     tuple<_int, _int> t2;
     _int z;
+    __init_module__();
     destructure(a, b) = tuple(1LL, 2LL);
     print(str("Test 1 - Simple destructure:"), a, b);
     destructure(a, b) = tuple(10LL, 20LL);

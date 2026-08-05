@@ -20,6 +20,10 @@ using namespace py;
 void min_max_pair();
 void min_max_sequence();
 _int inc(_int x);
+void __init_module__();
+
+void __init_module__() {
+}
 
 void min_max_pair() {
     ptr<list<_int>> a;
@@ -84,6 +88,7 @@ _int inc(_int x) {
 
 
     int main() {
+        __init_module__();
         auto t0 = std::chrono::steady_clock::now();
         min_max_sequence(); // Call the benchmarked function
         auto t1 = std::chrono::steady_clock::now();

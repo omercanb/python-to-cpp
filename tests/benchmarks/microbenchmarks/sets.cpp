@@ -17,9 +17,12 @@
 #include "mathops.h"
 #include "builtins.h"
 using namespace py;
-ptr<_SpecialForm> Tuple;
 void in_set();
 void set_literal_iteration();
+void __init_module__();
+
+void __init_module__() {
+}
 
 void in_set() {
     ptr<list<tuple<_int, _int>>> a;
@@ -87,6 +90,7 @@ void set_literal_iteration() {
 
 
     int main() {
+        __init_module__();
         auto t0 = std::chrono::steady_clock::now();
         set_literal_iteration(); // Call the benchmarked function
         auto t1 = std::chrono::steady_clock::now();

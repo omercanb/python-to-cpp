@@ -177,7 +177,13 @@ def translate_module_for_benchmarking(module: str, benchmark: str) -> str:
     file = open(fnam).read()
     cpp = pipeline(fnam, file)
     assert "int main" not in cpp
-    main_function = main_function_template(benchmark)
+    # Translated code has no literal main() of its own here to call
+    # __init_module__() for it (see mypy_codegen.py) - this synthetic one
+    # has to do it instead, so top-level statements (eg. `SIZE = 30`) run
+    # before the benchmark function does.
+    main_function = main_function_template(benchmark).replace(
+        "int main() {", "int main() {\n        __init_module__();", 1
+    )
     cpp += "\n" + main_function
     cpp = "#include <chrono>\n" + cpp
     return cpp
@@ -281,8 +287,8 @@ def main() -> None:
 
     benchmark = get_benchmark(args.benchmark)
 
-    interpreted_times = run_benchmark(benchmark, BenchmarkMode.interpreted)
     compiled_times = run_benchmark(benchmark, BenchmarkMode.translated)
+    interpreted_times = run_benchmark(benchmark, BenchmarkMode.interpreted)
 
     # handwritten_times = run_benchmark(benchmark, BenchmarkMode.handwritten)
 

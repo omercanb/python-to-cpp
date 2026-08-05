@@ -113,6 +113,27 @@ auto filter(Pred pred, Container &&c) {
     return filter_iter<decltype(iter(c)), Pred>(iter(c), pred);
 }
 
+// ---- reversed ----
+// Walks a sequence back to front via indexing, matching Python's
+// reversed() (needs len()/operator[], not just an iterator).
+template <typename Container> class reversed_iter {
+  public:
+    Container &c;
+    _int i;
+
+    reversed_iter(Container &c) : c(c), i(len(c) - 1) {}
+
+    bool done() { return i < 0; }
+
+    void next() { --i; }
+
+    auto current() { return c[i]; }
+};
+
+template <typename Container> auto reversed(Container &c) {
+    return reversed_iter<Container>(c);
+}
+
 // ---- iter() functions for iterator types ----
 // These allow calling iter() on an iterator to get itself back
 // Lvalue versions
@@ -136,6 +157,11 @@ filter_iter<IterType, Pred> &iter(filter_iter<IterType, Pred> &f) {
     return f;
 }
 
+template <typename Container>
+reversed_iter<Container> &iter(reversed_iter<Container> &r) {
+    return r;
+}
+
 // Rvalue versions - return by value since we can't return reference to
 // temporary
 template <typename IterType>
@@ -156,6 +182,11 @@ map_iter<IterType, Func> iter(map_iter<IterType, Func> &&m) {
 template <typename IterType, typename Pred>
 filter_iter<IterType, Pred> iter(filter_iter<IterType, Pred> &&f) {
     return f;
+}
+
+template <typename Container>
+reversed_iter<Container> iter(reversed_iter<Container> &&r) {
+    return r;
 }
 
 // ---- next() functions for iterator types ----
@@ -183,6 +214,12 @@ template <typename IterType, typename Pred>
 auto next(filter_iter<IterType, Pred> &f) {
     auto val = f.current();
     f.next();
+    return val;
+}
+
+template <typename Container> auto next(reversed_iter<Container> &r) {
+    auto val = r.current();
+    r.next();
     return val;
 }
 

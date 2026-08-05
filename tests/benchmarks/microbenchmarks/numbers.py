@@ -1,6 +1,5 @@
 """Numeric microbenchmarks."""
 
-import random
 from typing import List, Tuple
 
 from typing_extensions import Final
@@ -19,7 +18,7 @@ def matrix_multiply() -> None:
     m, m2 = setup_matrix_mult()
     for i in range(50):
         m = multiply(m, m2)
-    assert is_close(m[0][0], 1.758765499e58), m[0][0]
+    assert is_close(m[0][0], 3.630221302e58), m[0][0]
 
 
 def is_close(x: float, y: float) -> bool:
@@ -31,10 +30,17 @@ def setup_matrix_mult() -> Tuple[Matrix, Matrix]:
 
 
 def make_matrix(w: int, h: int) -> Matrix:
-    random.seed(SEED)
+    # A small LCG standing in for random.random(), so this benchmark doesn't
+    # depend on the (unsupported) random module. Still deterministic and
+    # still produces varying float data - just not Python's exact RNG.
+    state = SEED
     result = []
     for i in range(h):
-        result.append([random.random() for _ in range(w)])
+        row = []
+        for j in range(w):
+            state = (state * 1103515245 + 12345) % (2**31)
+            row.append(state / (2**31))
+        result.append(row)
     return result
 
 

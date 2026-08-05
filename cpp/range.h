@@ -6,6 +6,8 @@
 #include <iostream>
 #include <string>
 
+namespace py {
+
 class range_iterator;
 class range;
 std::ostream &operator<<(std::ostream &os, const range &r);
@@ -26,8 +28,7 @@ class range {
         this->step = step;
     }
     range_iterator iter();
-    // range sits in the global namespace, unlike the rest of the runtime.
-    py::str __str__() const;
+    str __str__() const;
 };
 
 class range_iterator {
@@ -35,6 +36,7 @@ class range_iterator {
     range r;
     _int cur;
     range_iterator(range r) : r(r), cur(r.start) {}
+    _int current() { return cur; }
     _int next() {
         auto temp = cur;
         cur += r.step;
@@ -63,12 +65,14 @@ std::ostream &operator<<(std::ostream &os, const range &r) {
     return os;
 };
 
-inline py::str range::__str__() const {
+inline str range::__str__() const {
     std::string result =
         "range(" + std::to_string(start) + ", " + std::to_string(stop);
     if (step != 1) {
         result += ", " + std::to_string(step);
     }
     result += ")";
-    return py::str(result);
+    return str(result);
 }
+
+} // namespace py

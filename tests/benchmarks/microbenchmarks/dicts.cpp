@@ -17,6 +17,19 @@
 #include "mathops.h"
 #include "builtins.h"
 using namespace py;
+void dict_iteration();
+void dict_to_list();
+void dict_set_default();
+void dict_clear();
+void dict_copy();
+ptr<list<tuple<str, str>>> __list_comprehension_42(ptr<list<tuple<str, str>>> s);
+void dict_call_generator();
+void dict_del_item();
+void __init_module__();
+
+void __init_module__() {
+}
+
 void dict_iteration() {
     ptr<list<ptr<dict<str, _int>>>> a;
     _int j;
@@ -44,25 +57,30 @@ void dict_iteration() {
             for (auto __iter_5 = iter(d); !__iter_5.done();) {
                 k = next(__iter_5);
                 if (to_bool(((k == str("0 str"))))) {
+                    n += 1LL;
                 }
             }
             for (auto __iter_6 = iter(d->keys()); !__iter_6.done();) {
                 k = next(__iter_6);
                 if (to_bool(((k == str("0 str"))))) {
+                    n += 1LL;
                 }
             }
             for (auto __iter_7 = iter(d->values()); !__iter_7.done();) {
                 v = next(__iter_7);
                 if (to_bool(((v == 0LL)))) {
+                    n += 1LL;
                 }
             }
             for (auto __iter_8 = iter(d->items()); !__iter_8.done();) {
                 destructure(k, v) = next(__iter_8);
                 if ((to_bool(((v == 1LL))) || to_bool(((k == str("1 str")))))) {
+                    n += 1LL;
                 }
             }
         }
     }
+    if (!(to_bool(((n == 202000LL))))) throw AssertionError(to_str(n));
 }
 
 void dict_to_list() {
@@ -88,8 +106,12 @@ void dict_to_list() {
         for (auto __iter_12 = iter(a); !__iter_12.done();) {
             d = next(__iter_12);
             (n + (+len(ptr(new list<str>(d)))));
+            n += len(ptr(new list<str>(d->keys())));
+            n += len(ptr(new list<_int>(d->values())));
+            n += len(ptr(new list<tuple<str, _int>>(d->items())));
         }
     }
+    if (!(to_bool(((n == 5400000LL))))) throw AssertionError(to_str(n));
 }
 
 void dict_set_default() {
@@ -109,7 +131,9 @@ void dict_set_default() {
                 d->setdefault(j, ptr(new list<_int>()))->append(k);
             }
         }
+        n += len(d);
     }
+    if (!(to_bool(((n == 409095LL))))) throw AssertionError(to_str(n));
 }
 
 void dict_clear() {
@@ -126,6 +150,7 @@ void dict_clear() {
             d->__setitem__(j, str("x"));
         }
         d->clear();
+        if (!(to_bool(((len(d) == 0LL))))) throw AssertionError("");
     }
 }
 
@@ -157,20 +182,21 @@ void dict_copy() {
             d2 = d->copy();
             d3 = d2->copy();
             d4 = d3->copy();
+            if (!(to_bool(((len(d4) == len(d)))))) throw AssertionError("");
         }
     }
 }
 
-ptr<list<tuple<str, str>>> __list_comprehension_48(ptr<list<tuple<str, str>>> s) {
-    ptr<list<tuple<str, str>>> __tmp_48;
+ptr<list<tuple<str, str>>> __list_comprehension_42(ptr<list<tuple<str, str>>> s) {
+    ptr<list<tuple<str, str>>> __tmp_42;
     str key;
     str value;
-    __tmp_48 = ptr(new list<tuple<str, str>>());
+    __tmp_42 = ptr(new list<tuple<str, str>>());
     for (auto __iter_22 = iter(s); !__iter_22.done();) {
         destructure(key, value) = next(__iter_22);
-        __tmp_48->append(tuple(key, value));
+        __tmp_42->append(tuple(key, value));
     }
-    return __tmp_48;
+    return __tmp_42;
 }
 
 void dict_call_generator() {
@@ -195,7 +221,8 @@ void dict_call_generator() {
     for (i = 0; i < __stop_24; ++i) {
         for (auto __iter_25 = iter(a); !__iter_25.done();) {
             s = next(__iter_25);
-            d = ptr(new dict<str, str>(__list_comprehension_48(s)));
+            d = ptr(new dict<str, str>(__list_comprehension_42(s)));
+            if (!(to_bool(((len(d) == len(s)))))) throw AssertionError("");
         }
     }
 }
@@ -214,6 +241,7 @@ void dict_del_item() {
 
 
     int main() {
+        __init_module__();
         auto t0 = std::chrono::steady_clock::now();
         dict_del_item(); // Call the benchmarked function
         auto t1 = std::chrono::steady_clock::now();

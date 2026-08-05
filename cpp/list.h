@@ -5,6 +5,7 @@
 #include "exceptions.h"
 #include "iter.h"
 #include "ptr.h"
+#include "range.h"
 #include "slice.h"
 #include "str.h"
 #include "types.h"

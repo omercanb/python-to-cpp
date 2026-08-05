@@ -28,6 +28,7 @@ void str_searching();
 void str_call();
 void ord_builtin();
 bool is_upper_case_letter(str ch);
+void __init_module__();
 
 class Cls {
   public:
@@ -45,6 +46,9 @@ void Cls::__init__(_int x) {
 
 str Cls::__str__() {
     return to_str(this->x);
+}
+
+void __init_module__() {
 }
 
 void str_methods() {
@@ -311,6 +315,7 @@ bool is_upper_case_letter(str ch) {
 
 
     int main() {
+        __init_module__();
         auto t0 = std::chrono::steady_clock::now();
         ord_builtin(); // Call the benchmarked function
         auto t1 = std::chrono::steady_clock::now();
