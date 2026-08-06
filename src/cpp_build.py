@@ -10,16 +10,16 @@ from typing import TYPE_CHECKING, Mapping
 
 # clang, not g++: only its precompiled headers pay off (0.45s -> 0.07s a compile)
 COMPILER = "clang++"
-CPP_DIR = Path("cpp")
-PCH_HEADER = CPP_DIR / ".pch.h"
-PCH_FILE = CPP_DIR / ".pch.h.pch"
+RUNTIME_DIR = Path("runtime")
+PCH_HEADER = RUNTIME_DIR / ".pch.h"
+PCH_FILE = RUNTIME_DIR / ".pch.h.pch"
 STD = "c++17"
 
 
 def ensure_pch() -> Path | None:
-    """Build a precompiled header of cpp/*.h, refreshing it when one changes."""
+    """Build a precompiled header of runtime/*.h, refreshing it when one changes."""
     # Skip our own generated header, or it ends up including itself.
-    headers = sorted(h for h in CPP_DIR.glob("*.h") if h != PCH_HEADER)
+    headers = sorted(h for h in RUNTIME_DIR.glob("*.h") if h != PCH_HEADER)
     if not headers:
         return None
     if PCH_FILE.exists() and PCH_FILE.stat().st_mtime >= max(
@@ -35,7 +35,7 @@ def ensure_pch() -> Path | None:
         [
             COMPILER,
             f"-std={STD}",
-            f"-I{CPP_DIR}",
+            f"-I{RUNTIME_DIR}",
             "-fpch-instantiate-templates",
             "-x",
             "c++-header",
@@ -61,7 +61,7 @@ def ensure_pch() -> Path | None:
 def compile_cpp_source(source: str, path: str, exe: str, includes: list[str] = []):
     """Save the source the path them compile and put the output to 'exe'"""
     file = open(path).write(source)
-    directories = [str(CPP_DIR)] + includes
+    directories = [str(RUNTIME_DIR)] + includes
 
     def run(pch: Path | None):
         command = [COMPILER, f"-std={STD}"] + [f"-I{d}" for d in directories]
@@ -91,7 +91,7 @@ def compile_cpp(
     """Compile `src` to `exe` using the precompiled header."""
     if exe == None:
         exe = path[: path.rfind(".")]
-    directories = [str(CPP_DIR)] + (includes or [])
+    directories = [str(RUNTIME_DIR)] + (includes or [])
 
     def run(pch: Path | None):
         command = [COMPILER, f"-std={STD}"] + [f"-I{d}" for d in directories]

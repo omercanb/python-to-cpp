@@ -74,7 +74,7 @@ NON_POINTER_TYPES = {
 
 POINTER_TYPES = {"list", "dict", "set"}
 
-# Exceptions catchable by an except clause, as defined in cpp/exceptions.h.
+# Exceptions catchable by an except clause, as defined in runtime/exceptions.h.
 # That hierarchy is flat, so an intermediate base like LookupError has no
 # equivalent: PyException would over-catch. Rejected rather than listed.
 EXCEPTION_TYPES = {

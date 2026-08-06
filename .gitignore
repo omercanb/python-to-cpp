@@ -3,8 +3,8 @@ main.cpp
 main
 input.py
 /prof
-cpp/.pch.h
-cpp/.pch.h.pch
+runtime/.pch.h
+runtime/.pch.h.pch
 .mypy_cache/
 tests/test_files/sample_out.txt
 *.egg-info/

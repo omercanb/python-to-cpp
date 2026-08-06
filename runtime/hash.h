@@ -18,7 +18,6 @@ inline size_t hash(_float x) { return std::hash<_float>{}(x); }
 inline size_t hash(bool x) { return std::hash<bool>{}(x); }
 inline size_t hash(const std::string &s) { return std::hash<std::string>{}(s); }
 
-// Order-sensitive combine, so hash((1, 2)) != hash((2, 1)).
 inline size_t hash_combine(size_t seed, size_t h) {
     return seed ^ (h + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2));
 }
@@ -35,7 +34,8 @@ struct has_hash_method<
 } // namespace detail
 
 // Fallback for user-defined classes: prefer __hash__(), like CPython.
-template <typename T> inline size_t hash(const T &x) {
+template <typename T>
+inline size_t hash(const T &x) {
     static_assert(detail::has_hash_method<T>::value,
                   "unhashable type: needs a __hash__() method to be used as a "
                   "dict key or set element");
@@ -44,7 +44,8 @@ template <typename T> inline size_t hash(const T &x) {
 
 // Functor form for std::unordered_map/set. Must come after every hash()
 // overload: ADL alone would miss py::hash for std::string keys.
-template <typename T> struct hasher {
+template <typename T>
+struct hasher {
     size_t operator()(const T &x) const { return hash(x); }
 };
 

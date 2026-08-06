@@ -10,7 +10,7 @@ import glob
 import re
 from pathlib import Path
 
-cpp_path = "cpp"
+runtime_path = "runtime"
 
 # Classes no program can hold, so nothing can ever print one. Each says why:
 # adding a class here is a deliberate call, not a way to silence the test.
@@ -55,7 +55,7 @@ _BASE_NOISE = {"public", "private", "protected", "virtual", "std"}
 
 
 def headers() -> str:
-    return "\n".join(Path(p).read_text() for p in sorted(glob.glob(f"{cpp_path}/*.h")))
+    return "\n".join(Path(p).read_text() for p in sorted(glob.glob(f"{runtime_path}/*.h")))
 
 
 def _body(source: str, start: int) -> str:
