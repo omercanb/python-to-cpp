@@ -41,7 +41,7 @@ from mypy.nodes import (
     Var,
 )
 
-from python.visitor import Visitor
+from visitor import Visitor
 
 
 @dataclass

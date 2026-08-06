@@ -14,8 +14,8 @@ from typing import NamedTuple, Optional
 
 from tabulate import tabulate
 
-from mypy_pass import pipeline
-from python.compile import compile_cpp, compile_proc
+from pipeline import pipeline
+from cpp_build import compile_cpp, compile_proc
 from tests.benchmarks.benchmarking import BenchmarkInfo, benchmarks
 
 raw_output = False
@@ -177,7 +177,7 @@ def translate_module_for_benchmarking(module: str, benchmark: str) -> str:
     cpp = pipeline(fnam, file)
     assert "int main" not in cpp
     # Translated code has no literal main() of its own here to call
-    # __init_module__() for it (see mypy_codegen.py) - this synthetic one
+    # __init_module__() for it (see statement_codegen.py) - this synthetic one
     # has to do it instead, so top-level statements (eg. `SIZE = 30`) run
     # before the benchmark function does.
     main_function = main_function_template(benchmark).replace(

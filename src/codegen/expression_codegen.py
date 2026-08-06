@@ -20,7 +20,7 @@ from mypy.nodes import (
 )
 from mypy.types import TupleType, Type, UnionType, get_proper_type
 
-from python.codegen.translation_utils import (
+from codegen.translation_utils import (
     call_method,
     is_truthy,
     list_of,
@@ -41,8 +41,8 @@ from python.codegen.translation_utils import (
     translate_qualified_builtin,
     translate_tuple_access,
 )
-from python.codegen.typegen import cpp_type_name, is_pointer
-from python.visitor import Visitor
+from codegen.typegen import cpp_type_name, is_pointer
+from visitor import Visitor
 
 
 class ExpressionCodegen(Visitor[str]):

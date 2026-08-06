@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from mypy_pass import pipeline
-from python.utils import compile_cpp
+from pipeline import pipeline
+from cpp_build import compile_cpp
 from tests.test_utils import print_output_diff, run_python_and_capture
 
 test_path = "tests/test_files"

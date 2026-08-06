@@ -3,9 +3,9 @@
 import pytest
 from mypy.nodes import FuncDef, TypeInfo
 
-from mypy_pass import analyse
-from python.codegen.expression_codegen import ExpressionCodegen
-from python.codegen.translation_utils import translate_func_signature
+from pipeline import analyse
+from codegen.expression_codegen import ExpressionCodegen
+from codegen.translation_utils import translate_func_signature
 
 # Test Python functions with various signatures
 test_code = """

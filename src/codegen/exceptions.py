@@ -8,10 +8,10 @@ from mypy.nodes import CallExpr
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import NameExpr, RaiseStmt, TryStmt, TypeInfo
 
-from python.codegen.builtins import EXCEPTION_TYPES
+from codegen.builtins import EXCEPTION_TYPES
 
 if TYPE_CHECKING:
-    from python.codegen.mypy_codegen import StatementCodegen
+    from codegen.statement_codegen import StatementCodegen
 
 
 def exception_name(expression: MypyExpression) -> str:

@@ -3,9 +3,9 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "python-to-cpp"
+name = "splice"
 version = "0.1.0"
-description = "Compiles a subset of Python to C++"
+description = "Compiles a typed subset of Python straight to native C++"
 requires-python = ">=3.13"
 dependencies = [
     # Must be the mypyc-compiled wheel, not pure-Python, or analysis is ~4x
@@ -17,7 +17,6 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "pytest>=9.1",
-    "pytest-xdist>=3.8",
     "syrupy>=5.5",
     "numpy>=2.5",
     "tqdm>=4.70",
@@ -25,5 +24,9 @@ test = [
     "typing-extensions>=4.16",
 ]
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["namer", "visitor", "cpp_build", "convert_to_python", "pipeline"]
+
 [tool.setuptools.packages.find]
-include = ["python*"]
+where = ["src"]

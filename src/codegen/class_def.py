@@ -16,13 +16,13 @@ from typing import TYPE_CHECKING
 from mypy.nodes import ClassDef, Decorator, FuncDef, Var
 from mypy.types import Type
 
-from python.codegen.translation_utils import (
+from codegen.translation_utils import (
     translate_func_signature,
     translate_parameters,
 )
 
 if TYPE_CHECKING:
-    from python.codegen.mypy_codegen import StatementCodegen
+    from codegen.statement_codegen import StatementCodegen
 
 INIT = "__init__"
 

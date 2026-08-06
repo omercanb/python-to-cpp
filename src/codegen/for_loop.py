@@ -1,4 +1,4 @@
-"""For loop translation from MyPy AST to C++."""
+"""Translating common python for loop cases efficiently"""
 
 from __future__ import annotations
 
@@ -9,11 +9,11 @@ from mypy.nodes import CallExpr
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import ForStmt, IntExpr, NameExpr, OpExpr
 
-from python.codegen.typegen import cpp_type
-from python.namer import temp_name
+from codegen.typegen import cpp_type
+from namer import temp_name
 
 if TYPE_CHECKING:
-    from python.codegen.mypy_codegen import StatementCodegen
+    from codegen.statement_codegen import StatementCodegen
 
 
 @dataclass

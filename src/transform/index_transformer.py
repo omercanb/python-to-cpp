@@ -22,7 +22,7 @@ from mypy.nodes import (
 )
 from mypy.types import TupleType, Type, get_proper_type
 
-from python.transform.tree_transformer import Transformer
+from transform.tree_transformer import Transformer
 
 
 def _none_expr() -> NameExpr:

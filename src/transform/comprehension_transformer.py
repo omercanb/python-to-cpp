@@ -29,10 +29,10 @@ from mypy.nodes import (
 )
 from mypy.types import CallableType, Type
 
-import mypy_pass
-from python.analysis.free_variables import get_free_variables
-from python.namer import TempNameGenerator
-from python.transform.tree_transformer import Transformer
+import pipeline
+from analysis.free_variables import get_free_variables
+from namer import TempNameGenerator
+from transform.tree_transformer import Transformer
 
 
 def method_expr(
@@ -114,7 +114,7 @@ class ComprehensionRemover(Transformer):
             arg_kinds=[ArgKind.ARG_POS for _ in args],
             arg_names=[v.name for v in free_variables],
             ret_type=comprehension_type,
-            fallback=mypy_pass.function_fallback,
+            fallback=pipeline.function_fallback,
         )
 
         function_definition = FuncDef(new_name, args, function_body, func_type)

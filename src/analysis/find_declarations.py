@@ -14,7 +14,7 @@ from mypy.nodes import (
 )
 from mypy.types import CallableType, Type, get_proper_type
 
-from python.visitor import Traverser
+from visitor import Traverser
 
 
 class _DeclarationCollector(Traverser):

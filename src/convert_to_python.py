@@ -49,7 +49,7 @@ from mypy.nodes import (
 )
 from mypy.types import CallableType, get_proper_type
 
-from python.visitor import Visitor
+from visitor import Visitor
 
 
 class PythonPrinter(Visitor[str]):

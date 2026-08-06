@@ -2,7 +2,7 @@
 
 from mypy.nodes import ExpressionStmt, FuncDef, MypyFile, Node, Statement, StrExpr
 
-from python.transform.tree_transformer import Transformer
+from transform.tree_transformer import Transformer
 
 
 def _is_docstring(statement: Statement) -> bool:

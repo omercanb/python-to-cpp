@@ -11,7 +11,7 @@ from mypy.types import (
     get_proper_type,
 )
 
-from python.codegen.builtins import NON_POINTER_TYPES, POINTER_TYPES
+from codegen.builtins import NON_POINTER_TYPES, POINTER_TYPES
 
 
 class UnsupportedType(Exception):

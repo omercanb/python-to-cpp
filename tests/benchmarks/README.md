@@ -1,6 +1,6 @@
 # benchmarks
 
-These are a collection of benchmarks that were mostly adapted from the mypyc benchmarks at [https://github.com/mypyc/mypyc-benchmarks](https://github.com/mypyc/mypyc-benchmarks). Both the benchmarks and the scripts that are used to benchmark are taken from there. The benchmarks are used to measure performance between python programs, their translations using python-to-cpp, and a handwritten C++ program. These results are tracked to see how close we can come to native C++ performance. 
+These are a collection of benchmarks that were mostly adapted from the mypyc benchmarks at [https://github.com/mypyc/mypyc-benchmarks](https://github.com/mypyc/mypyc-benchmarks). Both the benchmarks and the scripts that are used to benchmark are taken from there. The benchmarks are used to measure performance between python programs, their translations using Splice, and a handwritten C++ program. These results are tracked to see how close we can come to native C++ performance. 
 
 *Some benchmarks are microbenchmarks that are only useful for finding
 big performance differences related to specific operations or language

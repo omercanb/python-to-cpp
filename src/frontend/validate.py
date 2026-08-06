@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from mypy_pass import TypeTable
+    from pipeline import TypeTable
 
 from mypy.nodes import (
     AssignmentStmt,
@@ -65,12 +65,12 @@ from mypy.types import (
     get_proper_type,
 )
 
-from python.analysis.free_variables import get_free_variables
-from python.codegen.builtins import EXCEPTION_TYPES, OP_MAP
-from python.codegen.exceptions import names_a_class
-from python.codegen.typegen import UnsupportedType, cpp_type, cpp_type_name
-from python.convert_to_python import convert_to_python
-from python.visitor import Traverser
+from analysis.free_variables import get_free_variables
+from codegen.builtins import EXCEPTION_TYPES, OP_MAP
+from codegen.exceptions import names_a_class
+from codegen.typegen import UnsupportedType, cpp_type, cpp_type_name
+from convert_to_python import convert_to_python
+from visitor import Traverser
 
 SUPPORTED_EXCEPTIONS = ", ".join(
     sorted({name.rpartition(".")[2] for name in EXCEPTION_TYPES})

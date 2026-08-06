@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 
-from python.compile import compile_cpp
+from cpp_build import compile_cpp
 
 
 def run_python_and_capture(path: str) -> subprocess.CompletedProcess:

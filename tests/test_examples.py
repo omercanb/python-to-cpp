@@ -4,8 +4,8 @@ import glob
 
 import pytest
 
-from mypy_pass import pipeline
-from python.compile import build_and_run_capture
+from pipeline import pipeline
+from cpp_build import build_and_run_capture
 from tests.test_utils import print_output_diff, run_python_and_capture
 
 examples_path = "examples"

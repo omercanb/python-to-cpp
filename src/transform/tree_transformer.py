@@ -44,7 +44,7 @@ from mypy.nodes import (
     WhileStmt,
 )
 
-from python.visitor import Visitor
+from visitor import Visitor
 
 
 class Transformer(Visitor[Node]):

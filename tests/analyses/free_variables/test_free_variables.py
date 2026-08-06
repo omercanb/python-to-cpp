@@ -9,10 +9,10 @@ from mypy.nodes import (
     SetComprehension,
 )
 
-from python.analysis.free_variables import get_free_variables
-from mypy_pass import parse
-from python.convert_to_python import convert_to_python
-from python.visitor import Traverser
+from analysis.free_variables import get_free_variables
+from pipeline import parse
+from convert_to_python import convert_to_python
+from visitor import Traverser
 
 test_file = Path(__file__).parent / "program.py"
 
