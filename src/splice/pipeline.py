@@ -14,14 +14,14 @@ from mypy.types import Instance, Type
 
 type TypeTable = dict[Expression, Type]
 
-from frontend.mypy_fixes import get_resolved_types
-from frontend.validate import validate, UnsupportedProgram, render
-from codegen.statement_codegen import StatementCodegen
-from transform.comprehension_transformer import (
+from splice.frontend.mypy_fixes import get_resolved_types
+from splice.frontend.validate import validate, UnsupportedProgram, render
+from splice.codegen.statement_codegen import StatementCodegen
+from splice.transform.comprehension_transformer import (
     apply_comprehension_transforms,
 )
-from transform.docstring_transformer import DocstringRemover
-from transform.index_transformer import IndexTransformer
+from splice.transform.docstring_transformer import DocstringRemover
+from splice.transform.index_transformer import IndexTransformer
 
 _STRICT_ASSIGNMENTS = define_options()[2]
 

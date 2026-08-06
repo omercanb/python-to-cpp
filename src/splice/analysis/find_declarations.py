@@ -2,6 +2,7 @@
 
 from mypy.nodes import (
     AssignmentStmt,
+    CallExpr,
     Expression,
     ForStmt,
     FuncDef,
@@ -13,14 +14,15 @@ from mypy.nodes import (
 )
 from mypy.types import CallableType, Type, get_proper_type
 
-from visitor import Traverser
+from splice.visitor import Traverser
 
 
-class _BoundVariableCollector(Traverser):
-    """Collect all variables bound inside the node"""
+class _DeclarationCollector(Traverser):
+    """Collect all local variable declarations in a function."""
 
-    def __init__(self, types_dict: dict[Expression, Type]):
+    def __init__(self, types_dict: dict[Expression, Type], parameter_names: set[str]):
         self.types = types_dict
+        self.parameter_names = parameter_names
         self.declarations: dict[str, Type] = {}
 
     def visit_assignment_stmt(self, o: AssignmentStmt) -> None:
@@ -46,17 +48,30 @@ class _BoundVariableCollector(Traverser):
             for item in lvalue.items:
                 self.check_names(item)
 
-        elif isinstance(lvalue, (IndexExpr, MemberExpr)):
-            # d[k] = ... / obj.attr = ... write into something that exists.
+        elif isinstance(lvalue, (IndexExpr, MemberExpr, CallExpr)):
+            # d[k] = ... / obj.attr = ... / a.back() = ... write into
+            # something that exists.
             pass
         else:
             assert False, "rejected by validation"
 
     def check_add_declaration(self, name: NameExpr):
         """Check if name is a declaration and add it to declarations"""
+        if name.name in self.parameter_names:
+            # Already declared as a function parameter.
+            return
         if name.is_new_def:
             # TODO uncomment this after making comprehensions into functions
             # if name.name in self.declarations:
             #     print(name.name, self.declarations)
             # assert name.name not in self.declarations
             self.declarations[name.name] = self.types[name]
+
+
+def get_declarations(
+    func: FuncDef, types_dict: dict[Expression, Type]
+) -> dict[str, Type]:
+    parameter_names = {argument.variable.name for argument in func.arguments}
+    collector = _DeclarationCollector(types_dict, parameter_names)
+    collector.visit(func)
+    return collector.declarations

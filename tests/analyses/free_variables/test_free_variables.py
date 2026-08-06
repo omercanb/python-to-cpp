@@ -9,10 +9,10 @@ from mypy.nodes import (
     SetComprehension,
 )
 
-from analysis.free_variables import get_free_variables
-from pipeline import parse
-from convert_to_python import convert_to_python
-from visitor import Traverser
+from splice.analysis.free_variables import get_free_variables
+from splice.pipeline import parse
+from splice.convert_to_python import convert_to_python
+from splice.visitor import Traverser
 
 test_file = Path(__file__).parent / "program.py"
 

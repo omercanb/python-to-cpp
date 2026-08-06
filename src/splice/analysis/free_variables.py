@@ -41,7 +41,7 @@ from mypy.nodes import (
     Var,
 )
 
-from visitor import Visitor
+from splice.visitor import Visitor
 
 
 @dataclass

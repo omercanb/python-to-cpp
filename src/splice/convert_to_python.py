@@ -49,7 +49,7 @@ from mypy.nodes import (
 )
 from mypy.types import CallableType, get_proper_type
 
-from visitor import Visitor
+from splice.visitor import Visitor
 
 
 class PythonPrinter(Visitor[str]):

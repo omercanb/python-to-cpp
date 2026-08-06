@@ -4,8 +4,8 @@ import glob
 
 import pytest
 
-from pipeline import pipeline
-from cpp_build import build_and_run_capture
+from splice.pipeline import pipeline
+from splice.cpp_build import build_and_run_capture
 from tests.test_utils import print_output_diff, run_python_and_capture
 
 examples_path = "examples"

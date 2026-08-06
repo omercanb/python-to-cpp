@@ -14,8 +14,8 @@ from typing import NamedTuple, Optional
 
 from tabulate import tabulate
 
-from pipeline import pipeline
-from cpp_build import compile_cpp, compile_proc
+from splice.pipeline import pipeline
+from splice.cpp_build import compile_cpp, compile_proc
 from tests.benchmarks.benchmarking import BenchmarkInfo, benchmarks
 
 raw_output = False

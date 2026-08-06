@@ -44,7 +44,7 @@ from mypy.nodes import (
     WhileStmt,
 )
 
-from visitor import Visitor
+from splice.visitor import Visitor
 
 
 class Transformer(Visitor[Node]):

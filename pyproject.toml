@@ -8,8 +8,8 @@ version = "0.1.0"
 description = "Compiles a typed subset of Python straight to native C++"
 requires-python = ">=3.13"
 dependencies = [
-    # Must be the mypyc-compiled wheel, not pure-Python, or analysis is ~4x
-    # slower: pip install --force-reinstall --only-binary :all: mypy==2.3.0
+    # Must be the mypyc-compiled wheel, not pure-Python or a run may be 4x slower
+    # pip install --force-reinstall --only-binary :all: mypy==2.3.0
     "mypy==2.3.0",
     "tabulate>=0.10",
 ]
@@ -23,10 +23,3 @@ test = [
     "mypy-extensions>=1.1",
     "typing-extensions>=4.16",
 ]
-
-[tool.setuptools]
-package-dir = {"" = "src"}
-py-modules = ["namer", "visitor", "cpp_build", "convert_to_python", "pipeline"]
-
-[tool.setuptools.packages.find]
-where = ["src"]

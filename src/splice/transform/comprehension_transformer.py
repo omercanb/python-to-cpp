@@ -29,10 +29,10 @@ from mypy.nodes import (
 )
 from mypy.types import CallableType, Type
 
-import pipeline
-from analysis.free_variables import get_free_variables
-from namer import TempNameGenerator
-from transform.tree_transformer import Transformer
+from splice import pipeline
+from splice.analysis.free_variables import get_free_variables
+from splice.namer import TempNameGenerator
+from splice.transform.tree_transformer import Transformer
 
 
 def method_expr(

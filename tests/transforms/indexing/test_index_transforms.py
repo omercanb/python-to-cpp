@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from pipeline import analyse
-from convert_to_python import PythonPrinter
+from splice.pipeline import analyse
+from splice.convert_to_python import PythonPrinter
 
 test_file = Path(__file__).parent / "program.py"
 

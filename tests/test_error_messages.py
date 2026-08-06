@@ -10,13 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from pipeline import pipeline
-from frontend.validate import UnsupportedProgram, render
+from splice.pipeline import pipeline
+from splice.frontend.validate import UnsupportedProgram, render
 
 error_programs_path = "tests/error_programs"
 paths = sorted(glob.glob(f"{error_programs_path}/*.py"))
 
-validator_path = "src/frontend/validate.py"
+validator_path = "src/splice/frontend/validate.py"
 
 
 def _diagnostics_for(path: str):

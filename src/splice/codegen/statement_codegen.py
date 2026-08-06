@@ -31,14 +31,14 @@ from mypy.nodes import (
 )
 from mypy.types import Type
 
-from analysis.find_declarations import get_declarations
-from codegen.class_def import write_class_bodies, write_class_declaration
-from codegen.exceptions import translate_raise_stmt, translate_try_stmt
-from codegen.expression_codegen import ExpressionCodegen
-from codegen.for_loop import translate_for_stmt
-from codegen.translation_utils import translate_func_signature
-from codegen.typegen import cpp_type, is_pointer
-from visitor import Traverser
+from splice.analysis.find_declarations import get_declarations
+from splice.codegen.class_def import write_class_bodies, write_class_declaration
+from splice.codegen.exceptions import translate_raise_stmt, translate_try_stmt
+from splice.codegen.expression_codegen import ExpressionCodegen
+from splice.codegen.for_loop import translate_for_stmt
+from splice.codegen.translation_utils import translate_func_signature
+from splice.codegen.typegen import cpp_type, is_pointer
+from splice.visitor import Traverser
 
 includes = [
     "types.h",

@@ -6,7 +6,7 @@ from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import FuncDef, IndexExpr, IntExpr, LambdaExpr, NameExpr, TypeInfo
 from mypy.types import CallableType, TupleType, Type, get_proper_type
 
-from codegen.builtins import (
+from splice.codegen.builtins import (
     BOOL_OP_MACROS,
     EXCEPTION_TYPES,
     METHOD_RENAMES,
@@ -18,8 +18,8 @@ from codegen.builtins import (
     get_kwarg_order,
     is_builtin_with_kwargs,
 )
-from codegen.typegen import cpp_type, cpp_type_name, is_pointer
-from visitor import Visitor
+from splice.codegen.typegen import cpp_type, cpp_type_name, is_pointer
+from splice.visitor import Visitor
 
 
 def get_function_type(func: FuncDef) -> CallableType:
