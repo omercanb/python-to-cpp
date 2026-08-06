@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from python.analysis.mypy_pass import pipeline
-from python.errors import UnsupportedProgram, render
+from mypy_pass import pipeline
+from python.frontend.validate import UnsupportedProgram, render
 
 error_programs_path = "tests/error_programs"
 paths = sorted(glob.glob(f"{error_programs_path}/*.py"))

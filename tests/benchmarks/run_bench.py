@@ -7,7 +7,6 @@ import re
 import statistics
 import subprocess
 import sys
-import time
 from enum import Enum, auto
 from importlib import import_module
 from pathlib import Path
@@ -15,8 +14,8 @@ from typing import NamedTuple, Optional
 
 from tabulate import tabulate
 
-from python.analysis.mypy_pass import pipeline
-from python.utils import compile_cpp, compile_proc
+from mypy_pass import pipeline
+from python.compile import compile_cpp, compile_proc
 from tests.benchmarks.benchmarking import BenchmarkInfo, benchmarks
 
 raw_output = False

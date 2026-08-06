@@ -8,8 +8,6 @@ import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Mapping
 
-from python.formatting import *
-
 # clang, not g++: only its precompiled headers pay off (0.45s -> 0.07s a compile)
 COMPILER = "clang++"
 CPP_DIR = Path("cpp")
@@ -61,7 +59,7 @@ def ensure_pch() -> Path | None:
 
 
 def compile_cpp_source(source: str, path: str, exe: str, includes: list[str] = []):
-    """Save the source the the path them compile and put the output to 'exe'"""
+    """Save the source the path them compile and put the output to 'exe'"""
     file = open(path).write(source)
     directories = [str(CPP_DIR)] + includes
 

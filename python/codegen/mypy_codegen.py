@@ -74,12 +74,6 @@ class StatementCodegen(Traverser):
         self.expr_codegen = ExpressionCodegen(types_dict)
         self.indent_level = 0
         self.output: list[str] = []
-        self.temp_count = 0
-
-    def temp_name(self, prefix: str) -> str:
-        """A name for a generated variable, unique across the file."""
-        self.temp_count += 1
-        return f"__{prefix}_{self.temp_count}"
 
     def visit_statements(self, statements):
         for statement in statements:

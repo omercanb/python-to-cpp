@@ -1,9 +1,9 @@
 """Test that function signatures are correctly translated to C++."""
 
 import pytest
-from mypy.nodes import ClassDef, FuncDef, TypeInfo
+from mypy.nodes import FuncDef, TypeInfo
 
-from python.analysis.mypy_pass import analyse
+from mypy_pass import analyse
 from python.codegen.expression_codegen import ExpressionCodegen
 from python.codegen.translation_utils import translate_func_signature
 

@@ -2,9 +2,6 @@
 Transforms comprehensions into function calls
 """
 
-from ast import Name
-
-import mypy
 from mypy.nodes import (
     ArgKind,
     Argument,
@@ -19,10 +16,8 @@ from mypy.nodes import (
     FuncDef,
     GeneratorExpr,
     IfStmt,
-    IndexExpr,
     ListComprehension,
     ListExpr,
-    Lvalue,
     MemberExpr,
     NameExpr,
     Node,
@@ -34,7 +29,7 @@ from mypy.nodes import (
 )
 from mypy.types import CallableType, Type
 
-from python.analysis import mypy_pass
+import mypy_pass
 from python.analysis.free_variables import get_free_variables
 from python.namer import TempNameGenerator
 from python.transform.tree_transformer import Transformer

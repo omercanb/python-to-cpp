@@ -7,12 +7,12 @@ walk so a program reports all of its problems at once.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from python.analysis.mypy_pass import TypeTable
+    from mypy_pass import TypeTable
 
-import mypy
 from mypy.nodes import (
     AssignmentStmt,
     Block,
@@ -53,7 +53,7 @@ from mypy.nodes import (
     Var,
     WhileStmt,
     YieldExpr,
-    YieldFromExpr,
+    YieldFromExpr, Context,
 )
 from mypy.types import (
     CallableType,
@@ -69,8 +69,7 @@ from python.analysis.free_variables import get_free_variables
 from python.codegen.builtins import EXCEPTION_TYPES, OP_MAP
 from python.codegen.exceptions import names_a_class
 from python.codegen.typegen import UnsupportedType, cpp_type, cpp_type_name
-from python.errors import Diagnostic, diagnostic
-from python.printer import convert_to_python
+from python.convert_to_python import convert_to_python
 from python.visitor import Traverser
 
 SUPPORTED_EXCEPTIONS = ", ".join(
@@ -696,6 +695,23 @@ class _Validator(Traverser):
             )
 
 
+@dataclass(frozen=True)
+class Diagnostic:
+    """One unsupported construct and the source span it occupies."""
+
+    kind: str
+    message: str
+    hint: str
+    line: int
+    column: int
+    end_line: int
+    end_column: int
+
+    @property
+    def position(self) -> tuple[int, int]:
+        return self.line, self.column
+
+
 def validate(tree: MypyFile, types: TypeTable) -> list[Diagnostic]:
     """Every construct in the file that cannot be translated, in source order."""
     type_table: dict[Expression, ProperType] = {}
@@ -710,3 +726,61 @@ def validate(tree: MypyFile, types: TypeTable) -> list[Diagnostic]:
     # Nested and/or report once each, which reads as the same complaint twice.
     unique = {(d.position, d.kind): d for d in validator.diagnostics}
     return sorted(unique.values(), key=lambda d: d.position)
+
+
+def diagnostic(node: Context, kind: str, message: str, hint: str) -> Diagnostic:
+    """Build a diagnostic from any mypy node, which carries its own span."""
+    end_line = node.end_line if node.end_line is not None else node.line
+    end_column = node.end_column if node.end_column is not None else node.column + 1
+    return Diagnostic(
+        kind=kind,
+        message=message,
+        hint=hint,
+        line=node.line,
+        column=node.column,
+        end_line=end_line,
+        end_column=end_column,
+    )
+
+
+class UnsupportedProgram(Exception):
+    """Every construct validation rejected, reported in one go."""
+
+    def __init__(self, diagnostics: list[Diagnostic]):
+        self.diagnostics = diagnostics
+        super().__init__(f"{len(diagnostics)} unsupported construct(s)")
+
+
+def render(
+    diagnostics: list[Diagnostic], source: str, path: str = "<source>"
+) -> str:
+    """Render diagnostics with the offending source line underlined."""
+    lines = source.splitlines()
+    return "\n".join(_render_one(d, lines, path) for d in diagnostics)
+
+
+def _render_one(diagnostic: Diagnostic, lines: list[str], path: str) -> str:
+    text = lines[diagnostic.line - 1] if diagnostic.line <= len(lines) else ""
+    # A span running onto later lines is underlined to the end of the first.
+    end = diagnostic.end_column if diagnostic.end_line == diagnostic.line else len(text)
+    underline = " " * diagnostic.column + "^" * max(1, end - diagnostic.column)
+
+    number = str(diagnostic.line)
+    gutter = " " * len(number)
+    # mypy columns are 0 based, editors and compilers count from 1.
+    header = (
+        f"{path}:{diagnostic.line}:{diagnostic.column + 1}: "
+        f"error: {diagnostic.message}"
+    )
+    hint_lines = diagnostic.hint.splitlines()
+    hint = "\n".join(
+        [f"  help: {hint_lines[0]}"] + [f"          {l}" for l in hint_lines[1:]]
+    )
+    return (
+        f"{header}\n"
+        f"\n"
+        f"  {number} | {text}\n"
+        f"  {gutter} | {underline}\n"
+        f"\n"
+        f"{hint}\n"
+    )

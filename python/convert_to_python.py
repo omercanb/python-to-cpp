@@ -1,9 +1,6 @@
-"""Renders a mypy AST back to readable Python source, for debugging transforms.
-
-Not meant to round-trip perfectly (e.g. keyword-only parameters don't get
-their separating bare `*`) - just enough that printing a tree mid-transform
-shows what it actually represents, type annotations included, instead of the
-`MypyFile:1(...)` s-expression dump from mypy's own strconv.
+"""
+Renders a mypy AST back to Python source, for debugging transforms.
+Also includes type annotations.
 """
 
 from mypy.nodes import (

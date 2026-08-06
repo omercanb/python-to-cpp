@@ -10,6 +10,7 @@ from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import ForStmt, IntExpr, NameExpr, OpExpr
 
 from python.codegen.typegen import cpp_type
+from python.namer import temp_name
 
 if TYPE_CHECKING:
     from python.codegen.mypy_codegen import StatementCodegen
@@ -85,7 +86,7 @@ def _hoist(
     wrong the moment its value depends on the loop target itself
     (`range(x)` inside `for x in ...`), or changes during the loop.
     """
-    temp = codegen.temp_name(prefix)
+    temp = temp_name(prefix)
     codegen.emit(f"{cpp_type_name} {temp} = {value};")
     return temp
 
@@ -196,7 +197,7 @@ def for_generic(
     """Translate: for var in iterable (generic iterator protocol)"""
     target = codegen.get_expr(index, lvalue=True)
     iterable_expr = codegen.get_expr(iterable)
-    iter_var = codegen.temp_name("iter")
+    iter_var = temp_name("iter")
     # TODO itervar shouldnt be declared in the loop
 
     return LoopHeader(

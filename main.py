@@ -1,13 +1,9 @@
 import sys
 
-from mypy.nodes import Expression, TypeInfo
-from mypy.types import ProperType
-
-from python.analysis.mypy_pass import _generate, analyse
-from python.analysis.validate import validate
-from python.errors import UnsupportedProgram, render
-from python.printer import convert_to_python
-from python.utils import build_and_run
+from mypy_pass import _generate, analyse
+from python.compile import build_and_run
+from python.convert_to_python import convert_to_python
+from python.frontend.validate import render, validate
 
 # Mypys strict upgrades
 

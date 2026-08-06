@@ -10,8 +10,8 @@ from mypy.nodes import (
 )
 
 from python.analysis.free_variables import get_free_variables
-from python.analysis.mypy_pass import analyse, parse
-from python.printer import convert_to_python
+from mypy_pass import parse
+from python.convert_to_python import convert_to_python
 from python.visitor import Traverser
 
 test_file = Path(__file__).parent / "program.py"

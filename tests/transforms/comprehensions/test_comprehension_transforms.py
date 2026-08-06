@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from python.analysis.mypy_pass import analyse
-from python.printer import PythonPrinter
+from mypy_pass import analyse
+from python.convert_to_python import PythonPrinter
 
 test_file = Path(__file__).parent / "program.py"
 

@@ -1,7 +1,6 @@
 import os
 import sys
 from dataclasses import dataclass
-from pathlib import Path
 
 from mypy import build
 from mypy.main import define_options
@@ -21,19 +20,15 @@ from mypy.nodes import (
     Var,
 )
 from mypy.options import Options
-from mypy.types import Instance, ProperType, Type, get_proper_type
+from mypy.types import Instance, Type, get_proper_type
 
-from python.analysis.validate import validate
+from python.frontend.validate import validate, UnsupportedProgram, render
 from python.codegen.mypy_codegen import StatementCodegen
-from python.errors import UnsupportedProgram, render
-from python.printer import convert_to_python
 from python.transform.comprehension_transformer import (
-    ComprehensionRemover,
     apply_comprehension_transforms,
 )
 from python.transform.docstring_transformer import DocstringRemover
 from python.transform.index_transformer import IndexTransformer
-from python.transform.tree_transformer import Transformer
 from python.visitor import Traverser
 
 type TypeTable = dict[Expression, Type]

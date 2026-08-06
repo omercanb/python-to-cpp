@@ -1,21 +1,6 @@
 """
 Base class for AST-level transforms
-
-Unlike Traverser (which walks the tree purely for side effects and never
-writes anything back), every visit_* here writes the result of visiting a
-child back into the parent's attribute. That's what lets a subclass replace
-a node wherever it lives in the tree - a call argument, an operand of a
-binary op, the rvalue of an assignment, nested arbitrarily deep - not just
-when it happens to sit directly in a Block's statement list.
-
-Splicing extra statements in front of the one being visited (e.g. hoisting a
-desugared loop above the statement that used to contain a comprehension) is
-a separate concern from replacing a node in place, since a lone required
-child (say, Decorator.func) has nowhere to put extra statements. That case
-goes through hoist() instead, which lands the statements in the nearest
-enclosing statement list - or hoist_global(), which reaches all the way out
-to module scope regardless of nesting depth, for introducing whole new
-top-level definitions (e.g. lifting a comprehension out into its own def).
+Also supports hoisting statements in the function or global scope
 """
 
 from mypy.nodes import (
