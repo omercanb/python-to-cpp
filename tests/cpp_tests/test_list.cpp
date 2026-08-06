@@ -1,6 +1,6 @@
-#include "../../cpp/list.h"
-#include "../../cpp/print.h"
-#include "../../cpp/truthy.h"
+#include "../../src/splice/runtime/list.h"
+#include "../../src/splice/runtime/print.h"
+#include "../../src/splice/runtime/truthy.h"
 #include <cassert>
 #include <iostream>
 #include <vector>

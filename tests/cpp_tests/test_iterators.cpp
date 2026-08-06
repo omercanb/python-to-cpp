@@ -1,5 +1,5 @@
-#include "../../cpp/list.h"
-#include "../../cpp/print.h"
+#include "../../src/splice/runtime/list.h"
+#include "../../src/splice/runtime/print.h"
 #include <cassert>
 #include <iostream>
 using namespace py;

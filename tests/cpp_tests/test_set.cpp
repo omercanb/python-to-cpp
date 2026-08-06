@@ -1,5 +1,5 @@
-#include "../../cpp/set.h"
-#include "../../cpp/truthy.h"
+#include "../../src/splice/runtime/set.h"
+#include "../../src/splice/runtime/truthy.h"
 #include <iostream>
 #include <string>
 using namespace py;

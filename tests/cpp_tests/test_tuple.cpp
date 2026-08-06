@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cassert>
-#include "../../cpp/print.h"
-#include "../../cpp/tuple.h"
+#include "../../src/splice/runtime/print.h"
+#include "../../src/splice/runtime/tuple.h"
 using namespace py;
 
 // Test utilities

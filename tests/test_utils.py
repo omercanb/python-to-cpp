@@ -77,7 +77,7 @@ def compile_cpp_test(cpp_file: str) -> str:
     # Get project root - assumes tests/ directory structure
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    # These include the same runtime/ headers, so they share its precompiled header.
+    # These include the same src/splice/runtime headers, so they share its precompiled header.
     result = compile_cpp(cpp_file, exe_path, includes=[project_root])
     if result.returncode != 0:
         os.unlink(exe_path)

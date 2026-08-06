@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Mapping
 
 # clang, not g++: only its precompiled headers pay off (0.45s -> 0.07s a compile)
 COMPILER = "clang++"
-RUNTIME_DIR = Path("runtime")
+RUNTIME_DIR = Path(__file__).parent / "runtime"
 PCH_HEADER = RUNTIME_DIR / ".pch.h"
 PCH_FILE = RUNTIME_DIR / ".pch.h.pch"
 STD = "c++17"

@@ -23,3 +23,6 @@ test = [
     "mypy-extensions>=1.1",
     "typing-extensions>=4.16",
 ]
+
+[tool.setuptools.package-data]
+splice = ["runtime/*.h"]

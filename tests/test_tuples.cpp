@@ -1,5 +1,5 @@
-#include "../cpp/print.h"
-#include "../cpp/tuple.h"
+#include "../src/splice/runtime/print.h"
+#include "../src/splice/runtime/tuple.h"
 #include <iostream>
 using namespace py;
 

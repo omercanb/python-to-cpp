@@ -10,7 +10,7 @@ import glob
 import re
 from pathlib import Path
 
-runtime_path = "runtime"
+runtime_path = "src/splice/runtime"
 
 # Classes no program can hold, so nothing can ever print one. Each says why:
 # adding a class here is a deliberate call, not a way to silence the test.

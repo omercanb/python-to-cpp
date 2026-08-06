@@ -1,6 +1,6 @@
-#include "../../cpp/dict.h"
-#include "../../cpp/print.h"
-#include "../../cpp/truthy.h"
+#include "../../src/splice/runtime/dict.h"
+#include "../../src/splice/runtime/print.h"
+#include "../../src/splice/runtime/truthy.h"
 #include <iostream>
 #include <string>
 using namespace py;
