@@ -58,9 +58,20 @@ def ensure_pch() -> Path | None:
     return PCH_FILE
 
 
+def _is_pch_error(stderr: str) -> bool:
+    """Whether a failed compile's stderr points at the pch, not the source."""
+    return "PCH file" in stderr or "precompiled header" in stderr
+
+
+def _rebuild_pch() -> Path | None:
+    """Force a fresh precompiled header, discarding whatever is on disk."""
+    PCH_FILE.unlink(missing_ok=True)
+    return ensure_pch()
+
+
 def compile_cpp_source(source: str, path: str, exe: str, includes: list[str] = []):
     """Save the source the path them compile and put the output to 'exe'"""
-    file = open(path).write(source)
+    open(path).write(source)
     directories = [str(RUNTIME_DIR)] + includes
 
     def run(pch: Path | None):
@@ -72,8 +83,11 @@ def compile_cpp_source(source: str, path: str, exe: str, includes: list[str] = [
         )
 
     compiled = run(ensure_pch())
-    if compiled.returncode != 0 and "precompiled header" in compiled.stderr:
-        # clang rejects a stale pch rather than using it, so just drop it.
+    if compiled.returncode != 0 and _is_pch_error(compiled.stderr):
+        compiled = run(_rebuild_pch())
+    if compiled.returncode != 0 and _is_pch_error(compiled.stderr):
+        # Rebuilding didn't help either - drop the pch for this compile
+        # rather than fail outright.
         warnings.warn(
             f"precompiled header rejected, recompiling {path} without it "
             f"(expect a ~4x slower compile):\n{compiled.stderr}",
@@ -97,23 +111,27 @@ def compile_cpp(
         command = [COMPILER, f"-std={STD}"] + [f"-I{d}" for d in directories]
         if pch is not None:
             command += ["-include-pch", str(pch)]
-        try:
-            return subprocess.run(
-                command + [path, "-o", exe], capture_output=True, text=True, check=True
-            )
-        except subprocess.CalledProcessError as e:
-            print(e.stderr, end="", file=sys.stderr)
-            raise
+        return subprocess.run(
+            command + [path, "-o", exe], capture_output=True, text=True
+        )
 
     compiled = run(ensure_pch())
-    if compiled.returncode != 0 and "precompiled header" in compiled.stderr:
-        # clang rejects a stale pch rather than using it, so just drop it.
+    if compiled.returncode != 0 and _is_pch_error(compiled.stderr):
+        compiled = run(_rebuild_pch())
+    if compiled.returncode != 0 and _is_pch_error(compiled.stderr):
+        # Rebuilding didn't help either - drop the pch for this compile
+        # rather than fail outright.
         warnings.warn(
             f"precompiled header rejected, recompiling {path} without it "
             f"(expect a ~4x slower compile):\n{compiled.stderr}",
             stacklevel=2,
         )
         compiled = run(None)
+    if compiled.returncode != 0:
+        print(compiled.stderr, end="", file=sys.stderr)
+        raise subprocess.CalledProcessError(
+            compiled.returncode, compiled.args, compiled.stdout, compiled.stderr
+        )
     return compiled
 
 

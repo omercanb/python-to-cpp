@@ -1,9 +1,8 @@
 import ast
 
-from mypy.nodes import CallExpr, ComparisonExpr, DictExpr
+from mypy.nodes import BytesExpr, CallExpr, ComparisonExpr, DictExpr
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import (
-    BytesExpr,
     FloatExpr,
     IndexExpr,
     IntExpr,
@@ -51,10 +50,9 @@ from splice.visitor import Visitor
 def _cpp_bytes_literal(raw: bytes) -> str:
     """A C++ expression for a std::string holding exactly `raw`'s bytes.
 
-    Adjacent string-literal concatenation joins the pieces; non-printable
-    bytes get their own "\\xHH" piece so a following hex digit in source
-    can't extend the escape. The explicit length keeps embedded NUL bytes
-    intact (a bare const char* would truncate at the first one).
+    Non-printable bytes become their own "\\xHH" piece, split from the rest,
+    so a following hex digit can't extend the escape; the explicit length
+    keeps embedded NULs from truncating the string.
     """
     pieces: list[str] = []
     current: list[str] = []
@@ -224,10 +222,9 @@ class ExpressionCodegen(Visitor[str]):
         return f'str("{repr(o.value)[1:-1]}")'
 
     def visit_bytes_expr(self, o: BytesExpr) -> str:
-        # o.value is mypy's "human readable repr" of the literal (the
-        # content of repr(the_bytes), minus the leading b and quotes) -
-        # wrapping it back in triple quotes and evaluating recovers the
-        # original bytes regardless of which quote character repr() chose.
+        # o.value is repr(the_bytes) minus the b'' wrapper; re-wrapping it in
+        # triple quotes recovers the original bytes regardless of which quote
+        # character repr() picked.
         raw = ast.literal_eval("b'''" + o.value + "'''")
         return f"bytes({_cpp_bytes_literal(raw)})"
 

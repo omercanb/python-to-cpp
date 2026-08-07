@@ -21,3 +21,7 @@ class TempNameGenerator:
 
 def temp_name(prefix: str) -> str:
     return TempNameGenerator().temp_name(prefix)
+
+
+def reset() -> None:
+    TempNameGenerator.prefix_counts.clear()

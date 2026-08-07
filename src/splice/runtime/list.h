@@ -23,126 +23,46 @@ namespace py {
 
 namespace detail {
 
-// std::vector<bool> is bit-packed: data_[i] returns a proxy, not a real
-// bool&, so every T&-returning method below (operator[], __getitem__,
-// back()) would bind that proxy to a dangling reference. bool_vector is a
-// plain, unpacked array of bool instead - one real byte per element,
-// contiguous, no bit manipulation, no indirection - so it has the same
-// memory layout and performance characteristics as std::vector<char>, and
-// list<T>'s own methods need no bool-specific handling at all.
+// std::vector<bool> is a bad case. It tries to be efficient by bit packing. So we can't use it and we have to define it be a std::vector<char> and we recast the types to bools
 class bool_vector {
   public:
-    using iterator = bool *;
-    using const_iterator = const bool *;
+    using iterator = std::vector<char>::iterator;
+    using const_iterator = std::vector<char>::const_iterator;
 
     bool_vector() = default;
     bool_vector(std::initializer_list<bool> init) {
-        reserve(init.size());
+        data_.reserve(init.size());
         for (bool b : init)
-            push_back(b);
+            data_.push_back(b);
     }
-    bool_vector(const bool_vector &o) { assign_from(o.data_, o.size_); }
-    bool_vector(bool_vector &&o) noexcept
-        : data_(o.data_), size_(o.size_), capacity_(o.capacity_) {
-        o.data_ = nullptr;
-        o.size_ = o.capacity_ = 0;
-    }
-    bool_vector &operator=(const bool_vector &o) {
-        if (this != &o) {
-            delete[] data_;
-            data_ = nullptr;
-            size_ = capacity_ = 0;
-            assign_from(o.data_, o.size_);
-        }
-        return *this;
-    }
-    bool_vector &operator=(bool_vector &&o) noexcept {
-        if (this != &o) {
-            delete[] data_;
-            data_ = o.data_;
-            size_ = o.size_;
-            capacity_ = o.capacity_;
-            o.data_ = nullptr;
-            o.size_ = o.capacity_ = 0;
-        }
-        return *this;
-    }
-    ~bool_vector() { delete[] data_; }
 
-    size_t size() const noexcept { return size_; }
-    bool empty() const noexcept { return size_ == 0; }
-    void clear() noexcept { size_ = 0; }
+    size_t size() const noexcept { return data_.size(); }
+    bool empty() const noexcept { return data_.empty(); }
+    void clear() noexcept { data_.clear(); }
 
-    bool &operator[](size_t i) { return data_[i]; }
-    const bool &operator[](size_t i) const { return data_[i]; }
-    bool &back() { return data_[size_ - 1]; }
-    const bool &back() const { return data_[size_ - 1]; }
+    bool &operator[](size_t i) { return reinterpret_cast<bool &>(data_[i]); }
+    const bool &operator[](size_t i) const {
+        return reinterpret_cast<const bool &>(data_[i]);
+    }
+    bool &back() { return reinterpret_cast<bool &>(data_.back()); }
+    const bool &back() const { return reinterpret_cast<const bool &>(data_.back()); }
 
-    iterator begin() { return data_; }
-    iterator end() { return data_ + size_; }
-    const_iterator begin() const { return data_; }
-    const_iterator end() const { return data_ + size_; }
+    iterator begin() { return data_.begin(); }
+    iterator end() { return data_.end(); }
+    const_iterator begin() const { return data_.begin(); }
+    const_iterator end() const { return data_.end(); }
 
-    void reserve(size_t n) {
-        if (n > capacity_)
-            grow_to(n);
+    void reserve(size_t n) { data_.reserve(n); }
+    void push_back(bool b) { data_.push_back(b); }
+    iterator insert(iterator pos, bool value) { return data_.insert(pos, value); }
+    template <typename It>
+    iterator insert(iterator pos, It first, It last) {
+        return data_.insert(pos, first, last);
     }
-    void push_back(bool b) {
-        if (size_ == capacity_)
-            grow_to(capacity_ == 0 ? 4 : capacity_ * 2);
-        data_[size_++] = b;
-    }
-    iterator insert(iterator pos, bool value) {
-        size_t at = static_cast<size_t>(pos - data_);
-        if (size_ == capacity_)
-            grow_to(capacity_ == 0 ? 4 : capacity_ * 2);
-        for (size_t i = size_; i > at; --i)
-            data_[i] = data_[i - 1];
-        data_[at] = value;
-        ++size_;
-        return data_ + at;
-    }
-    template <typename It> iterator insert(iterator pos, It first, It last) {
-        size_t at = static_cast<size_t>(pos - data_);
-        size_t count = static_cast<size_t>(last - first);
-        if (size_ + count > capacity_)
-            grow_to(size_ + count);
-        for (size_t i = size_; i > at; --i)
-            data_[i + count - 1] = data_[i - 1];
-        size_t i = at;
-        for (It it = first; it != last; ++it, ++i)
-            data_[i] = *it;
-        size_ += count;
-        return data_ + at;
-    }
-    iterator erase(iterator pos) {
-        size_t at = static_cast<size_t>(pos - data_);
-        for (size_t i = at; i + 1 < size_; ++i)
-            data_[i] = data_[i + 1];
-        --size_;
-        return data_ + at;
-    }
+    iterator erase(iterator pos) { return data_.erase(pos); }
 
   private:
-    bool *data_ = nullptr;
-    size_t size_ = 0;
-    size_t capacity_ = 0;
-
-    void assign_from(const bool *src, size_t n) {
-        data_ = n ? new bool[n] : nullptr;
-        size_ = n;
-        capacity_ = n;
-        for (size_t i = 0; i < n; ++i)
-            data_[i] = src[i];
-    }
-    void grow_to(size_t n) {
-        bool *bigger = new bool[n];
-        for (size_t i = 0; i < size_; ++i)
-            bigger[i] = data_[i];
-        delete[] data_;
-        data_ = bigger;
-        capacity_ = n;
-    }
+    std::vector<char> data_;
 };
 
 inline bool operator==(const bool_vector &a, const bool_vector &b) {
@@ -161,8 +81,14 @@ inline bool operator<=(const bool_vector &a, const bool_vector &b) { return !(b 
 inline bool operator>(const bool_vector &a, const bool_vector &b) { return b < a; }
 inline bool operator>=(const bool_vector &a, const bool_vector &b) { return !(a < b); }
 
-template <typename T> struct list_storage { using type = std::vector<T>; };
-template <> struct list_storage<bool> { using type = bool_vector; };
+template <typename T>
+struct list_storage {
+    using type = std::vector<T>;
+};
+template <>
+struct list_storage<bool> {
+    using type = bool_vector;
+};
 
 } // namespace detail
 
@@ -172,7 +98,6 @@ class list {
     using value_type = T;
     using size_type = _int;
 
-    // ---- construction -------------------------------------------------------
     list() = default;
     list(std::initializer_list<T> init) : data_(init) {}
 
@@ -335,7 +260,6 @@ class list {
     // Copies via *this; list<T>(data_) would hit the iterable constructor.
     ptr<list<T>> copy() const { return ptr(new list<T>(*this)); }
 
-    // ---- membership / iteration --------------------------------------------
     bool __contains__(const T &value) const { // `value in a`
         for (const auto &e : data_)
             if (e == value)
@@ -347,7 +271,6 @@ class list {
     auto begin() const { return data_.begin(); }
     auto end() const { return data_.end(); }
 
-    // ---- operators ----------------------------------------------------------
     // + returns a new list; += extends in place and returns *this (Python
     // semantics).
     list<T> operator+(const list<T> &other) const {
@@ -358,7 +281,7 @@ class list {
         return out;
     }
     list<T> &operator+=(const list<T> &other) {
-        extend(other);
+        data_.insert(data_.end(), other.data_.begin(), other.data_.end());
         return *this;
     }
 
@@ -457,6 +380,13 @@ ptr<list<T>> &operator*=(ptr<list<T>> &a, typename list<T>::size_type n) {
 template <typename T>
 ptr<list<T>> operator+(const ptr<list<T>> &a, const ptr<list<T>> &b) {
     return ptr<list<T>>(new list<T>(*a + *b));
+}
+
+// a += b -- mutates the pointed-to list in place, mirroring list<T>::operator+=.
+template <typename T>
+ptr<list<T>> &operator+=(ptr<list<T>> &a, const ptr<list<T>> &b) {
+    *a += *b;
+    return a;
 }
 
 template <typename T>

@@ -30,8 +30,8 @@ void catch_exceptions() {
     _int n;
     _int i;
     n = 0LL;
-    _int __stop_830 = (100LL * 1000LL);
-    for (i = 0; i < __stop_830; ++i) {
+    _int __stop_0 = (100LL * 1000LL);
+    for (i = 0; i < __stop_0; ++i) {
         try {
             f(i);
         } catch (ValueError &) {

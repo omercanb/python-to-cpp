@@ -1,11 +1,9 @@
 #pragma once
 
-// Python's open() and the file object it hands back.
-//
-// There is no context manager: a file is held behind ptr like every other
-// object, so it closes when the last reference to it goes. Reading pulls the
-// whole file in at once, which keeps read/readline/readlines/iteration all
-// agreeing on one position without buffering rules of their own.
+// Python's open() and the file object it hands back. No context manager: a
+// file closes when its last ptr reference goes, like everything else. Reads
+// pull the whole file in at once, so read/readline/readlines/iteration all
+// just share one position rather than needing their own buffering.
 
 #include "exceptions.h"
 #include "list.h"
@@ -106,7 +104,6 @@ class file {
                    "'>");
     }
 
-    // ---- for line in f ----
     class file_iterator {
       public:
         file_iterator(file &f) : lines_(_split_keepends(f.remaining())), i_(0) {}

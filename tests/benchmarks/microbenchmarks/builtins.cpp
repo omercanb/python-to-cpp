@@ -35,19 +35,19 @@ void min_max_pair() {
     _int m;
     _int j;
     a = ptr(new list<_int>());
-    _int __stop_760 = 20LL;
-    for (i = 0; i < __stop_760; ++i) {
+    _int __stop_0 = 20LL;
+    for (i = 0; i < __stop_0; ++i) {
         a->append(mod((i * 12753LL), (pow(2LL, 15LL) - 1LL)));
     }
     expected_min = min(a);
     expected_max = max(a);
     n = 0LL;
-    _int __stop_761 = (100LL * 1000LL);
-    for (i = 0; i < __stop_761; ++i) {
+    _int __stop_1 = (100LL * 1000LL);
+    for (i = 0; i < __stop_1; ++i) {
         n = 1000000000LL;
         m = 0LL;
-        for (auto __iter_218 = iter(a); !__iter_218.done();) {
-            j = next(__iter_218);
+        for (auto __iter_0 = iter(a); !__iter_0.done();) {
+            j = next(__iter_0);
             n = min(n, j);
             m = max(m, j);
         }
@@ -63,17 +63,17 @@ void min_max_sequence() {
     ptr<list<_int>> s;
     _int x;
     a = ptr(new list<ptr<list<_int>>>());
-    _int __stop_762 = 1000LL;
-    for (i = 0; i < __stop_762; ++i) {
+    _int __stop_2 = 1000LL;
+    for (i = 0; i < __stop_2; ++i) {
         a->append(ptr(new list<_int>({(i * 2LL)})));
         a->append(ptr(new list<_int>({i, (i + 2LL)})));
         a->append((ptr(new list<_int>({i})) * 15LL));
     }
     n = 0LL;
-    _int __stop_763 = 100LL;
-    for (i = 0; i < __stop_763; ++i) {
-        for (auto __iter_219 = iter(a); !__iter_219.done();) {
-            s = next(__iter_219);
+    _int __stop_3 = 100LL;
+    for (i = 0; i < __stop_3; ++i) {
+        for (auto __iter_1 = iter(a); !__iter_1.done();) {
+            s = next(__iter_1);
             x = min(s);
             n += x;
             x = max(s);

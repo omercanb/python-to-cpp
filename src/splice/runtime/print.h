@@ -11,8 +11,6 @@
 
 namespace py {
 
-// ---- print implementation ----
-
 // Internal implementation - takes sep, end, and variadic args explicitly
 // Called by transpiler when kwargs are present
 template <class... Args>

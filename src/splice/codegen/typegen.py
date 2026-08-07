@@ -57,11 +57,10 @@ def cpp_type_name(t: Type) -> str:
                 return "str"
             case Instance(type=type_info) if type_info.fullname == "builtins.bytes":
                 return "bytes"
-            # bytes([...]) infers its literal list argument as
-            # list[SupportsIndex], not list[int], from the bytes constructor's
-            # typeshed signature - it is int in every case this runtime
-            # supports.
-            case Instance(type=type_info) if type_info.fullname == "typing.SupportsIndex":
+            # Some cases an int is typed as a typing.SupportsIndex
+            case Instance(type=type_info) if (
+                type_info.fullname == "typing.SupportsIndex"
+            ):
                 return "_int"
             case Instance(type=type_info) if type_info.fullname == "builtins.bool":
                 return "bool"
@@ -145,8 +144,9 @@ def cpp_type_name(t: Type) -> str:
                 current_error = UnsupportedType(t)
                 raise current_error
     except UnsupportedType as e:
-        # We need to propogate the unsupported type error up while keeping the underlying member type that caused the issue
-        # For this we need to skip doing anything special if the exception was raised in the current call, then set the member type in the call one further up the stack, then just propogate the error after
+        # Propagate the error up while keeping the member type that actually
+        # caused it: leave it alone where it was raised, set it one frame up,
+        # then just re-raise from there.
         if e.problematic_member_type:
             raise UnsupportedType(t, problematic_member_type=e.problematic_member_type)
         elif e is current_error:

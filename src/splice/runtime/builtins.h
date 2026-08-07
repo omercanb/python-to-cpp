@@ -1,10 +1,8 @@
 #pragma once
 
-// Python builtins that are not methods on a container.
-//
-// Anything working over an iterable goes through iter()/done()/next(), the
-// same protocol a for loop uses, so it takes lists, sets, dicts, strings,
-// ranges, enumerate and zip alike, and a user's class with iter() as well.
+// Python builtins that aren't methods on a container. Anything over an
+// iterable goes through iter()/done()/next(), the same protocol a for loop
+// uses, so any of our containers - or a user class with iter() - work here.
 
 #include "iter.h"
 #include "mathops.h"
@@ -17,8 +15,6 @@
 #include <type_traits>
 
 namespace py {
-
-// ---- over an iterable ------------------------------------------------------
 
 template <typename Container> auto sum(Container &&c) {
     auto iterator = iter(c);
@@ -80,8 +76,6 @@ template <typename A, typename B> auto max(const A &a, const B &b) {
     return a < b ? b : a;
 }
 
-// ---- numbers ---------------------------------------------------------------
-
 // idiv and mod already floor the way Python does, so the pair agrees with it.
 inline tuple<_int, _int> divmod(_int a, _int b) {
     return tuple<_int, _int>(idiv(a, b), mod(a, b));
@@ -96,8 +90,6 @@ inline _float round(_float x, _int digits) {
     _float factor = std::pow(10.0, static_cast<_float>(digits));
     return std::nearbyint(x * factor) / factor;
 }
-
-// ---- characters ------------------------------------------------------------
 
 inline str chr(_int code) { return str(std::string(1, static_cast<char>(code))); }
 

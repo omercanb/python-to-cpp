@@ -32,10 +32,10 @@ void in_set() {
     _int n;
     tuple<_int, _int> s;
     a = ptr(new list<tuple<_int, _int>>());
-    _int __stop_836 = 100LL;
-    for (j = 0; j < __stop_836; ++j) {
-        _int __stop_837 = 10LL;
-        for (i = 0; i < __stop_837; ++i) {
+    _int __stop_0 = 100LL;
+    for (j = 0; j < __stop_0; ++j) {
+        _int __stop_1 = 10LL;
+        for (i = 0; i < __stop_1; ++i) {
             a->append(tuple((i * 2LL), i));
             a->append(tuple(i, (i + 2LL)));
             a->append(tuple(i, i));
@@ -43,10 +43,10 @@ void in_set() {
         }
     }
     n = 0LL;
-    _int __stop_838 = 1000LL;
-    for (i = 0; i < __stop_838; ++i) {
-        for (auto __iter_262 = iter(a); !__iter_262.done();) {
-            s = next(__iter_262);
+    _int __stop_2 = 1000LL;
+    for (i = 0; i < __stop_2; ++i) {
+        for (auto __iter_0 = iter(a); !__iter_0.done();) {
+            s = next(__iter_0);
             if (to_bool((s.__contains__(6LL)))) {
                 n += 1LL;
             }
@@ -66,22 +66,22 @@ void set_literal_iteration() {
     str s;
     bool a;
     n = 0LL;
-    _int __stop_839 = 1000LL;
-    for (p = 0; p < __stop_839; ++p) {
-        _int __stop_840 = 10LL;
-        for (l = 0; l < __stop_840; ++l) {
-            for (auto __iter_263 = iter(ptr(new set<_int>({1LL, 2LL, 3LL, 4LL, 5LL, 6LL, 7LL, 8LL, 9LL, 10LL}))); !__iter_263.done();) {
-                i = next(__iter_263);
+    _int __stop_3 = 1000LL;
+    for (p = 0; p < __stop_3; ++p) {
+        _int __stop_4 = 10LL;
+        for (l = 0; l < __stop_4; ++l) {
+            for (auto __iter_1 = iter(ptr(new set<_int>({1LL, 2LL, 3LL, 4LL, 5LL, 6LL, 7LL, 8LL, 9LL, 10LL}))); !__iter_1.done();) {
+                i = next(__iter_1);
                 n += i;
             }
-            for (auto __iter_264 = iter(ptr(new set<str>({str("yes"), str("no")}))); !__iter_264.done();) {
-                s = next(__iter_264);
+            for (auto __iter_2 = iter(ptr(new set<str>({str("yes"), str("no")}))); !__iter_2.done();) {
+                s = next(__iter_2);
                 if (to_bool(((s == str("yes"))))) {
                     n += 1LL;
                 }
             }
-            for (auto __iter_265 = iter(ptr(new set<bool>({true, false}))); !__iter_265.done();) {
-                a = next(__iter_265);
+            for (auto __iter_3 = iter(ptr(new set<bool>({true, false}))); !__iter_3.done();) {
+                a = next(__iter_3);
                 n += 1LL;
             }
         }

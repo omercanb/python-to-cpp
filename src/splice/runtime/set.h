@@ -21,7 +21,6 @@ template <typename T> class set {
     using value_type = T;
     using size_type = _int;
 
-    // ---- construction -------------------------------------------------------
     set() = default;
     set(std::initializer_list<T> init) : data_(init) {}
 

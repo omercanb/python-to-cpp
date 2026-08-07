@@ -44,8 +44,8 @@ void matrix_multiply() {
     ptr<list<ptr<list<_float>>>> m2;
     _int i;
     destructure(m, m2) = setup_matrix_mult();
-    _int __stop_821 = 50LL;
-    for (i = 0; i < __stop_821; ++i) {
+    _int __stop_0 = 50LL;
+    for (i = 0; i < __stop_0; ++i) {
         m = multiply(m, m2);
     }
     if (!(to_bool(is_close(m->__getitem__(0LL)->__getitem__(0LL), 3.630221302e+58)))) throw AssertionError(to_str(m->__getitem__(0LL)->__getitem__(0LL)));
@@ -67,11 +67,11 @@ ptr<list<ptr<list<_float>>>> make_matrix(_int w, _int h) {
     _int j;
     state = SEED;
     result = ptr(new list<ptr<list<_float>>>());
-    _int __stop_822 = h;
-    for (i = 0; i < __stop_822; ++i) {
+    _int __stop_1 = h;
+    for (i = 0; i < __stop_1; ++i) {
         row = ptr(new list<_float>());
-        _int __stop_823 = w;
-        for (j = 0; j < __stop_823; ++j) {
+        _int __stop_2 = w;
+        for (j = 0; j < __stop_2; ++j) {
             state = mod(((state * 1103515245LL) + 12345LL), pow(2LL, 31LL));
             row->append(fdiv(state, pow(2LL, 31LL)));
         }
@@ -87,14 +87,14 @@ ptr<list<ptr<list<_float>>>> multiply(ptr<list<ptr<list<_float>>>> a, ptr<list<p
     _float x;
     _int k;
     result = ptr(new list<ptr<list<_float>>>());
-    _int __len_15 = len(a);
-    for (i = 0; i < __len_15; ++i) {
+    _int __len_0 = len(a);
+    for (i = 0; i < __len_0; ++i) {
         result->append((ptr(new list<_float>({0.0})) * len(b->__getitem__(0LL))));
-        _int __len_16 = len(b->__getitem__(0LL));
-        for (j = 0; j < __len_16; ++j) {
+        _int __len_1 = len(b->__getitem__(0LL));
+        for (j = 0; j < __len_1; ++j) {
             x = 0.0;
-            _int __len_17 = len(b);
-            for (k = 0; k < __len_17; ++k) {
+            _int __len_2 = len(b);
+            for (k = 0; k < __len_2; ++k) {
                 x += (a->__getitem__(i)->__getitem__(k) * b->__getitem__(k)->__getitem__(j));
             }
             result->back()->__setitem__(j, x);
@@ -110,10 +110,10 @@ void int_to_float() {
     _int n;
     a = ptr(new list<_int>({1LL, 4LL, 6LL, 7LL, 8LL, 9LL}));
     x = 0.0;
-    _int __stop_824 = (1000LL * 1000LL);
-    for (i = 0; i < __stop_824; ++i) {
-        for (auto __iter_253 = iter(a); !__iter_253.done();) {
-            n = next(__iter_253);
+    _int __stop_3 = (1000LL * 1000LL);
+    for (i = 0; i < __stop_3; ++i) {
+        for (auto __iter_0 = iter(a); !__iter_0.done();) {
+            n = next(__iter_0);
             x += to_float(n);
         }
     }
@@ -127,10 +127,10 @@ void str_to_float() {
     str n;
     a = ptr(new list<str>({str("1"), str("1.234567"), str("44324"), str("23.4"), str("-43.44e-4")}));
     x = 0.0;
-    _int __stop_825 = (1000LL * 1000LL);
-    for (i = 0; i < __stop_825; ++i) {
-        for (auto __iter_254 = iter(a); !__iter_254.done();) {
-            n = next(__iter_254);
+    _int __stop_4 = (1000LL * 1000LL);
+    for (i = 0; i < __stop_4; ++i) {
+        for (auto __iter_1 = iter(a); !__iter_1.done();) {
+            n = next(__iter_1);
             x += to_float(n);
         }
     }
@@ -144,10 +144,10 @@ void float_abs() {
     _float n;
     a = ptr(new list<_float>({1LL, (-1.234567), 44324LL, 23.4, (-0.004344)}));
     x = 0.0;
-    _int __stop_826 = (1000LL * 1000LL);
-    for (i = 0; i < __stop_826; ++i) {
-        for (auto __iter_255 = iter(a); !__iter_255.done();) {
-            n = next(__iter_255);
+    _int __stop_5 = (1000LL * 1000LL);
+    for (i = 0; i < __stop_5; ++i) {
+        for (auto __iter_2 = iter(a); !__iter_2.done();) {
+            n = next(__iter_2);
             x += abs(n);
         }
     }
@@ -163,10 +163,10 @@ void int_divmod() {
     _int r;
     a = ptr(new list<_int>({1LL, 1235LL, 5434LL, 394879374LL, (-34453LL)}));
     n = 0LL;
-    _int __stop_827 = (1000LL * 1000LL);
-    for (i = 0; i < __stop_827; ++i) {
-        for (auto __iter_256 = iter(a); !__iter_256.done();) {
-            x = next(__iter_256);
+    _int __stop_6 = (1000LL * 1000LL);
+    for (i = 0; i < __stop_6; ++i) {
+        for (auto __iter_3 = iter(a); !__iter_3.done();) {
+            x = next(__iter_3);
             destructure(q, r) = divmod(x, 23LL);
             n += (q + r);
         }
@@ -184,8 +184,8 @@ void int_list() {
     b = ptr(new list<_int>(reversed(a)));
     c = (ptr(new list<_int>({(-1LL), 3LL, 7LL, 1234LL})) * 40LL);
     n = 0LL;
-    _int __stop_828 = 4000LL;
-    for (i = 0; i < __stop_828; ++i) {
+    _int __stop_7 = 4000LL;
+    for (i = 0; i < __stop_7; ++i) {
         n += sum_ints(a);
         n += min_int(a);
         n += min_int(b);
@@ -200,8 +200,8 @@ _int sum_ints(ptr<list<_int>> a) {
     _int s;
     _int x;
     s = 0LL;
-    for (auto __iter_257 = iter(a); !__iter_257.done();) {
-        x = next(__iter_257);
+    for (auto __iter_4 = iter(a); !__iter_4.done();) {
+        x = next(__iter_4);
         s += x;
     }
     return s;
@@ -212,8 +212,8 @@ _int min_int(ptr<list<_int>> a) {
     _int i;
     _int x;
     minimum = a->__getitem__(0LL);
-    _int __stop_829 = len(a);
-    for (i = 1LL; i < __stop_829; ++i) {
+    _int __stop_8 = len(a);
+    for (i = 1LL; i < __stop_8; ++i) {
         x = a->__getitem__(i);
         if (to_bool(((x < minimum)))) {
             minimum = x;

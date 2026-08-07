@@ -7,7 +7,6 @@
 
 namespace py {
 
-// ---- enumerate ----
 // Wraps an iterator and produces tuple<_int, element_type>
 template <typename IterType> class enumerate_iter {
   public:
@@ -33,7 +32,6 @@ template <typename Container> auto enumerate(Container &&c) {
     return enumerate_iter<decltype(iter(c))>(iter(c));
 }
 
-// ---- zip ----
 // Wraps two iterators and produces tuple<T1, T2>
 template <typename Iter1, typename Iter2> class zip_iter {
   public:
@@ -59,7 +57,6 @@ template <typename C1, typename C2> auto zip(C1 &&c1, C2 &&c2) {
     return zip_iter<decltype(iter(c1)), decltype(iter(c2))>(iter(c1), iter(c2));
 }
 
-// ---- map ----
 // Wraps an iterator and applies a function to each element
 template <typename IterType, typename Func> class map_iter {
   public:
@@ -80,7 +77,6 @@ auto map(Func func, Container &&c) {
     return map_iter<decltype(iter(c)), Func>(iter(c), func);
 }
 
-// ---- filter ----
 // Wraps an iterator and skips elements that don't match predicate
 template <typename IterType, typename Pred> class filter_iter {
   public:
@@ -113,7 +109,6 @@ auto filter(Pred pred, Container &&c) {
     return filter_iter<decltype(iter(c)), Pred>(iter(c), pred);
 }
 
-// ---- reversed ----
 // Walks a sequence back to front via indexing, matching Python's
 // reversed() (needs len()/operator[], not just an iterator).
 template <typename Container> class reversed_iter {
@@ -134,7 +129,6 @@ template <typename Container> auto reversed(Container &c) {
     return reversed_iter<Container>(c);
 }
 
-// ---- iter() functions for iterator types ----
 // These allow calling iter() on an iterator to get itself back
 // Lvalue versions
 template <typename IterType>
@@ -189,7 +183,6 @@ reversed_iter<Container> iter(reversed_iter<Container> &&r) {
     return r;
 }
 
-// ---- next() functions for iterator types ----
 // Return current value and advance the iterator
 template <typename IterType> auto next(enumerate_iter<IterType> &e) {
     auto val = e.current();
@@ -223,7 +216,6 @@ template <typename Container> auto next(reversed_iter<Container> &r) {
     return val;
 }
 
-// ---- Deduction guide for list construction from iterables ----
 // Defined here (not in list.h) because it needs iter() functions to be declared
 // #include "list.h"
 //

@@ -67,7 +67,6 @@ class str {
         return data_.find(sub.data_) != std::string::npos;
     }
 
-    // ---- case ---------------------------------------------------------------
     str upper() const { return mapped(::toupper); }
     str lower() const { return mapped(::tolower); }
     str swapcase() const {
@@ -93,7 +92,6 @@ class str {
     }
     str casefold() const { return lower(); }
 
-    // ---- search -------------------------------------------------------------
     // find returns -1 when absent; index raises, which is the only difference.
     _int find(const str &sub) const { return toIndex(data_.find(sub.data_)); }
     _int find(const str &sub, size_type start) const {
@@ -122,7 +120,6 @@ class str {
         return n;
     }
 
-    // ---- edit ---------------------------------------------------------------
     str replace(const str &old_s, const str &new_s, _int count = -1) const {
         if (old_s.data_.empty())
             return *this;
@@ -169,7 +166,6 @@ class str {
         return str(e == std::string::npos ? "" : data_.substr(0, e + 1));
     }
 
-    // ---- padding ------------------------------------------------------------
     str ljust(size_type width, const str &fill = " ") const {
         return pad(width, fill, 0);
     }
@@ -190,7 +186,6 @@ class str {
         return str(std::move(out));
     }
 
-    // ---- classification -----------------------------------------------------
     // All are false for the empty string, like Python.
     bool isalpha() const { return allOf(isAlpha); }
     bool isdigit() const { return allOf(isDigit); }
@@ -210,7 +205,7 @@ class str {
     bool isupper() const { return casedAllAre(true); }
     bool islower() const { return casedAllAre(false); }
 
-    // ---- list/tuple-returning: defined in strops.h ---------------------------
+    // list/tuple-returning: defined in strops.h.
     ptr<list<str>> split() const;                  // on whitespace
     ptr<list<str>> split(const str &sep) const;
     ptr<list<str>> rsplit(const str &sep) const;
@@ -219,12 +214,11 @@ class str {
     tuple<str, str, str> partition(const str &sep) const;
     tuple<str, str, str> rpartition(const str &sep) const;
 
-    // ---- format: PEP 3101 Format Mini-Language, enough for str.format()
+    // format: PEP 3101 Format Mini-Language, enough for str.format()
     // and the "{conv:{}}" calls f-strings desugar into. Defined below, after
     // to_str()/repr(), which it needs to render arbitrary argument types.
     template <typename... Args> str format(const Args &...args) const;
 
-    // ---- operators ----------------------------------------------------------
     str operator+(const str &o) const { return str(data_ + o.data_); }
     str &operator+=(const str &o) {
         data_ += o.data_;
@@ -338,7 +332,6 @@ inline std::ostream &operator<<(std::ostream &os, const str &s) {
     return os << s.raw();
 }
 
-// ---- to_str() - Python's str() ---------------------------------------------
 inline str to_str(_int x) { return str(std::to_string(x)); }
 
 inline str to_str(_float x) {
@@ -359,14 +352,10 @@ inline str to_str(const std::string &s) { return str(s); }
 
 inline str PyException::__str__() const { return str(what()); }
 
-// Everything that is not one of the primitives above is a class of ours, and
-// renders itself: to_str() is the free spelling of __str__().
-//
-// The detection and the call both go through a mutable reference. A transpiled
-// class writes its methods the way Python does, without const, so requiring it
-// here would leave every user class unprintable. Python's __str__ does not
-// mutate, so casting the const away is safe; the runtime's own const __str__
-// bind to it just as well.
+// Everything else is a class of ours, and renders itself: to_str() is the
+// free spelling of __str__(). Detection and the call both go through a
+// mutable reference because transpiled methods aren't const, matching
+// Python; casting the const away is safe since __str__ never mutates.
 template <class T, class = void> struct has_str : std::false_type {};
 template <class T>
 struct has_str<T, std::void_t<decltype(std::declval<T &>().__str__())>>
@@ -395,7 +384,6 @@ template <typename T> str repr(const T &x) {
     }
 }
 
-// ---- format() implementation -----------------------------------------------
 // A parsed "[[fill]align][sign][#][0][width][,][.precision][type]" spec, per
 // the Format Mini-Language (PEP 3101).
 namespace detail {

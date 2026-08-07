@@ -76,10 +76,9 @@ NON_POINTER_TYPES = {
 
 POINTER_TYPES = {"list", "dict", "set"}
 
-# Exceptions catchable by an except clause, as defined in
-# src/splice/runtime/exceptions.h.
-# That hierarchy is flat, so an intermediate base like LookupError has no
-# equivalent: PyException would over-catch. Rejected rather than listed.
+# Exceptions catchable by an except clause (runtime/exceptions.h). Flat
+# hierarchy, so a base like LookupError has no equivalent and is rejected
+# rather than mapped to PyException, which would over-catch.
 EXCEPTION_TYPES = {
     "builtins.BaseException": "PyException",
     "builtins.Exception": "PyException",

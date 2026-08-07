@@ -25,11 +25,19 @@ template <typename K, typename V> class dict {
     using mapped_type = V;
     using size_type = _int;
 
-    // ---- construction -------------------------------------------------------
     dict() = default;
     dict(std::initializer_list<std::pair<const K, V>> init) : data_(init) {}
 
-    // ---- size / truthiness --------------------------------------------------
+    // dict(pairs): from a list of (key, value) tuples, like Python's
+    // dict([(k, v), ...]).
+    dict(const ptr<list<tuple<K, V>>> &pairs) {
+        _int n = pairs->__len__();
+        for (_int i = 0; i < n; ++i) {
+            const tuple<K, V> &pair = (*pairs)[i];
+            data_[pair.first()] = pair.second();
+        }
+    }
+
     size_type __len__() const noexcept {
         return static_cast<size_type>(data_.size());
     }
@@ -37,7 +45,6 @@ template <typename K, typename V> class dict {
     bool empty() const noexcept { return data_.empty(); }
     explicit operator bool() const noexcept { return !data_.empty(); }
 
-    // ---- item access --------------------------------------------------------
     // Inserts on a missing key, like std::unordered_map::operator[].
     V &operator[](const K &key) { return data_[key]; }
 
@@ -67,7 +74,6 @@ template <typename K, typename V> class dict {
         return data_.find(key) != data_.end();
     }
 
-    // ---- dict methods -------------------------------------------------------
     // get(key, default=None): never raises; without a default a missing
     // key yields a value-initialized V.
     V get(const K &key) const {
@@ -145,12 +151,10 @@ template <typename K, typename V> class dict {
         return out;
     }
 
-    // ---- comparison ---------------------------------------------------------
     // Order-independent, like Python.
     bool operator==(const dict<K, V> &o) const { return data_ == o.data_; }
     bool operator!=(const dict<K, V> &o) const { return data_ != o.data_; }
 
-    // ---- iteration ----------------------------------------------------------
     // `for k in d` iterates keys, matching Python.
     class dict_iterator {
       public:

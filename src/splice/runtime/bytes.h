@@ -1,9 +1,7 @@
 #pragma once
 
-// Python bytes on top of std::string. Like str, this is a raw byte buffer:
-// no encoding is assumed. Unlike str, indexing and iteration yield ints (the
-// 0-255 byte value), matching Python 3's bytes/int split - there is no
-// separate "byte character" type. encode()/decode() are intentionally not
+// Python bytes on top of std::string. Unlike str, indexing and iteration
+// yield ints (Python 3's bytes/int split), and encode()/decode() are not
 // implemented: this runtime never converts between str and bytes.
 
 #include "exceptions.h"
@@ -122,7 +120,6 @@ class bytes {
         return data_.find(static_cast<char>(byte)) != std::string::npos;
     }
 
-    // ---- case ---------------------------------------------------------------
     bytes upper() const { return mapped(::toupper); }
     bytes lower() const { return mapped(::tolower); }
     bytes swapcase() const {
@@ -147,7 +144,6 @@ class bytes {
         return bytes(std::move(out));
     }
 
-    // ---- search -------------------------------------------------------------
     _int find(const bytes &sub) const { return toIndex(data_.find(sub.data_)); }
     _int find(const bytes &sub, size_type start) const {
         return toIndex(data_.find(sub.data_, clampStart(start)));
@@ -175,7 +171,6 @@ class bytes {
         return n;
     }
 
-    // ---- edit ---------------------------------------------------------------
     bytes replace(const bytes &old_b, const bytes &new_b, _int count = -1) const {
         if (old_b.data_.empty())
             return *this;
@@ -221,7 +216,6 @@ class bytes {
         return bytes(e == std::string::npos ? "" : data_.substr(0, e + 1));
     }
 
-    // ---- padding ------------------------------------------------------------
     bytes ljust(size_type width, const bytes &fill = bytes(" ")) const {
         return pad(width, fill, 0);
     }
@@ -242,7 +236,6 @@ class bytes {
         return bytes(std::move(out));
     }
 
-    // ---- classification -----------------------------------------------------
     bool isalpha() const { return allOf(isAlpha); }
     bool isdigit() const { return allOf(isDigit); }
     bool isalnum() const {
@@ -258,7 +251,6 @@ class bytes {
     bool isupper() const { return casedAllAre(true); }
     bool islower() const { return casedAllAre(false); }
 
-    // ---- list/tuple-returning -------------------------------------------------
     ptr<list<bytes>> split() const { // on whitespace
         auto out = ptr(new list<bytes>());
         const std::string &s = data_;
@@ -328,7 +320,6 @@ class bytes {
                                           bytes(data_.substr(at + sep.data_.size())));
     }
 
-    // ---- operators ----------------------------------------------------------
     bytes operator+(const bytes &o) const { return bytes(data_ + o.data_); }
     bytes &operator+=(const bytes &o) {
         data_ += o.data_;

@@ -23,7 +23,7 @@ void dict_to_list();
 void dict_set_default();
 void dict_clear();
 void dict_copy();
-ptr<list<tuple<str, str>>> __list_comprehension_42(ptr<list<tuple<str, str>>> s);
+ptr<list<tuple<str, str>>> __list_comprehension_0(ptr<list<tuple<str, str>>> s);
 void dict_call_generator();
 void dict_del_item();
 void __init_module__();
@@ -40,41 +40,41 @@ void dict_iteration() {
     str k;
     _int v;
     a = ptr(new list<ptr<dict<str, _int>>>());
-    _int __stop_943 = 1000LL;
-    for (j = 0; j < __stop_943; ++j) {
+    _int __stop_0 = 1000LL;
+    for (j = 0; j < __stop_0; ++j) {
         d = ptr(new dict<str, _int>());
-        _int __stop_944 = mod(j, 10LL);
-        for (i = 0; i < __stop_944; ++i) {
-            d->__setitem__(mod(str("Foobar-%d"), j), j);
-            d->__setitem__(mod(str("%d str"), j), i);
+        _int __stop_1 = mod(j, 10LL);
+        for (i = 0; i < __stop_1; ++i) {
+            d->__setitem__(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(j, str(""))}))), j);
+            d->__setitem__(str("").join(ptr(new list<str>({str("{:{}}").format(j, str("")), str(" str")}))), i);
         }
         a->append(d);
     }
     n = 0LL;
-    _int __stop_945 = 1000LL;
-    for (i = 0; i < __stop_945; ++i) {
-        for (auto __iter_320 = iter(a); !__iter_320.done();) {
-            d = next(__iter_320);
-            for (auto __iter_321 = iter(d); !__iter_321.done();) {
-                k = next(__iter_321);
+    _int __stop_2 = 1000LL;
+    for (i = 0; i < __stop_2; ++i) {
+        for (auto __iter_0 = iter(a); !__iter_0.done();) {
+            d = next(__iter_0);
+            for (auto __iter_1 = iter(d); !__iter_1.done();) {
+                k = next(__iter_1);
                 if (to_bool(((k == str("0 str"))))) {
                     n += 1LL;
                 }
             }
-            for (auto __iter_322 = iter(d->keys()); !__iter_322.done();) {
-                k = next(__iter_322);
+            for (auto __iter_2 = iter(d->keys()); !__iter_2.done();) {
+                k = next(__iter_2);
                 if (to_bool(((k == str("0 str"))))) {
                     n += 1LL;
                 }
             }
-            for (auto __iter_323 = iter(d->values()); !__iter_323.done();) {
-                v = next(__iter_323);
+            for (auto __iter_3 = iter(d->values()); !__iter_3.done();) {
+                v = next(__iter_3);
                 if (to_bool(((v == 0LL)))) {
                     n += 1LL;
                 }
             }
-            for (auto __iter_324 = iter(d->items()); !__iter_324.done();) {
-                destructure(k, v) = next(__iter_324);
+            for (auto __iter_4 = iter(d->items()); !__iter_4.done();) {
+                destructure(k, v) = next(__iter_4);
                 if ((to_bool(((v == 1LL))) || to_bool(((k == str("1 str")))))) {
                     n += 1LL;
                 }
@@ -91,21 +91,21 @@ void dict_to_list() {
     _int i;
     _int n;
     a = ptr(new list<ptr<dict<str, _int>>>());
-    _int __stop_946 = 1000LL;
-    for (j = 0; j < __stop_946; ++j) {
+    _int __stop_3 = 1000LL;
+    for (j = 0; j < __stop_3; ++j) {
         d = ptr(new dict<str, _int>());
-        _int __stop_947 = mod(j, 10LL);
-        for (i = 0; i < __stop_947; ++i) {
-            d->__setitem__(mod(str("Foobar-%d"), j), j);
-            d->__setitem__(mod(str("%d str"), j), i);
+        _int __stop_4 = mod(j, 10LL);
+        for (i = 0; i < __stop_4; ++i) {
+            d->__setitem__(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(j, str(""))}))), j);
+            d->__setitem__(str("").join(ptr(new list<str>({str("{:{}}").format(j, str("")), str(" str")}))), i);
         }
         a->append(d);
     }
     n = 0LL;
-    _int __stop_948 = 1000LL;
-    for (i = 0; i < __stop_948; ++i) {
-        for (auto __iter_325 = iter(a); !__iter_325.done();) {
-            d = next(__iter_325);
+    _int __stop_5 = 1000LL;
+    for (i = 0; i < __stop_5; ++i) {
+        for (auto __iter_5 = iter(a); !__iter_5.done();) {
+            d = next(__iter_5);
             (n + (+len(ptr(new list<str>(d)))));
             n += len(ptr(new list<str>(d->keys())));
             n += len(ptr(new list<_int>(d->values())));
@@ -122,13 +122,13 @@ void dict_set_default() {
     _int j;
     _int k;
     n = 0LL;
-    _int __stop_949 = (100LL * 1000LL);
-    for (i = 0; i < __stop_949; ++i) {
+    _int __stop_6 = (100LL * 1000LL);
+    for (i = 0; i < __stop_6; ++i) {
         d = ptr(new dict<_int, ptr<list<_int>>>());
-        _int __stop_950 = mod(i, 10LL);
-        for (j = 0; j < __stop_950; ++j) {
-            _int __stop_951 = mod(i, 11LL);
-            for (k = 0; k < __stop_951; ++k) {
+        _int __stop_7 = mod(i, 10LL);
+        for (j = 0; j < __stop_7; ++j) {
+            _int __stop_8 = mod(i, 11LL);
+            for (k = 0; k < __stop_8; ++k) {
                 d->setdefault(j, ptr(new list<_int>()))->append(k);
             }
         }
@@ -143,11 +143,11 @@ void dict_clear() {
     ptr<dict<_int, str>> d;
     _int j;
     n = 0LL;
-    _int __stop_952 = (1000LL * 1000LL);
-    for (i = 0; i < __stop_952; ++i) {
+    _int __stop_9 = (1000LL * 1000LL);
+    for (i = 0; i < __stop_9; ++i) {
         d = ptr(new dict<_int, str>());
-        _int __stop_953 = mod(i, 4LL);
-        for (j = 0; j < __stop_953; ++j) {
+        _int __stop_10 = mod(i, 4LL);
+        for (j = 0; j < __stop_10; ++j) {
             d->__setitem__(j, str("x"));
         }
         d->clear();
@@ -165,21 +165,21 @@ void dict_copy() {
     ptr<dict<str, _int>> d3;
     ptr<dict<str, _int>> d4;
     a = ptr(new list<ptr<dict<str, _int>>>());
-    _int __stop_954 = 100LL;
-    for (j = 0; j < __stop_954; ++j) {
+    _int __stop_11 = 100LL;
+    for (j = 0; j < __stop_11; ++j) {
         d = ptr(new dict<str, _int>());
-        _int __stop_955 = mod(j, 10LL);
-        for (i = 0; i < __stop_955; ++i) {
-            d->__setitem__(mod(str("Foobar-%d"), j), j);
-            d->__setitem__(mod(str("%d str"), j), i);
+        _int __stop_12 = mod(j, 10LL);
+        for (i = 0; i < __stop_12; ++i) {
+            d->__setitem__(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(j, str(""))}))), j);
+            d->__setitem__(str("").join(ptr(new list<str>({str("{:{}}").format(j, str("")), str(" str")}))), i);
         }
         a->append(d);
     }
     n = 0LL;
-    _int __stop_956 = (10LL * 1000LL);
-    for (i = 0; i < __stop_956; ++i) {
-        for (auto __iter_326 = iter(a); !__iter_326.done();) {
-            d = next(__iter_326);
+    _int __stop_13 = (10LL * 1000LL);
+    for (i = 0; i < __stop_13; ++i) {
+        for (auto __iter_6 = iter(a); !__iter_6.done();) {
+            d = next(__iter_6);
             d2 = d->copy();
             d3 = d2->copy();
             d4 = d3->copy();
@@ -188,16 +188,16 @@ void dict_copy() {
     }
 }
 
-ptr<list<tuple<str, str>>> __list_comprehension_42(ptr<list<tuple<str, str>>> s) {
-    ptr<list<tuple<str, str>>> __tmp_42;
+ptr<list<tuple<str, str>>> __list_comprehension_0(ptr<list<tuple<str, str>>> s) {
+    ptr<list<tuple<str, str>>> __tmp_0;
     str key;
     str value;
-    __tmp_42 = ptr(new list<tuple<str, str>>());
-    for (auto __iter_327 = iter(s); !__iter_327.done();) {
-        destructure(key, value) = next(__iter_327);
-        __tmp_42->append(tuple(key, value));
+    __tmp_0 = ptr(new list<tuple<str, str>>());
+    for (auto __iter_7 = iter(s); !__iter_7.done();) {
+        destructure(key, value) = next(__iter_7);
+        __tmp_0->append(tuple(key, value));
     }
-    return __tmp_42;
+    return __tmp_0;
 }
 
 void dict_call_generator() {
@@ -209,20 +209,20 @@ void dict_call_generator() {
     ptr<list<tuple<str, str>>> s;
     ptr<dict<str, str>> d;
     a = ptr(new list<ptr<list<tuple<str, str>>>>());
-    _int __stop_957 = 1000LL;
-    for (j = 0; j < __stop_957; ++j) {
-        items = ptr(new list<tuple<str, str>>({tuple(mod(str("Foobar-%d"), j), to_str(j)), tuple(mod(str("%d str"), j), str("x"))}));
+    _int __stop_14 = 1000LL;
+    for (j = 0; j < __stop_14; ++j) {
+        items = ptr(new list<tuple<str, str>>({tuple(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(j, str(""))}))), to_str(j)), tuple(str("").join(ptr(new list<str>({str("{:{}}").format(j, str("")), str(" str")}))), str("x"))}));
         if (to_bool(((mod(j, 2LL) == 0LL)))) {
             items->append(tuple(str("blah"), str("bar")));
         }
         a->append(items);
     }
     n = 0LL;
-    _int __stop_958 = 1000LL;
-    for (i = 0; i < __stop_958; ++i) {
-        for (auto __iter_328 = iter(a); !__iter_328.done();) {
-            s = next(__iter_328);
-            d = ptr(new dict<str, str>(__list_comprehension_42(s)));
+    _int __stop_15 = 1000LL;
+    for (i = 0; i < __stop_15; ++i) {
+        for (auto __iter_8 = iter(a); !__iter_8.done();) {
+            s = next(__iter_8);
+            d = ptr(new dict<str, str>(__list_comprehension_0(s)));
             if (!(to_bool(((len(d) == len(s)))))) throw AssertionError("");
         }
     }
@@ -232,8 +232,8 @@ void dict_del_item() {
     ptr<dict<str, str>> d;
     _int j;
     d = ptr(new dict<str, str>({{str("long_lived"), str("value")}}));
-    _int __stop_959 = (1000LL * 1000LL);
-    for (j = 0; j < __stop_959; ++j) {
+    _int __stop_16 = (1000LL * 1000LL);
+    for (j = 0; j < __stop_16; ++j) {
         d->__setitem__(str("xyz"), str("asdf"));
         d->__setitem__(str("asdf"), str("lulz"));
         d->__setitem__(str("foobar"), str("baz zar"));

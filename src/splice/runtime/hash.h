@@ -9,7 +9,6 @@
 
 namespace py {
 
-// ---- hash() - Python hashing ----
 // Required by dict keys and set elements: objects comparing equal must
 // hash equal.
 

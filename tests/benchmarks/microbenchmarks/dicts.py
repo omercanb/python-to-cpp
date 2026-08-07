@@ -9,8 +9,8 @@ def dict_iteration() -> None:
     for j in range(1000):
         d = {}
         for i in range(j % 10):
-            d["Foobar-%d" % j] = j
-            d["%d str" % j] = i
+            d[f"Foobar-{j}"] = j
+            d[f"{j} str"] = i
         a.append(d)
 
     n = 0
@@ -37,8 +37,8 @@ def dict_to_list() -> None:
     for j in range(1000):
         d = {}
         for i in range(j % 10):
-            d["Foobar-%d" % j] = j
-            d["%d str" % j] = i
+            d[f"Foobar-{j}"] = j
+            d[f"{j} str"] = i
         a.append(d)
 
     n = 0
@@ -80,8 +80,8 @@ def dict_copy() -> None:
     for j in range(100):
         d = {}
         for i in range(j % 10):
-            d["Foobar-%d" % j] = j
-            d["%d str" % j] = i
+            d[f"Foobar-{j}"] = j
+            d[f"{j} str"] = i
         a.append(d)
 
     n = 0
@@ -98,8 +98,8 @@ def dict_call_generator() -> None:
     a = []
     for j in range(1000):
         items = [
-            ("Foobar-%d" % j, str(j)),
-            ("%d str" % j, "x"),
+            (f"Foobar-{j}", str(j)),
+            (f"{j} str", "x"),
         ]
         if j % 2 == 0:
             items.append(("blah", "bar"))

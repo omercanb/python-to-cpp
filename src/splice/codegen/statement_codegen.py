@@ -116,11 +116,9 @@ class StatementCodegen(Traverser):
 
     def generate_declarations(self, declarations: SymbolTable):
         for name, item in declarations.items():
-            # tree.names also holds functions, classes, imports and the
-            # module dunders (__name__, __spec__, ...), none of which are
-            # user globals to declare. An imported name (eg. `from typing
-            # import Tuple`) is a Var too, just one mypy marks module_hidden -
-            # its type (`_SpecialForm` and friends) has no C++ equivalent.
+            # tree.names also holds functions, classes, imports, and module
+            # dunders - not user globals. An import is a Var too, but mypy
+            # marks it module_hidden since its type has no C++ equivalent.
             if (
                 not isinstance(item.node, Var)
                 or name.startswith("__")
@@ -176,10 +174,8 @@ class StatementCodegen(Traverser):
         if classes:
             self.emit("")
 
-        # NOTE: a parameter default that constructs another user class (eg.
-        # `def f(x: Other = Other()) -> None`) would need that class's full
-        # definition already visible here, not just a forward declaration -
-        # an accepted, out-of-scope limitation (see translate_parameters).
+        # A default like `def f(x: Other = Other())` would need Other's full
+        # definition here, not just a forward declaration - a known gap.
         for function in functions:
             self.emit(f"{translate_func_signature(function, self.expr_codegen)};")
         self.emit("void __init_module__();")
@@ -256,10 +252,9 @@ class StatementCodegen(Traverser):
         self.emit(f"{lhs} = {rhs};")
 
     def visit_operator_assignment_stmt(self, o: OperatorAssignmentStmt):
-        # a[i] is likewise already a __getitem__/back() CallExpr here, a
-        # reference the compound operator can act on directly. Ops with no
-        # direct C++ compound form (/, //, %, **) are rejected by
-        # validate.py before this ever runs - see its comment for why.
+        # a[i] is already a __getitem__/back() CallExpr here, a reference the
+        # compound operator can act on directly. Ops with no C++ compound
+        # form (/, //, %, **) are rejected earlier, by validate.py.
         lhs = self.get_expr(o.lvalue, lvalue=True)
         rhs = self.get_expr(o.rvalue)
         self.emit(f"{lhs} {o.op}= {rhs};")

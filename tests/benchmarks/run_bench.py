@@ -14,8 +14,9 @@ from typing import NamedTuple, Optional
 
 from tabulate import tabulate
 
-from splice.pipeline import pipeline
+from splice import namer
 from splice.cpp_build import compile_cpp, compile_proc
+from splice.pipeline import pipeline
 from tests.benchmarks.benchmarking import BenchmarkInfo, benchmarks
 
 raw_output = False
@@ -104,6 +105,7 @@ def run_benchmark(
     min_iter: Optional[int] = None,
     min_time: Optional[float] = None,  # Min time in seconds
 ) -> list[float]:
+    namer.reset()
 
     if not min_iter:
         # Use default minimum iterations

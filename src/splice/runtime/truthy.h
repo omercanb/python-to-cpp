@@ -8,7 +8,6 @@
 
 namespace py {
 
-// ---- to_bool() - Python truthiness ----
 // Scalars and strings get concrete overloads; everything else falls back
 // to operator bool(), then __bool__(), then __len__() != 0, then True -
 // mirroring CPython's resolution order.
@@ -68,8 +67,7 @@ inline bool to_bool(const T &x) {
 
 } // namespace py
 
-// 'and' and 'or' as a value
-// inside if statements we directly use && and ||
-// We use macros rather than functions here as an exception because evaluation must be short circuited
+// `and`/`or` as a value (conditions use && / || directly instead). Macros,
+// not functions, so evaluation stays short-circuited.
 #define _and(a, b) ([&] { auto lhs = (a); return py::to_bool(lhs) ? (b) : lhs; }())
 #define _or(a, b) ([&] { auto lhs = (a); return py::to_bool(lhs) ? lhs : (b); }())

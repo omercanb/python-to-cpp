@@ -58,16 +58,16 @@ void str_methods() {
     _int n;
     str s;
     a = ptr(new list<str>());
-    _int __stop_1072 = 1000LL;
-    for (i = 0; i < __stop_1072; ++i) {
+    _int __stop_0 = 1000LL;
+    for (i = 0; i < __stop_0; ++i) {
         a->append(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(i, str(""))}))));
         a->append(str("").join(ptr(new list<str>({str("  "), str("{:{}}").format(i, str("")), str(" str")}))));
     }
     n = 0LL;
-    _int __stop_1073 = 100LL;
-    for (i = 0; i < __stop_1073; ++i) {
-        for (auto __iter_385 = iter(a); !__iter_385.done();) {
-            s = next(__iter_385);
+    _int __stop_1 = 100LL;
+    for (i = 0; i < __stop_1; ++i) {
+        for (auto __iter_0 = iter(a); !__iter_0.done();) {
+            s = next(__iter_0);
             if (to_bool(s.startswith(str("foo")))) {
                 n += 1LL;
             }
@@ -100,16 +100,16 @@ void str_methods_2() {
     str y;
     str z;
     a = ptr(new list<str>());
-    _int __stop_1074 = 1000LL;
-    for (i = 0; i < __stop_1074; ++i) {
+    _int __stop_2 = 1000LL;
+    for (i = 0; i < __stop_2; ++i) {
         a->append(str("").join(ptr(new list<str>({str("FOOBAR-"), str("{:{}}").format(i, str(""))}))));
         a->append(str("").join(ptr(new list<str>({str("  "), str("{:{}}").format(i, str("")), str(" str")}))));
     }
     n = 0LL;
-    _int __stop_1075 = 100LL;
-    for (i = 0; i < __stop_1075; ++i) {
-        for (auto __iter_386 = iter(a); !__iter_386.done();) {
-            s = next(__iter_386);
+    _int __stop_3 = 100LL;
+    for (i = 0; i < __stop_3; ++i) {
+        for (auto __iter_1 = iter(a); !__iter_1.done();) {
+            s = next(__iter_1);
             if (to_bool(s.startswith(str("  1")))) {
                 n += 1LL;
             }
@@ -148,16 +148,16 @@ void str_format() {
     str s;
     str ss;
     a = ptr(new list<str>());
-    _int __stop_1076 = 1000LL;
-    for (i = 0; i < __stop_1076; ++i) {
+    _int __stop_4 = 1000LL;
+    for (i = 0; i < __stop_4; ++i) {
         a->append(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(i, str(""))}))));
         a->append(str("").join(ptr(new list<str>({str("{:{}}").format(i, str("")), str(" str")}))));
     }
     n = 0LL;
-    _int __stop_1077 = 100LL;
-    for (i = 0; i < __stop_1077; ++i) {
-        for (auto __iter_387 = iter(a); !__iter_387.done();) {
-            s = next(__iter_387);
+    _int __stop_5 = 100LL;
+    for (i = 0; i < __stop_5; ++i) {
+        for (auto __iter_2 = iter(a); !__iter_2.done();) {
+            s = next(__iter_2);
             n += len(str("foobar {} stuff").format(s));
             ss = str("").join(ptr(new list<str>({str("foobar "), str("{:{}}").format(s, str("")), str(" stuff")})));
             n += len(str("").join(ptr(new list<str>({str("{:{}}").format(s, str("")), str("-"), str("{:{}}").format(ss, str(""))}))));
@@ -172,16 +172,16 @@ void str_slicing() {
     _int n;
     str s;
     a = ptr(new list<str>());
-    _int __stop_1078 = 1000LL;
-    for (i = 0; i < __stop_1078; ++i) {
+    _int __stop_6 = 1000LL;
+    for (i = 0; i < __stop_6; ++i) {
         a->append(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(i, str(""))}))));
         a->append(str("").join(ptr(new list<str>({str("{:{}}").format(i, str("")), str(" str")}))));
     }
     n = 0LL;
-    _int __stop_1079 = 1000LL;
-    for (i = 0; i < __stop_1079; ++i) {
-        for (auto __iter_388 = iter(a); !__iter_388.done();) {
-            s = next(__iter_388);
+    _int __stop_7 = 1000LL;
+    for (i = 0; i < __stop_7; ++i) {
+        for (auto __iter_3 = iter(a); !__iter_3.done();) {
+            s = next(__iter_3);
             n += len(s.__getitem__(slice(2LL, (-2LL), std::nullopt)));
             if (to_bool(((s.__getitem__(slice(std::nullopt, 3LL, std::nullopt)) == str("Foo"))))) {
                 n += 1LL;
@@ -201,17 +201,17 @@ void split_and_join() {
     str s;
     ptr<list<str>> items;
     a = ptr(new list<str>());
-    _int __stop_1080 = 1000LL;
-    for (i = 0; i < __stop_1080; ++i) {
+    _int __stop_8 = 1000LL;
+    for (i = 0; i < __stop_8; ++i) {
         a->append(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(i, str(""))}))));
         a->append(str("").join(ptr(new list<str>({str("{:{}}").format(i, str("")), str("-ab-asdfsdf-asdf")}))));
         a->append(str("yeah"));
     }
     n = 0LL;
-    _int __stop_1081 = 100LL;
-    for (i = 0; i < __stop_1081; ++i) {
-        for (auto __iter_389 = iter(a); !__iter_389.done();) {
-            s = next(__iter_389);
+    _int __stop_9 = 100LL;
+    for (i = 0; i < __stop_9; ++i) {
+        for (auto __iter_4 = iter(a); !__iter_4.done();) {
+            s = next(__iter_4);
             items = s.split(str("-"));
             if (to_bool(((str("-").join(items) == s)))) {
                 n += 1LL;
@@ -227,17 +227,17 @@ void str_searching() {
     _int n;
     str s;
     a = ptr(new list<str>());
-    _int __stop_1082 = 1000LL;
-    for (i = 0; i < __stop_1082; ++i) {
+    _int __stop_10 = 1000LL;
+    for (i = 0; i < __stop_10; ++i) {
         a->append(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(i, str(""))}))));
         a->append(str("").join(ptr(new list<str>({str("{:{}}").format(i, str("")), str("-ab-asdfsdf-asdf")}))));
         a->append(str("yeah"));
     }
     n = 0LL;
-    _int __stop_1083 = 100LL;
-    for (i = 0; i < __stop_1083; ++i) {
-        for (auto __iter_390 = iter(a); !__iter_390.done();) {
-            s = next(__iter_390);
+    _int __stop_11 = 100LL;
+    for (i = 0; i < __stop_11; ++i) {
+        for (auto __iter_5 = iter(a); !__iter_5.done();) {
+            s = next(__iter_5);
             if (to_bool((s.__contains__(str("i"))))) {
                 n += 1LL;
             }
@@ -258,15 +258,15 @@ void str_call() {
     str s1;
     str s2;
     a = ptr(new list<ptr<Cls>>());
-    _int __stop_1084 = 100LL;
-    for (i = 0; i < __stop_1084; ++i) {
+    _int __stop_12 = 100LL;
+    for (i = 0; i < __stop_12; ++i) {
         a->append(ptr(new Cls(i)));
     }
     n = 0LL;
-    _int __stop_1085 = (10LL * 1000LL);
-    for (i = 0; i < __stop_1085; ++i) {
-        for (auto __iter_391 = iter(a); !__iter_391.done();) {
-            obj = next(__iter_391);
+    _int __stop_13 = (10LL * 1000LL);
+    for (i = 0; i < __stop_13; ++i) {
+        for (auto __iter_6 = iter(a); !__iter_6.done();) {
+            obj = next(__iter_6);
             s1 = to_str(obj);
             s2 = to_str(s1);
             n += len(s2);
@@ -282,19 +282,19 @@ void ord_builtin() {
     str s;
     _int j;
     a = ptr(new list<str>());
-    _int __stop_1086 = 1000LL;
-    for (i = 0; i < __stop_1086; ++i) {
+    _int __stop_14 = 1000LL;
+    for (i = 0; i < __stop_14; ++i) {
         a->append(str("").join(ptr(new list<str>({str("Foobar-"), str("{:{}}").format(i, str(""))}))));
         a->append(str("").join(ptr(new list<str>({str("{:{}}").format(i, str("")), str("-ab-asdfsdf-asdf")}))));
         a->append(str("yeah"));
     }
     n = 0LL;
-    _int __stop_1087 = 50LL;
-    for (i = 0; i < __stop_1087; ++i) {
-        for (auto __iter_392 = iter(a); !__iter_392.done();) {
-            s = next(__iter_392);
-            _int __len_25 = len(s);
-            for (j = 0; j < __len_25; ++j) {
+    _int __stop_15 = 50LL;
+    for (i = 0; i < __stop_15; ++i) {
+        for (auto __iter_7 = iter(a); !__iter_7.done();) {
+            s = next(__iter_7);
+            _int __len_0 = len(s);
+            for (j = 0; j < __len_0; ++j) {
                 if (to_bool(((97LL <= ord(s.__getitem__(j))) && (ord(s.__getitem__(j)) <= 122LL)))) {
                     n += 1LL;
                 }
