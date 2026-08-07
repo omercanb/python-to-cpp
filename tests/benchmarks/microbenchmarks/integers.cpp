@@ -9,6 +9,7 @@
 #include "slice.h"
 #include "list.h"
 #include "strops.h"
+#include "bytes.h"
 #include "dict.h"
 #include "set.h"
 #include "file.h"
@@ -34,22 +35,22 @@ void int_bitwise_ops() {
     _int k;
     _int x;
     a = ptr(new list<_int>());
-    _int __stop_1 = 1000LL;
-    for (i = 0; i < __stop_1; ++i) {
+    _int __stop_770 = 1000LL;
+    for (i = 0; i < __stop_770; ++i) {
         a->append(mod(((i * i) * 12753LL), (pow(2LL, 20LL) - 1LL)));
     }
     b = ptr(new list<_int>());
-    _int __stop_2 = 40LL;
-    for (t = 0; t < __stop_2; ++t) {
+    _int __stop_771 = 40LL;
+    for (t = 0; t < __stop_771; ++t) {
         b->append(a->__getitem__((10LL + t)));
     }
     n = 0LL;
-    _int __stop_3 = 50LL;
-    for (i = 0; i < __stop_3; ++i) {
-        for (auto __iter_4 = iter(a); !__iter_4.done();) {
-            j = next(__iter_4);
-            for (auto __iter_5 = iter(b); !__iter_5.done();) {
-                k = next(__iter_5);
+    _int __stop_772 = 50LL;
+    for (i = 0; i < __stop_772; ++i) {
+        for (auto __iter_224 = iter(a); !__iter_224.done();) {
+            j = next(__iter_224);
+            for (auto __iter_225 = iter(b); !__iter_225.done();) {
+                k = next(__iter_225);
                 j |= k;
                 j &= (~(j ^ k));
                 x = (j >> 5LL);
@@ -71,22 +72,22 @@ void int_bitwise_ops2() {
     _int j;
     _int k;
     a = ptr(new list<_int>());
-    _int __stop_6 = 1000LL;
-    for (i = 0; i < __stop_6; ++i) {
+    _int __stop_773 = 1000LL;
+    for (i = 0; i < __stop_773; ++i) {
         a->append((((i * i) * 2654435761LL) & 4294967295LL));
     }
     b = ptr(new list<_int>());
-    _int __stop_7 = 49LL;
-    for (t = 0; t < __stop_7; ++t) {
+    _int __stop_774 = 49LL;
+    for (t = 0; t < __stop_774; ++t) {
         b->append(a->__getitem__((10LL + (t * 10LL))));
     }
     n = 0LL;
-    _int __stop_8 = 10LL;
-    for (i = 0; i < __stop_8; ++i) {
-        for (auto __iter_9 = iter(a); !__iter_9.done();) {
-            j = next(__iter_9);
-            for (auto __iter_10 = iter(b); !__iter_10.done();) {
-                k = next(__iter_10);
+    _int __stop_775 = 10LL;
+    for (i = 0; i < __stop_775; ++i) {
+        for (auto __iter_226 = iter(a); !__iter_226.done();) {
+            j = next(__iter_226);
+            for (auto __iter_227 = iter(b); !__iter_227.done();) {
+                k = next(__iter_227);
                 j |= k;
                 j &= (~(j ^ k));
                 if (to_bool(((1LL << (i * 3LL)) & j))) {

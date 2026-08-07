@@ -65,11 +65,13 @@ NON_POINTER_TYPES = {
     "int",
     "float",
     "str",
+    "bytes",
     "bool",
     "map",
     "filter",
     "zip",
     "enumerate",
+    "SupportsIndex",
 }
 
 POINTER_TYPES = {"list", "dict", "set"}

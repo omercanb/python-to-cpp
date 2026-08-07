@@ -163,6 +163,16 @@ template <typename T1, typename T2> class tuple<T1, T2> {
     tuple_iterator iter() { return tuple_iterator(*this); }
 };
 
+// ---- concatenation ------------------------------------------------------
+// (1, 2) + (3, 4) == (1, 2, 3, 4), like Python: the operand types need not
+// match, and the result's pack is the two operands' packs joined.
+template <typename... Ts, typename... Us>
+tuple<Ts..., Us...> operator+(const tuple<Ts...> &a, const tuple<Us...> &b) {
+    tuple<Ts..., Us...> out;
+    out.data = std::tuple_cat(a.data, b.data);
+    return out;
+}
+
 // ---- equality / hashing -----------------------------------------------------
 // Needed both for `t1 == t2` and for tuples used as dict keys / set elements.
 // std::tuple already compares element-wise.

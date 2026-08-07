@@ -55,6 +55,14 @@ def cpp_type_name(t: Type) -> str:
                 return "_float"
             case Instance(type=type_info) if type_info.fullname == "builtins.str":
                 return "str"
+            case Instance(type=type_info) if type_info.fullname == "builtins.bytes":
+                return "bytes"
+            # bytes([...]) infers its literal list argument as
+            # list[SupportsIndex], not list[int], from the bytes constructor's
+            # typeshed signature - it is int in every case this runtime
+            # supports.
+            case Instance(type=type_info) if type_info.fullname == "typing.SupportsIndex":
+                return "_int"
             case Instance(type=type_info) if type_info.fullname == "builtins.bool":
                 return "bool"
 

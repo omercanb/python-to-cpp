@@ -9,6 +9,7 @@
 #include "slice.h"
 #include "list.h"
 #include "strops.h"
+#include "bytes.h"
 #include "dict.h"
 #include "set.h"
 #include "file.h"
@@ -34,19 +35,19 @@ void min_max_pair() {
     _int m;
     _int j;
     a = ptr(new list<_int>());
-    _int __stop_1 = 20LL;
-    for (i = 0; i < __stop_1; ++i) {
+    _int __stop_760 = 20LL;
+    for (i = 0; i < __stop_760; ++i) {
         a->append(mod((i * 12753LL), (pow(2LL, 15LL) - 1LL)));
     }
     expected_min = min(a);
     expected_max = max(a);
     n = 0LL;
-    _int __stop_2 = (100LL * 1000LL);
-    for (i = 0; i < __stop_2; ++i) {
+    _int __stop_761 = (100LL * 1000LL);
+    for (i = 0; i < __stop_761; ++i) {
         n = 1000000000LL;
         m = 0LL;
-        for (auto __iter_3 = iter(a); !__iter_3.done();) {
-            j = next(__iter_3);
+        for (auto __iter_218 = iter(a); !__iter_218.done();) {
+            j = next(__iter_218);
             n = min(n, j);
             m = max(m, j);
         }
@@ -62,17 +63,17 @@ void min_max_sequence() {
     ptr<list<_int>> s;
     _int x;
     a = ptr(new list<ptr<list<_int>>>());
-    _int __stop_4 = 1000LL;
-    for (i = 0; i < __stop_4; ++i) {
+    _int __stop_762 = 1000LL;
+    for (i = 0; i < __stop_762; ++i) {
         a->append(ptr(new list<_int>({(i * 2LL)})));
         a->append(ptr(new list<_int>({i, (i + 2LL)})));
         a->append((ptr(new list<_int>({i})) * 15LL));
     }
     n = 0LL;
-    _int __stop_5 = 100LL;
-    for (i = 0; i < __stop_5; ++i) {
-        for (auto __iter_6 = iter(a); !__iter_6.done();) {
-            s = next(__iter_6);
+    _int __stop_763 = 100LL;
+    for (i = 0; i < __stop_763; ++i) {
+        for (auto __iter_219 = iter(a); !__iter_219.done();) {
+            s = next(__iter_219);
             x = min(s);
             n += x;
             x = max(s);

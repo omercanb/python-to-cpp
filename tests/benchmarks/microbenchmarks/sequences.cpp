@@ -9,6 +9,7 @@
 #include "slice.h"
 #include "list.h"
 #include "strops.h"
+#include "bytes.h"
 #include "dict.h"
 #include "set.h"
 #include "file.h"
@@ -49,18 +50,18 @@ void list_slicing() {
     _int n;
     ptr<list<_int>> s;
     a = ptr(new list<ptr<list<_int>>>());
-    _int __stop_1 = 1000LL;
-    for (i = 0; i < __stop_1; ++i) {
+    _int __stop_714 = 1000LL;
+    for (i = 0; i < __stop_714; ++i) {
         a->append(ptr(new list<_int>({(i * 2LL)})));
         a->append(ptr(new list<_int>({i, (i + 2LL)})));
         a->append(ptr(new list<_int>({i})));
         a->append(ptr(new list<_int>()));
     }
     n = 0LL;
-    _int __stop_2 = 100LL;
-    for (i = 0; i < __stop_2; ++i) {
-        for (auto __iter_3 = iter(a); !__iter_3.done();) {
-            s = next(__iter_3);
+    _int __stop_715 = 100LL;
+    for (i = 0; i < __stop_715; ++i) {
+        for (auto __iter_204 = iter(a); !__iter_204.done();) {
+            s = next(__iter_204);
             n += len(s->__getitem__(slice(2LL, (-2LL), std::nullopt)));
             if (to_bool(((len(s->__getitem__(slice(std::nullopt, 2LL, std::nullopt))) < 2LL)))) {
                 n += 1LL;
@@ -83,10 +84,10 @@ void in_list() {
     _int n;
     ptr<list<_int>> s;
     a = ptr(new list<ptr<list<_int>>>());
-    _int __stop_4 = 100LL;
-    for (j = 0; j < __stop_4; ++j) {
-        _int __stop_5 = 10LL;
-        for (i = 0; i < __stop_5; ++i) {
+    _int __stop_716 = 100LL;
+    for (j = 0; j < __stop_716; ++j) {
+        _int __stop_717 = 10LL;
+        for (i = 0; i < __stop_717; ++i) {
             a->append(ptr(new list<_int>({(i * 2LL)})));
             a->append(ptr(new list<_int>({i, (i + 2LL)})));
             a->append(ptr(new list<_int>({i})));
@@ -94,10 +95,10 @@ void in_list() {
         }
     }
     n = 0LL;
-    _int __stop_6 = 1000LL;
-    for (i = 0; i < __stop_6; ++i) {
-        for (auto __iter_7 = iter(a); !__iter_7.done();) {
-            s = next(__iter_7);
+    _int __stop_718 = 1000LL;
+    for (i = 0; i < __stop_718; ++i) {
+        for (auto __iter_205 = iter(a); !__iter_205.done();) {
+            s = next(__iter_205);
             if (to_bool((s->__contains__(6LL)))) {
                 n += 1LL;
             }
@@ -116,10 +117,10 @@ void in_tuple() {
     _int n;
     tuple<_int, _int> s;
     a = ptr(new list<tuple<_int, _int>>());
-    _int __stop_8 = 100LL;
-    for (j = 0; j < __stop_8; ++j) {
-        _int __stop_9 = 10LL;
-        for (i = 0; i < __stop_9; ++i) {
+    _int __stop_719 = 100LL;
+    for (j = 0; j < __stop_719; ++j) {
+        _int __stop_720 = 10LL;
+        for (i = 0; i < __stop_720; ++i) {
             a->append(tuple((i * 2LL), 2LL));
             a->append(tuple(i, (i + 2LL)));
             a->append(tuple(i, 2LL));
@@ -127,10 +128,10 @@ void in_tuple() {
         }
     }
     n = 0LL;
-    _int __stop_10 = 1000LL;
-    for (i = 0; i < __stop_10; ++i) {
-        for (auto __iter_11 = iter(a); !__iter_11.done();) {
-            s = next(__iter_11);
+    _int __stop_721 = 1000LL;
+    for (i = 0; i < __stop_721; ++i) {
+        for (auto __iter_206 = iter(a); !__iter_206.done();) {
+            s = next(__iter_206);
             if (to_bool((s.__contains__(6LL)))) {
                 n += 1LL;
             }
@@ -148,11 +149,11 @@ void list_append_small() {
     ptr<list<_int>> a;
     _int j;
     n = 0LL;
-    _int __stop_12 = (200LL * 1000LL);
-    for (i = 0; i < __stop_12; ++i) {
+    _int __stop_722 = (200LL * 1000LL);
+    for (i = 0; i < __stop_722; ++i) {
         a = ptr(new list<_int>());
-        _int __stop_13 = mod(i, 10LL);
-        for (j = 0; j < __stop_13; ++j) {
+        _int __stop_723 = mod(i, 10LL);
+        for (j = 0; j < __stop_723; ++j) {
             a->append((j + i));
         }
         n += len(a);
@@ -166,11 +167,11 @@ void list_append_large() {
     ptr<list<_int>> a;
     _int j;
     n = 0LL;
-    _int __stop_14 = 2000LL;
-    for (i = 0; i < __stop_14; ++i) {
+    _int __stop_724 = 2000LL;
+    for (i = 0; i < __stop_724; ++i) {
         a = ptr(new list<_int>());
-        _int __stop_15 = i;
-        for (j = 0; j < __stop_15; ++j) {
+        _int __stop_725 = i;
+        for (j = 0; j < __stop_725; ++j) {
             a->append((j + i));
         }
         n += len(a);
@@ -185,18 +186,18 @@ void list_from_range() {
     _int n;
     ptr<list<_int>> lst;
     a = ptr(new list<_int>());
-    _int __stop_16 = 100LL;
-    for (j = 0; j < __stop_16; ++j) {
-        _int __stop_17 = 23LL;
-        for (i = 0; i < __stop_17; ++i) {
+    _int __stop_726 = 100LL;
+    for (j = 0; j < __stop_726; ++j) {
+        _int __stop_727 = 23LL;
+        for (i = 0; i < __stop_727; ++i) {
             a->append(mod((i * 7LL), 9LL));
         }
     }
     n = 0LL;
-    _int __stop_18 = 1000LL;
-    for (i = 0; i < __stop_18; ++i) {
-        for (auto __iter_19 = iter(a); !__iter_19.done();) {
-            j = next(__iter_19);
+    _int __stop_728 = 1000LL;
+    for (i = 0; i < __stop_728; ++i) {
+        for (auto __iter_207 = iter(a); !__iter_207.done();) {
+            j = next(__iter_207);
             lst = ptr(new list<_int>(range(j)));
             n += len(lst);
         }
@@ -211,17 +212,17 @@ void list_copy() {
     ptr<list<_int>> s2;
     ptr<list<_int>> s3;
     a = ptr(new list<ptr<list<_int>>>());
-    _int __stop_20 = 100LL;
-    for (i = 0; i < __stop_20; ++i) {
+    _int __stop_729 = 100LL;
+    for (i = 0; i < __stop_729; ++i) {
         a->append(ptr(new list<_int>({(i * 2LL)})));
         a->append(ptr(new list<_int>({i, (i + 2LL)})));
         a->append(ptr(new list<_int>({i})));
         a->append(ptr(new list<_int>()));
     }
-    _int __stop_21 = 1000LL;
-    for (i = 0; i < __stop_21; ++i) {
-        for (auto __iter_22 = iter(a); !__iter_22.done();) {
-            s = next(__iter_22);
+    _int __stop_730 = 1000LL;
+    for (i = 0; i < __stop_730; ++i) {
+        for (auto __iter_208 = iter(a); !__iter_208.done();) {
+            s = next(__iter_208);
             s2 = s->copy();
             s3 = s->__getitem__(slice(std::nullopt, std::nullopt, std::nullopt));
             if (!(to_bool(((s2 == s3))))) throw AssertionError("");
@@ -233,8 +234,8 @@ ptr<list<_int>> __list_comprehension_34(ptr<list<ptr<list<_int>>>> a) {
     ptr<list<_int>> __tmp_34;
     ptr<list<_int>> s;
     __tmp_34 = ptr(new list<_int>());
-    for (auto __iter_23 = iter(a); !__iter_23.done();) {
-        s = next(__iter_23);
+    for (auto __iter_209 = iter(a); !__iter_209.done();) {
+        s = next(__iter_209);
         __tmp_34->append(len(s));
     }
     return __tmp_34;
@@ -246,17 +247,17 @@ void list_remove() {
     _int i;
     ptr<list<_int>> s;
     _int total;
-    _int __stop_24 = (10LL * 1000LL);
-    for (j = 0; j < __stop_24; ++j) {
+    _int __stop_731 = (10LL * 1000LL);
+    for (j = 0; j < __stop_731; ++j) {
         a = ptr(new list<ptr<list<_int>>>());
-        _int __stop_25 = 10LL;
-        for (i = 0; i < __stop_25; ++i) {
+        _int __stop_732 = 10LL;
+        for (i = 0; i < __stop_732; ++i) {
             a->append(ptr(new list<_int>(range((11LL + i)))));
         }
-        _int __stop_26 = 10LL;
-        for (i = 0; i < __stop_26; ++i) {
-            for (auto __iter_27 = iter(a); !__iter_27.done();) {
-                s = next(__iter_27);
+        _int __stop_733 = 10LL;
+        for (i = 0; i < __stop_733; ++i) {
+            for (auto __iter_210 = iter(a); !__iter_210.done();) {
+                s = next(__iter_210);
                 s->remove(i);
             }
         }
@@ -269,15 +270,15 @@ void list_insert() {
     _int j;
     ptr<list<_int>> a;
     _int i;
-    _int __stop_28 = (10LL * 1000LL);
-    for (j = 0; j < __stop_28; ++j) {
+    _int __stop_734 = (10LL * 1000LL);
+    for (j = 0; j < __stop_734; ++j) {
         a = ptr(new list<_int>());
-        _int __stop_29 = 10LL;
-        for (i = 0; i < __stop_29; ++i) {
+        _int __stop_735 = 10LL;
+        for (i = 0; i < __stop_735; ++i) {
             a->insert(0LL, i);
         }
-        _int __stop_30 = 5LL;
-        for (i = 0; i < __stop_30; ++i) {
+        _int __stop_736 = 5LL;
+        for (i = 0; i < __stop_736; ++i) {
             a->insert(5LL, i);
         }
         if (!(to_bool(((len(a) == 15LL))))) throw AssertionError("");
@@ -290,18 +291,18 @@ void list_index() {
     _int n;
     ptr<list<_int>> s;
     a = ptr(new list<ptr<list<_int>>>());
-    _int __stop_31 = 100LL;
-    for (i = 0; i < __stop_31; ++i) {
+    _int __stop_737 = 100LL;
+    for (i = 0; i < __stop_737; ++i) {
         a->append(ptr(new list<_int>({(i * 2LL), 44LL})));
         a->append(ptr(new list<_int>({44LL, i, (i + 2LL)})));
         a->append(ptr(new list<_int>({i, 44LL})));
         a->append(ptr(new list<_int>({44LL})));
     }
     n = 0LL;
-    _int __stop_32 = 1000LL;
-    for (i = 0; i < __stop_32; ++i) {
-        for (auto __iter_33 = iter(a); !__iter_33.done();) {
-            s = next(__iter_33);
+    _int __stop_738 = 1000LL;
+    for (i = 0; i < __stop_738; ++i) {
+        for (auto __iter_211 = iter(a); !__iter_211.done();) {
+            s = next(__iter_211);
             n += s->index(44LL);
         }
     }
@@ -314,13 +315,13 @@ void list_add_in_place() {
     ptr<list<_int>> n;
     _int l;
     _int j;
-    _int __stop_34 = (100LL * 1000LL);
-    for (i = 0; i < __stop_34; ++i) {
+    _int __stop_739 = (100LL * 1000LL);
+    for (i = 0; i < __stop_739; ++i) {
         a = ptr(new list<_int>());
         n = a;
         l = (5LL + mod(i, 10LL));
-        _int __stop_35 = l;
-        for (j = 0; j < __stop_35; ++j) {
+        _int __stop_740 = l;
+        for (j = 0; j < __stop_740; ++j) {
             a += ptr(new list<_int>({j}));
         }
         if (!(to_bool(((len(a) == l))))) throw AssertionError("");
@@ -340,8 +341,8 @@ void list_concatenate() {
     x = ptr(new list<str>({str("x"), str("y"), str("z")}));
     y = ptr(new list<str>({str("1, 2")}));
     n = 0LL;
-    _int __stop_36 = (1000LL * 1000LL);
-    for (i = 0; i < __stop_36; ++i) {
+    _int __stop_741 = (1000LL * 1000LL);
+    for (i = 0; i < __stop_741; ++i) {
         a = x;
         if (to_bool(flag)) {
             b = (a + a);
@@ -361,10 +362,10 @@ void list_equality() {
     _int j;
     a = ptr(new list<_int>({1LL, 2LL}));
     n = 0LL;
-    _int __stop_37 = 10000LL;
-    for (i = 0; i < __stop_37; ++i) {
-        _int __stop_38 = 100LL;
-        for (j = 0; j < __stop_38; ++j) {
+    _int __stop_742 = 10000LL;
+    for (i = 0; i < __stop_742; ++i) {
+        _int __stop_743 = 100LL;
+        for (j = 0; j < __stop_743; ++j) {
             if (to_bool(((a == ptr(new list<_int>({1LL, j})))))) {
                 n += 1LL;
             }
@@ -384,12 +385,12 @@ void tuple_equality() {
     _int j;
     t = tuple(1LL, 2LL);
     n = 0LL;
-    _int __stop_39 = 10000LL;
-    for (i = 0; i < __stop_39; ++i) {
+    _int __stop_744 = 10000LL;
+    for (i = 0; i < __stop_744; ++i) {
         a = ptr(new list<tuple<_int, _int>>());
         a->append(tuple(i, 5LL));
-        _int __stop_40 = 100LL;
-        for (j = 0; j < __stop_40; ++j) {
+        _int __stop_745 = 100LL;
+        for (j = 0; j < __stop_745; ++j) {
             if (to_bool(((t == tuple(1LL, j))))) {
                 n += 1LL;
             }
@@ -417,8 +418,8 @@ void multiple_assignment() {
     y = 1LL;
     a = ptr(new list<_int>({2LL, 3LL}));
     n = 0LL;
-    _int __stop_41 = 1000000LL;
-    for (i = 0; i < __stop_41; ++i) {
+    _int __stop_746 = 1000000LL;
+    for (i = 0; i < __stop_746; ++i) {
         destructure(x, y) = tuple(y, x);
         destructure(a->__getitem__(0LL), a->__getitem__(1LL)) = tuple(a->__getitem__(1LL), a->__getitem__(0LL));
         destructure(xx, yy) = tuple(a->__getitem__(0LL), a->__getitem__(1LL));
@@ -434,20 +435,20 @@ void list_for_reversed() {
     ptr<list<_int>> aa;
     _int s;
     a = ptr(new list<ptr<list<_int>>>());
-    _int __stop_42 = 1000LL;
-    for (i = 0; i < __stop_42; ++i) {
+    _int __stop_747 = 1000LL;
+    for (i = 0; i < __stop_747; ++i) {
         a->append(ptr(new list<_int>({(i * 2LL)})));
         a->append(ptr(new list<_int>({i, (i + 2LL)})));
         a->append((ptr(new list<_int>({i})) * 12LL));
         a->append(ptr(new list<_int>()));
     }
     n = 0LL;
-    _int __stop_43 = 100LL;
-    for (i = 0; i < __stop_43; ++i) {
-        for (auto __iter_44 = iter(a); !__iter_44.done();) {
-            aa = next(__iter_44);
-            for (auto __iter_45 = iter(reversed(aa)); !__iter_45.done();) {
-                s = next(__iter_45);
+    _int __stop_748 = 100LL;
+    for (i = 0; i < __stop_748; ++i) {
+        for (auto __iter_212 = iter(a); !__iter_212.done();) {
+            aa = next(__iter_212);
+            for (auto __iter_213 = iter(reversed(aa)); !__iter_213.done();) {
+                s = next(__iter_213);
                 n += s;
             }
         }
@@ -459,8 +460,8 @@ void sieve() {
     _int n;
     _int i;
     n = 0LL;
-    _int __stop_46 = 1000LL;
-    for (i = 0; i < __stop_46; ++i) {
+    _int __stop_749 = 1000LL;
+    for (i = 0; i < __stop_749; ++i) {
         n += num_primes(1000LL);
     }
     if (!(to_bool(((n == 168000LL))))) throw AssertionError(to_str(n));
@@ -475,8 +476,8 @@ _int num_primes(_int n) {
     is_prime = (ptr(new list<bool>({true})) * (n + 1LL));
     is_prime->__setitem__(0LL, false);
     is_prime->__setitem__(1LL, false);
-    _int __stop_47 = (n + 1LL);
-    for (i = 2LL; i < __stop_47; ++i) {
+    _int __stop_750 = (n + 1LL);
+    for (i = 2LL; i < __stop_750; ++i) {
         if ((to_bool(is_prime->__getitem__(i)) && to_bool((((i * i) <= n))))) {
             j = (i * i);
             while (to_bool(((j <= n)))) {
@@ -486,8 +487,8 @@ _int num_primes(_int n) {
         }
     }
     count = 0LL;
-    for (auto __iter_48 = iter(is_prime); !__iter_48.done();) {
-        b = next(__iter_48);
+    for (auto __iter_214 = iter(is_prime); !__iter_214.done();) {
+        b = next(__iter_214);
         if (to_bool(b)) {
             count += 1LL;
         }
@@ -499,8 +500,8 @@ ptr<list<tuple<str, _int>>> __list_comprehension_35() {
     ptr<list<tuple<str, _int>>> __tmp_35;
     _int i;
     __tmp_35 = ptr(new list<tuple<str, _int>>());
-    _int __stop_49 = 20LL;
-    for (i = 0; i < __stop_49; ++i) {
+    _int __stop_751 = 20LL;
+    for (i = 0; i < __stop_751; ++i) {
         __tmp_35->append(tuple(to_str(i), mod((i * 5LL), 11LL)));
     }
     return __tmp_35;
@@ -518,25 +519,25 @@ void sorted_with_key() {
     ptr<list<tuple<str, _int>>> a3;
     n = 10LL;
     a = ptr(new list<ptr<list<_int>>>());
-    _int __stop_50 = n;
-    for (i = 0; i < __stop_50; ++i) {
+    _int __stop_752 = n;
+    for (i = 0; i < __stop_752; ++i) {
         aa = ptr(new list<_int>());
-        _int __stop_51 = i;
-        for (j = 0; j < __stop_51; ++j) {
+        _int __stop_753 = i;
+        for (j = 0; j < __stop_753; ++j) {
             aa->append(mod((j * 971LL), 11LL));
         }
         a->append(aa);
     }
-    _int __stop_52 = n;
-    for (i = 0; i < __stop_52; ++i) {
+    _int __stop_754 = n;
+    for (i = 0; i < __stop_754; ++i) {
         print(i);
     }
     a2 = __list_comprehension_35();
     c = 0LL;
-    _int __stop_53 = 20000LL;
-    for (i = 0; i < __stop_53; ++i) {
-        for (auto __iter_54 = iter(a); !__iter_54.done();) {
-            seq = next(__iter_54);
+    _int __stop_755 = 20000LL;
+    for (i = 0; i < __stop_755; ++i) {
+        for (auto __iter_215 = iter(a); !__iter_215.done();) {
+            seq = next(__iter_215);
             c += len(_sorted_kwargs(false, seq));
         }
         a3 = _sorted_kwargs(false, a2);

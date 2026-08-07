@@ -51,6 +51,7 @@ includes = [
     "slice.h",
     "list.h",
     "strops.h",
+    "bytes.h",
     "dict.h",
     "set.h",
     "file.h",

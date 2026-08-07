@@ -1,6 +1,9 @@
+import ast
+
 from mypy.nodes import CallExpr, ComparisonExpr, DictExpr
 from mypy.nodes import Expression as MypyExpression
 from mypy.nodes import (
+    BytesExpr,
     FloatExpr,
     IndexExpr,
     IntExpr,
@@ -43,6 +46,44 @@ from splice.codegen.translation_utils import (
 )
 from splice.codegen.typegen import cpp_type_name, is_pointer
 from splice.visitor import Visitor
+
+
+def _cpp_bytes_literal(raw: bytes) -> str:
+    """A C++ expression for a std::string holding exactly `raw`'s bytes.
+
+    Adjacent string-literal concatenation joins the pieces; non-printable
+    bytes get their own "\\xHH" piece so a following hex digit in source
+    can't extend the escape. The explicit length keeps embedded NUL bytes
+    intact (a bare const char* would truncate at the first one).
+    """
+    pieces: list[str] = []
+    current: list[str] = []
+
+    def flush() -> None:
+        if current:
+            pieces.append('"' + "".join(current) + '"')
+            current.clear()
+
+    for byte in raw:
+        ch = chr(byte)
+        if ch == "\\":
+            current.append("\\\\")
+        elif ch == '"':
+            current.append('\\"')
+        elif ch == "\n":
+            current.append("\\n")
+        elif ch == "\t":
+            current.append("\\t")
+        elif ch == "\r":
+            current.append("\\r")
+        elif 0x20 <= byte < 0x7F:
+            current.append(ch)
+        else:
+            flush()
+            pieces.append(f'"\\x{byte:02x}"')
+    flush()
+    literal = " ".join(pieces) if pieces else '""'
+    return f"std::string({literal}, {len(raw)})"
 
 
 class ExpressionCodegen(Visitor[str]):
@@ -181,6 +222,14 @@ class ExpressionCodegen(Visitor[str]):
         # Wrapped in str(...) so literals carry the string methods, like
         # Python. repr() escapes newlines; its quotes are stripped.
         return f'str("{repr(o.value)[1:-1]}")'
+
+    def visit_bytes_expr(self, o: BytesExpr) -> str:
+        # o.value is mypy's "human readable repr" of the literal (the
+        # content of repr(the_bytes), minus the leading b and quotes) -
+        # wrapping it back in triple quotes and evaluating recovers the
+        # original bytes regardless of which quote character repr() chose.
+        raw = ast.literal_eval("b'''" + o.value + "'''")
+        return f"bytes({_cpp_bytes_literal(raw)})"
 
     def visit_float_expr(self, o: FloatExpr) -> str:
         return str(o.value)

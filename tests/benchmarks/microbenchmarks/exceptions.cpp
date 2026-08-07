@@ -9,6 +9,7 @@
 #include "slice.h"
 #include "list.h"
 #include "strops.h"
+#include "bytes.h"
 #include "dict.h"
 #include "set.h"
 #include "file.h"
@@ -29,8 +30,8 @@ void catch_exceptions() {
     _int n;
     _int i;
     n = 0LL;
-    _int __stop_1 = (100LL * 1000LL);
-    for (i = 0; i < __stop_1; ++i) {
+    _int __stop_830 = (100LL * 1000LL);
+    for (i = 0; i < __stop_830; ++i) {
         try {
             f(i);
         } catch (ValueError &) {

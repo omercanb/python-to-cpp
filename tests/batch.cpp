@@ -1,4 +1,5 @@
 #include "builtins.h"
+#include "bytes.h"
 #include "dict.h"
 #include "exceptions.h"
 #include "file.h"
@@ -153,6 +154,93 @@ int run() {
 }
 }
 
+namespace prog_bytes {
+int run();
+void __init_module__();
+
+void __init_module__() {
+}
+
+int run() {
+    bytes b;
+    bytes padded;
+    bytes a;
+    bytes c;
+    _int total;
+    _int byte;
+    bytes joined;
+    __init_module__();
+    b = bytes(std::string("Hello World", 11));
+    print(b);
+    print(len(b));
+    print(b.__getitem__(0LL), b.back());
+    print(b.upper());
+    print(b.lower());
+    print(b.swapcase());
+    print(b.capitalize());
+    print(bytes(std::string("hello world", 11)).title());
+    print(b.find(bytes(std::string("o", 1))));
+    print(b.find(bytes(std::string("o", 1)), 5LL));
+    print(b.rfind(bytes(std::string("o", 1))));
+    print(b.find(bytes(std::string("zz", 2))));
+    print(b.index(bytes(std::string("World", 5))));
+    print(b.count(bytes(std::string("l", 1))));
+    print(b.count(bytes(std::string("zz", 2))));
+    print(b.startswith(bytes(std::string("Hello", 5))));
+    print(b.startswith(bytes(std::string("World", 5))));
+    print(b.endswith(bytes(std::string("World", 5))));
+    print(b.replace(bytes(std::string("l", 1)), bytes(std::string("L", 1))));
+    print(b.replace(bytes(std::string("l", 1)), bytes(std::string("L", 1)), 2LL));
+    print(b.removeprefix(bytes(std::string("Hello ", 6))));
+    print(b.removesuffix(bytes(std::string(" World", 6))));
+    padded = bytes(std::string("  spaced  ", 10));
+    print(padded.strip());
+    print(padded.lstrip());
+    print(padded.rstrip());
+    print(bytes(std::string("xxhixx", 6)).strip(bytes(std::string("x", 1))));
+    print(bytes(std::string("hi", 2)).ljust(5LL, bytes(std::string(".", 1))));
+    print(bytes(std::string("hi", 2)).rjust(5LL, bytes(std::string(".", 1))));
+    print(bytes(std::string("hi", 2)).center(6LL, bytes(std::string(".", 1))));
+    print(bytes(std::string("42", 2)).zfill(5LL));
+    print(bytes(std::string("-42", 3)).zfill(5LL));
+    print(bytes(std::string("abc", 3)).isalpha(), bytes(std::string("a1", 2)).isalpha());
+    print(bytes(std::string("123", 3)).isdigit(), bytes(std::string("12a", 3)).isdigit());
+    print(bytes(std::string("a1", 2)).isalnum(), bytes(std::string("a-1", 3)).isalnum());
+    print(bytes(std::string("  ", 2)).isspace(), bytes(std::string("a ", 2)).isspace());
+    print(bytes(std::string("ABC", 3)).isupper(), bytes(std::string("Abc", 3)).isupper());
+    print(bytes(std::string("abc", 3)).islower(), bytes(std::string("Abc", 3)).islower());
+    print(b.split());
+    print(bytes(std::string("a,b,c", 5)).split(bytes(std::string(",", 1))));
+    print(bytes(std::string("a,,b", 4)).split(bytes(std::string(",", 1))));
+    print(bytes(std::string("-", 1)).join(bytes(std::string("a,b,c", 5)).split(bytes(std::string(",", 1)))));
+    print(bytes(std::string("one\ntwo", 7)).splitlines());
+    a = bytes(std::string("foo", 3));
+    c = bytes(std::string("bar", 3));
+    print((a + c));
+    print((a * 3LL));
+    print(((a == bytes(std::string("foo", 3)))), ((a == c)));
+    print(((a < c)), ((a > c)));
+    print((b.__contains__(bytes(std::string("World", 5)))));
+    print((b.__contains__(87LL)));
+    print((b.__contains__(90LL)));
+    print(bytes(3LL));
+    print(bytes(ptr(new list<_int>({65LL, 66LL, 67LL}))));
+    total = 0LL;
+    for (auto __iter_15 = iter(bytes(std::string("abc", 3))); !__iter_15.done();) {
+        byte = next(__iter_15);
+        total += byte;
+    }
+    print(total);
+    joined = bytes(std::string("", 0));
+    for (auto __iter_16 = iter(bytes(std::string("abc", 3))); !__iter_16.done();) {
+        byte = next(__iter_16);
+        joined = ((joined + bytes(ptr(new list<_int>({byte})))) + bytes(std::string(".", 1)));
+    }
+    print(joined);
+    return 0LL;
+}
+}
+
 namespace prog_casts {
 int run();
 void __init_module__();
@@ -282,8 +370,8 @@ int run() {
     p->x = 10LL;
     print(p->x, p->norm());
     points = ptr(new list<ptr<Point>>({ptr(new Point(1LL, 1LL)), ptr(new Point(2LL, 2LL))}));
-    for (auto __iter_15 = iter(points); !__iter_15.done();) {
-        point = next(__iter_15);
+    for (auto __iter_17 = iter(points); !__iter_17.done();) {
+        point = next(__iter_17);
         print(point, point->norm());
     }
     print(len(points));
@@ -351,8 +439,8 @@ ptr<list<_int>> __list_comprehension_1(ptr<list<_int>> values, _int factor, _int
     ptr<list<_int>> __tmp_1;
     _int v;
     __tmp_1 = ptr(new list<_int>());
-    for (auto __iter_16 = iter(values); !__iter_16.done();) {
-        v = next(__iter_16);
+    for (auto __iter_18 = iter(values); !__iter_18.done();) {
+        v = next(__iter_18);
         __tmp_1->append(((v * factor) + offset));
     }
     return __tmp_1;
@@ -368,8 +456,8 @@ ptr<list<_int>> __list_comprehension_2(ptr<list<_int>> numbers) {
     ptr<list<_int>> __tmp_2;
     _int v;
     __tmp_2 = ptr(new list<_int>());
-    for (auto __iter_17 = iter(numbers); !__iter_17.done();) {
-        v = next(__iter_17);
+    for (auto __iter_19 = iter(numbers); !__iter_19.done();) {
+        v = next(__iter_19);
         __tmp_2->append(v);
     }
     return __tmp_2;
@@ -379,8 +467,8 @@ ptr<list<_int>> __list_comprehension_3(ptr<list<_int>> numbers) {
     ptr<list<_int>> __tmp_3;
     _int v;
     __tmp_3 = ptr(new list<_int>());
-    for (auto __iter_18 = iter(numbers); !__iter_18.done();) {
-        v = next(__iter_18);
+    for (auto __iter_20 = iter(numbers); !__iter_20.done();) {
+        v = next(__iter_20);
         if (to_bool(((v > 2LL)))) {
             __tmp_3->append(v);
         }
@@ -425,8 +513,8 @@ ptr<set<_int>> __set_comprehension_0(ptr<list<_int>> numbers) {
     ptr<set<_int>> __tmp_7;
     _int v;
     __tmp_7 = ptr(new set<_int>());
-    for (auto __iter_19 = iter(numbers); !__iter_19.done();) {
-        v = next(__iter_19);
+    for (auto __iter_21 = iter(numbers); !__iter_21.done();) {
+        v = next(__iter_21);
         __tmp_7->add((v * v));
     }
     return __tmp_7;
@@ -436,8 +524,8 @@ ptr<dict<_int, _int>> __dict_comprehension_0(ptr<list<_int>> numbers) {
     ptr<dict<_int, _int>> __tmp_8;
     _int v;
     __tmp_8 = ptr(new dict<_int, _int>());
-    for (auto __iter_20 = iter(numbers); !__iter_20.done();) {
-        v = next(__iter_20);
+    for (auto __iter_22 = iter(numbers); !__iter_22.done();) {
+        v = next(__iter_22);
         if (to_bool(((v > 1LL)))) {
             __tmp_8->__setitem__(v, (v * v));
         }
@@ -450,10 +538,10 @@ ptr<list<_int>> __list_comprehension_7(ptr<list<_int>> numbers) {
     _int x;
     _int y;
     __tmp_9 = ptr(new list<_int>());
-    for (auto __iter_21 = iter(numbers); !__iter_21.done();) {
-        x = next(__iter_21);
-        for (auto __iter_22 = iter(numbers); !__iter_22.done();) {
-            y = next(__iter_22);
+    for (auto __iter_23 = iter(numbers); !__iter_23.done();) {
+        x = next(__iter_23);
+        for (auto __iter_24 = iter(numbers); !__iter_24.done();) {
+            y = next(__iter_24);
             if (to_bool(((x < y)))) {
                 __tmp_9->append((x * y));
             }
@@ -477,8 +565,8 @@ ptr<list<_int>> __list_comprehension_8(ptr<list<_int>> numbers) {
     ptr<list<_int>> __tmp_10;
     _int v;
     __tmp_10 = ptr(new list<_int>());
-    for (auto __iter_23 = iter(numbers); !__iter_23.done();) {
-        v = next(__iter_23);
+    for (auto __iter_25 = iter(numbers); !__iter_25.done();) {
+        v = next(__iter_25);
         __tmp_10->append(len(__list_comprehension_11(v)));
     }
     return __tmp_10;
@@ -488,8 +576,8 @@ ptr<list<_int>> __list_comprehension_9(ptr<list<_int>> numbers) {
     ptr<list<_int>> __tmp_11;
     _int v;
     __tmp_11 = ptr(new list<_int>());
-    for (auto __iter_24 = iter(numbers); !__iter_24.done();) {
-        v = next(__iter_24);
+    for (auto __iter_26 = iter(numbers); !__iter_26.done();) {
+        v = next(__iter_26);
         __tmp_11->append((v * 2LL));
     }
     return __tmp_11;
@@ -499,8 +587,8 @@ ptr<list<_int>> __list_comprehension_10(ptr<list<_int>> doubled) {
     ptr<list<_int>> __tmp_12;
     _int v;
     __tmp_12 = ptr(new list<_int>());
-    for (auto __iter_25 = iter(doubled); !__iter_25.done();) {
-        v = next(__iter_25);
+    for (auto __iter_27 = iter(doubled); !__iter_27.done();) {
+        v = next(__iter_27);
         __tmp_12->append((v + 1LL));
     }
     return __tmp_12;
@@ -835,8 +923,8 @@ int run() {
     print(len(rest), rest->__getitem__(0LL).strip());
     print(len(stepped->readlines()));
     lines = open(SAMPLE);
-    for (auto __iter_26 = iter(lines); !__iter_26.done();) {
-        line = next(__iter_26);
+    for (auto __iter_28 = iter(lines); !__iter_28.done();) {
+        line = next(__iter_28);
         print(len(line), line.strip());
     }
     out = open(str("tests/test_files/sample_out.txt"), str("w"));
@@ -874,19 +962,19 @@ int run() {
     nums = ptr(new list<_int>({1LL, 2LL, 3LL, 4LL, 5LL}));
     a = ptr(new list<_int>(map([](auto x) { return (x * 2LL); }, nums)));
     print(a);
-    for (auto __iter_27 = iter(map([](auto x) { return to_str(x); }, nums)); !__iter_27.done();) {
-        s = next(__iter_27);
+    for (auto __iter_29 = iter(map([](auto x) { return to_str(x); }, nums)); !__iter_29.done();) {
+        s = next(__iter_29);
         print(s);
     }
     filtered = ptr(new list<_int>(filter([](auto x) { return ((mod(x, 2LL) == 0LL)); }, nums)));
     print(filtered);
-    for (auto __iter_28 = iter(zip(nums, a)); !__iter_28.done();) {
-        destructure(x, y) = next(__iter_28);
+    for (auto __iter_30 = iter(zip(nums, a)); !__iter_30.done();) {
+        destructure(x, y) = next(__iter_30);
         print(x, y);
     }
     nums = a;
-    for (auto __iter_29 = iter(enumerate(nums)); !__iter_29.done();) {
-        destructure(i, n) = next(__iter_29);
+    for (auto __iter_31 = iter(enumerate(nums)); !__iter_31.done();) {
+        destructure(i, n) = next(__iter_31);
         print(i, n);
     }
     return 0LL;
@@ -1049,12 +1137,12 @@ int run() {
         if ((__step_2 > 0 && i >= __stop_9) || (__step_2 < 0 && i <= __stop_9)) break;
         print(str("sixth"), i);
     }
-    for (auto __iter_30 = iter(l); !__iter_30.done();) {
-        n = next(__iter_30);
+    for (auto __iter_32 = iter(l); !__iter_32.done();) {
+        n = next(__iter_32);
         print(str("seventh"), n);
     }
-    for (auto __iter_31 = iter(l); !__iter_31.done();) {
-        n = next(__iter_31);
+    for (auto __iter_33 = iter(l); !__iter_33.done();) {
+        n = next(__iter_33);
         print(str("eight"), n);
     }
     return 0LL;
@@ -1144,8 +1232,8 @@ int run() {
         print(str("missing"));
     }
     count = 0LL;
-    for (auto __iter_32 = iter(ptr(new list<_int>({1LL, 2LL, 3LL, 4LL}))); !__iter_32.done();) {
-        x = next(__iter_32);
+    for (auto __iter_34 = iter(ptr(new list<_int>({1LL, 2LL, 3LL, 4LL}))); !__iter_34.done();) {
+        x = next(__iter_34);
         if (to_bool((s->__contains__(x)))) {
             count = (count + 1LL);
         }
@@ -1259,8 +1347,8 @@ int run() {
     d->clear();
     print(len(d));
     total = 0LL;
-    for (auto __iter_33 = iter(ptr(new set<_int>({1LL, 2LL, 3LL}))); !__iter_33.done();) {
-        x = next(__iter_33);
+    for (auto __iter_35 = iter(ptr(new set<_int>({1LL, 2LL, 3LL}))); !__iter_35.done();) {
+        x = next(__iter_35);
         total = (total + x);
     }
     print(total);
@@ -1416,8 +1504,8 @@ int run() {
     print(to_int(str("100")));
     print(to_float(str("0.5")));
     joined = str("");
-    for (auto __iter_34 = iter(str("abc")); !__iter_34.done();) {
-        c = next(__iter_34);
+    for (auto __iter_36 = iter(str("abc")); !__iter_36.done();) {
+        c = next(__iter_36);
         joined = ((joined + c) + str("."));
     }
     print(joined);
@@ -1536,6 +1624,7 @@ int run() {
 int main(int argc, char** argv) {
     if (argc > 1 && std::strcmp(argv[1], "boolops.py") == 0) return prog_boolops::run();
     if (argc > 1 && std::strcmp(argv[1], "builtin_functions.py") == 0) return prog_builtin_functions::run();
+    if (argc > 1 && std::strcmp(argv[1], "bytes.py") == 0) return prog_bytes::run();
     if (argc > 1 && std::strcmp(argv[1], "casts.py") == 0) return prog_casts::run();
     if (argc > 1 && std::strcmp(argv[1], "classes.py") == 0) return prog_classes::run();
     if (argc > 1 && std::strcmp(argv[1], "comparison.py") == 0) return prog_comparison::run();
